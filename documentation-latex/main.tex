@@ -169,6 +169,19 @@ La partie où on remercie les gens qui nous ont aidé à réaliser ce travail de
 
 \section{Résumé}
 % Insérer le résumé ici
+Ce travail de bachelor a pour but de concevoir une plateforme de réservation de terrain de Padel intégrant le Model Context Protocol. 
+La première partie du travail présente la problématique générale de réserver un terrain de Padel, les différentes solutions existantes et les technologies utilisées pour réaliser ce travail.
+
+Ensuite, u
+
+
+Le Padel est un sport de raquette qui se joue en double, généralement en exterieur sur un terrain plus petit que celui du tennis, entouré de vitres. 
+Sport émergent du moment, celui-ci sucite des problématiques de réservation comme beaucoup de sport : Niveaux des autres joueurs, disponibilité, météos extérieur, matériel disponible sur place, etc... 
+
+
+
+
+amener des difficultés lors de sa réservation,  La première partie du travail présente la problématique général de réserver un t  Le Model Context Protocol est un protocole de communication qui permet d'échanger des données contextuelles entre les différentes parties d'une application. Cette plateforme permettra aux utilisateurs de réserver des terrains de Padel, de consulter les disponibilités et les tarifs, et de gérer leurs réservations.
 Voilà le résumé de ce travail de bachelor. Il est important de bien résumer le travail pour que le lecteur puisse comprendre le contenu de ce travail sans avoir à le lire en entier.
 
 
@@ -192,7 +205,29 @@ Voilà le résumé de ce travail de bachelor. Il est important de bien résumer 
 % Ce sont des exemples de sections, vous pouvez les modifier ou les supprimer
 
 \section{Introduction}
-\subsection{Exemple de création de liste}
+\subsection{Introduction à la problématique}
+Le padel est un sport de raquette dérivé du tennis qui se joue exclusivement en double, généralement en extérieur, sur un court de dimensions réduites et encadré de vitres ou de grillages. Au cours de ces dernières années, cette discipline a connu une croissance fulgurante à l'échelle mondiale, et plus particulièrement en Europe ainsi qu'en Amérique latine. Face à cet engouement massif, de nombreuses infrastructures ont été construites pour répondre à une demande toujours plus grandissante. Cependant, bien que l'accès à ce sport se démocratise, l'organisation et la réservation de ces terrains représentent encore aujourd'hui un véritable défi pour les pratiquants.
+\newline\newline
+Dans le cadre de ce travail de bachelor, nous allons nous intéresser plus précisément à la gestion et aux problématiques de réservation des terrains de padel dans le canton de Genève. Actuellement, l'offre genevoise se répartit sur plusieurs sites dont les plus connus sont les suivants :
+\newline
+\begin{itemize}
+    \item Centre sportif de Vessy : 1 terrain outdoor\footnote{Outdoor signifie que le terrain est situé à l'extérieur.}
+    \item Centre sportif universitaire (CSU) : 1 terrain outdoor
+    \item Centre sportif de Bernex : 2 terrains outdoor
+    \item Country-club GVA, Bellevue : 3 terrains indoor\footnote{Indoor signifie que le terrain est situé à l'intérieur.}
+    \item Parc des Evaux : 3 terrains outdoor
+    \item Padel Academy, Jonction : 2 terrains couverts
+    \item Club international de tennis, Pregny-Chambésy : 2 terrains indoor
+\end{itemize}\
+\newline
+Comme nous pouvons le constater, prêt de la moitié des terrains de padel à Genève se situe en extérieur. Cette caractéristique amène un premier défi de taille : la dépendance à la météorologie. En effet, les conditions climatiques sont un facteur déterminant dans la pratique de ce sport. La pluie rend le jeu difficile, voire impossible, car elle modifie la physique de la balle et altère ses rebonds sur le sol et les vitres. Le vent dévie les trajectoires, tandis que l'éblouissement causé par le soleil complique fortement la lecture des trajectoires aériennes, notamment lors des lobs (nécessitant souvent l'anticipation avec des lunettes ou des casquettes). 
+Bien que les terrains indoor permettent de s'affranchir de ces contraintes météorologiques, ils s'avèrent souvent plus coûteux, posant ainsi une barrière financière pour les joueurs disposant d'un budget limité.
+Outre les facteurs environnementaux, la nature même du padel génère des contraintes organisationnelles complexes. Ce sport nécessitant impérativement la présence de quatre joueurs, la recherche de partenaires devient une problématique centrale. Il ne s'agit pas seulement de faire coïncider les disponibilités horaires de quatre individus, mais également de s'assurer d'une homogénéité des niveaux pour garantir la qualité du jeu. Le système de réservation doit ainsi pouvoir répondre à des dynamiques de "matchmaking" variées : un joueur cherchant trois inconnus, un binôme cherchant deux adversaires, ou encore l'intégration d'un joueur inconnu pour compléter un groupe d'amis.
+\newline\newline
+Enfin, l'aspect logistique ne s'arrête pas à la formation des équipes. De nombreux joueurs occasionnels ne possédant pas leur propre équipement, l'accès au matériel sur le lieu de pratique est primordial. La disponibilité de box de location (raquettes et balles) à proximité immédiate des terrains devient alors un critère de choix décisif lors de la réservation.
+\newline\newline
+Au vu de la multitude de paramètres à prendre en compte : contraintes météorologiques, homogénéité des niveaux, flexibilité du matchmaking, budget et disponibilité du matériel, l'organisation d'une partie s'apparente aujourd'hui à un véritable casse-tête logistique. Le traitement simultané de toutes ces variables dépasse largement les capacités d'un système de réservation traditionnel. La problématique de ce travail de bachelor est donc de concevoir une application de réservation centralisée et intelligente, spécifiquement adaptée aux contraintes du padel genevois pour réduire ces difficultés.
+ \subsection{Exemple de création de liste}
 
 Il est possible de créer des listes à puces ou numérotées.
 
