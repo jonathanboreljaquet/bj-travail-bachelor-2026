@@ -189,7 +189,7 @@ L'utilisation des conclusions et recommendations formulées dans le travail de B
 
 \section{Introduction}
 \subsection{Introduction à la problématique}
-Le padel est un sport de raquette dérivé du tennis qui se joue exclusivement en double\footnote{Deux joueurs contre deux joueurs}, généralement en extérieur, sur un court de dimensions réduites et encadré de vitres ou de grillages. Au cours de ces dernières années, cette discipline a connu une croissance fulgurante à l'échelle mondiale, et plus particulièrement en Europe ainsi qu'en Amérique latine. Face à cet engouement massif, de nombreuses infrastructures ont été construites pour répondre à une demande toujours plus grandissante. Cependant, bien que l'accès à ce sport se démocratise, l'organisation et la réservation de ces terrains représentent encore aujourd'hui un véritable défi pour les pratiquants.
+Le padel est un sport de raquette dérivé du tennis qui se joue exclusivement en double\footnote{Deux joueurs contre deux joueurs}, sur un court de dimensions réduites et encadré de vitres ou de grillages. Au cours de ces dernières années, cette discipline a connu une croissance fulgurante à l'échelle mondiale, et plus particulièrement en Europe ainsi qu'en Amérique latine. Face à cet engouement massif, de nombreuses infrastructures ont été construites pour répondre à une demande toujours plus grandissante. Cependant, bien que l'accès à ce sport se démocratise, l'organisation et la réservation de ces terrains représentent encore aujourd'hui un véritable défi pour ses pratiquants.
 \newline\newline
 Dans le cadre de ce travail de bachelor, nous allons nous intéresser plus précisément à la gestion et aux problématiques de réservation des terrains de padel dans le canton de Genève. Actuellement, l'offre genevoise se répartit sur plusieurs sites dont les plus connus sont les suivants :
 \newline
@@ -210,7 +210,7 @@ Enfin, l'aspect logistique ne s'arrête pas à la formation des équipes. De nom
 \newline\newline
 Au vu de la multitude de paramètres à prendre en compte : contraintes météorologiques, homogénéité des niveaux, flexibilité du matchmaking, budget et disponibilité du matériel, l'organisation d'une partie s'apparente aujourd'hui à un véritable casse-tête logistique. Le traitement simultané de toutes ces variables dépasse largement les capacités d'un système de réservation traditionnel. La problématique de ce travail de bachelor est donc de concevoir une application de réservation centralisée et intelligente utilisant une IA couplée au Mondel Context Protocol, spécifiquement adaptée aux contraintes du padel genevois pour réduire ces difficultés.
 \subsection{Intérêt de la problématique}
-Aujourd'hui, la réservation de terrains de padel à Genève est un véritable casse-tête logistique. En effet, la multitude de variables à prendre en compte rend l'organisation d'une partie particulièrement complexe.
+Aujourd'hui, la réservation de terrains de padel à Genève est un véritable casse-tête organisationnel. En effet, la multitude de variables à prendre en compte rend la planification d'une partie particulièrement complexe.
 \newline\newline
 Parmi ces contraintes, la météo joue un rôle déterminant. Tout pratiquant souhaitant réserver un terrain en extérieur doit systématiquement croiser les disponibilités avec des données météorologiques (via des applications comme MeteoSwiss, par exemple) pour s'assurer de conditions de jeu favorables. À cela s'ajoute la difficulté de réunir quatre partenaires de niveau équivalent, ce qui s'avère fastidieux lorsque l'on manque de contacts ou que les agendas de chacun diffèrent. Par ailleurs, pour les joueurs non équipés, il est impératif de vérifier en amont si le centre sportif propose du matériel de location.
 \newline\newline
@@ -224,7 +224,7 @@ Surtout, la véritable plus-value de ce projet réside dans l'intégration d'une
 \newline\newline
 Finalement, en levant ces barrières organisationnelles, la résolution de cette problématique contribue directement à la démocratisation du padel. En facilitant son accès, un public plus large pourrait être encouragé à le pratiquer, soutenant ainsi son développement dans la région.
 \subsection{Questions auxquelles nous souhaitons répondre dans ce travail}
-Il y a troix grandes questions à répondre dans ce travail. 
+Le but de ce travail est de répondre à trois grandes questions. 
 \newline
 \begin{enumerate}
     \item Comment l'intégration du Model Context Protocol permet-elle à une intelligence artificielle de s'affranchir des approximations du web pour s'appuyer sur des données météorologiques officielles et fiables ?
@@ -232,7 +232,7 @@ Il y a troix grandes questions à répondre dans ce travail.
     \item Dans quelle mesure le passage d'une interface de réservation statique à un assistant proactif réduit-il la charge mentale et le temps d'organisation pour les utilisateurs ?
 \end{enumerate}\
 \newline
-Le premier objectif de ce travail est de démontrer la viabilité technique d'une réservation assistée par IA basée sur des données officieles de haute précision. Actuellement, la plupart des modèles d'intelligence artificielle utilisent des données météorologiques existantes sur le web, souvent approximatives ou obsolètes face à la volatilité des conditions locales. Dans un sport très sensible à la météo comme le padel outdoor, une telle approximation n'est pas acceptable. Il s'agira donc de comprendre comment l'architecture MCP\footnote{Acronyme de Model Context Protocol} permet de forcer l'IA à interroger des sources de données officielles (via des API météorologiques certifiées) pour garantir que le choix du terrain (intérieur ou extérieur) soit optimal et sans risque.
+Le premier objectif de ce travail est de démontrer la viabilité technique d'une réservation assistée par IA basée sur des données précisent et officieles. Actuellement, la plupart des modèles d'intelligence artificielle utilisent des données météorologiques existantes sur le web, souvent approximatives ou obsolètes face à la volatilité des conditions locales. Dans un sport très sensible à la météo comme le padel outdoor, une telle approximation n'est pas acceptable. Il s'agira donc de comprendre comment l'architecture MCP\footnote{Acronyme de Model Context Protocol} permet de forcer l'IA à interroger des sources de données officielles (via des API météorologiques certifiées) pour garantir que le choix du terrain (intérieur ou extérieur) soit optimal et sans risque.
 \newline\newline
 Le deuxième objectif vise à résoudre le casse-tête organisationnel propre à ce sport. L'application devra prouver sa capacité à analyser une base de données d'utilisateurs pour automatiser la création de parties. Le but est de comprendre comment les algorithmes peuvent évaluer simultanément les niveaux relatifs des joueurs (pour garantir des matchs équilibrés), leurs disponibilités horaires croisées, et leurs besoins en matériel (Raquettes et/ou balles), afin de proposer le terrain et le créneau parfaits sans intervention manuelle fastidieuse.
 \newline\newline
@@ -240,6 +240,54 @@ Enfin, le troisième objectif de ce travail est d'évaluer l'impact de cette sol
 \subsection{Plan du document}
 \section{État de l'art}
 \subsection{Solutions de réservation actuelles}
+\subsubsection{PadelConnect}
+PadelConnect est une application disponible sur Android, IOS et sur le web, qui permet de réserver des terrains de padel à Genève, plus précisemment les terrains des quatres sites suivants : 
+\newline
+\begin{itemize}
+    \item Centre sportif de Bernex 
+    \begin{itemize}
+        \item 2 terrain outdoor 
+        \item Tout les jours de 07h30 à 22h30 
+        \item 10 CHF par personne
+    \end{itemize}
+    \item Parc des Evaux
+    \begin{itemize}
+        \item 3 terrains outdoor
+        \item Tout les jours de 07h30 à 22h30
+        \item 10 CHF par personne
+    \end{itemize} 
+    \item Padel Academy, Jonction
+    \begin{itemize}
+        \item 2 terrains couverts
+        \item Tout les jours de 09h00 à 21h30
+        \item ? CHF par personne
+    \end{itemize}
+    \item Club international de tennis, Pregny-Chambésy
+    \begin{itemize}
+        \item 2 terrains indoor
+        \item Tout les jours de 05h30 à 01h30
+        \item 17 CHF par personne
+    \end{itemize}
+\end{itemize}\
+\newline
+L'application ne stipule pas si le terrain désiré propose une box de location de matériel ou non, il est donc de la responsabilité de l'utilisateur de vérifier cette information avant de réserver un terrain. 
+\newline\newline
+Celle-ci propose une interface simple pour consulter les disponibilités des terrains et effectuer des réservations pour des sessions de 1h30. Il est possible de réserver un terrain complet de manière privé pour y inviter ces amis petit à petits ou rejoindre une partie publique existante avec de parfait inconnue. Chaque réservation fournis sa propre page de discussion permettant aux joueurs de communiquer entre eux. 
+\newline\newline
+Par rapport au données météorologiques, l'application ne propose pas de fonctionnalité pour vérifier les conditions météorologiques avant de réserver un terrain en extérieur. Il est donc de la responsabilité de l'utilisateur de vérifier les conditions météorologiques avant de réserver un terrain en extérieur. Toutefois, depuis le 27 octobre 2025, PadelConnect permet a ses utilisateurs d'anuler une partie et de se faire rembourser 180 minutes avant le début de cette dernière. À noter que la somme est remboursé sur le porte monnaie de l'utilisateur et non pas sur sa carte bancaire. Cette fonctionnalité permet aux utilisateurs de réserver un terrain en extérieur sans avoir à se soucier des conditions météorologiques, car ils peuvent annuler la réservation et se faire rembourser si les conditions météorologiques ne sont pas favorables.
+\newline\newline
+L'applicaiton permet également d'y renseigner son niveau de jeu allant de 1.0 à 10.0 par palier de 0.25 et son poste (Gauche, droite ou indiférent). Niveau totalement arbritaire et peu représentatif du niveau réel d'un joueur, mais qui permet tout de même de faire un semblant de matchmaking en selectionannt des parties avec des joueurs de notre "estimation" de niveau.
+\newline\newline
+Après une partie, l'application permet aussi d'y insérer les résultats de celle-ci. Cette dernière feature n'étant pas obligatoire, aucunement visible par les autres utilisateurs et non pris en compte dans le niveau du joueur, celle-ci est souvent ignorée par les utilisateurs.
+\newline\newline
+Pour finir, l'application propose une fonctionnalité de recherche de joueurs grâce a différents filtres comme le niveau, la ville, l'age et le sexe.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{img/padel_connect_app.drawio.png}
+    \caption{Aperçu de l'application PadelConnect}
+    \label{fig:padel_connect_app}
+\end{figure}
+\subsubsection{PlayPad}
 Analyse des applications PadelConnect et PlayPad, leurs fonctionnalités, leurs limites et pourquoi pas les retours utilisateurs.
 \subsection{Intelligence artificielle et Model Context Protocol}
 Explication du concept de Model Context Protocol, son fonctionnement (Utilisation de données extenres), ses avantages et comment il peut être utilisé pour améliorer les systèmes de réservation.
