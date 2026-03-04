@@ -241,40 +241,40 @@ Enfin, le troisième objectif de ce travail est d'évaluer l'impact de cette sol
 \section{État de l'art}
 \subsection{Solutions de réservation actuelles}
 \subsubsection{PadelConnect}
-PadelConnect est une application disponible sur Android, IOS et sur le web, qui permet de réserver des terrains de padel à Genève, plus précisemment les terrains des quatres sites suivants : 
+PadelConnect est une application disponible sur Android, iOS et sur le web, qui permet de réserver des terrains de padel à Genève, plus précisément sur les quatre sites suivants :
 \newline
 \begin{itemize}
     \item Centre sportif de Bernex 
     \begin{itemize}
-        \item 2 terrain outdoor 
-        \item Tout les jours de 07h30 à 22h30 
+        \item 2 terrains outdoor 
+        \item Tous les jours de 07h30 à 22h30 
         \item 10 CHF par personne
     \end{itemize}
     \item Parc des Evaux
     \begin{itemize}
         \item 3 terrains outdoor
-        \item Tout les jours de 07h30 à 22h30
+        \item Tous les jours de 07h30 à 22h30
         \item 10 CHF par personne
     \end{itemize} 
     \item Padel Academy, Jonction
     \begin{itemize}
         \item 2 terrains couverts
-        \item Tout les jours de 09h00 à 21h30
+        \item Tous les jours de 09h00 à 21h30
         \item ? CHF par personne
     \end{itemize}
     \item Club international de tennis, Pregny-Chambésy
     \begin{itemize}
         \item 2 terrains indoor
-        \item Tout les jours de 05h30 à 01h30
+        \item Tous les jours de 05h30 à 01h30
         \item 17 CHF par personne
     \end{itemize}
 \end{itemize}\
 \newline
 L'application ne stipule pas si le terrain désiré propose une box de location de matériel ou non, il est donc de la responsabilité de l'utilisateur de vérifier cette information avant de réserver un terrain. 
 \newline\newline
-Celle-ci propose une interface simple pour consulter les disponibilités des terrains et effectuer des réservations pour des sessions de 1h30. Il est possible de réserver un terrain complet de manière privé pour y inviter ces amis petit à petits ou rejoindre une partie publique existante avec de parfait inconnue. Chaque réservation fournis sa propre page de discussion permettant aux joueurs de communiquer entre eux. 
+Celle-ci propose une interface simple pour consulter les disponibilités des terrains et d'y effectuer des réservations pour des sessions de 1h30. Il est possible de réserver un terrain complet de manière privé pour y inviter des personnes petits à petits ou rejoindre une partie publique existante avec de parfait inconnue. Chaque réservation fournis sa propre page de discussion permettant aux joueurs de communiquer entre eux. 
 \newline\newline
-Par rapport au données météorologiques, l'application ne propose pas de fonctionnalité pour vérifier les conditions météorologiques avant de réserver un terrain en extérieur. Il est donc de la responsabilité de l'utilisateur de vérifier les conditions météorologiques avant de réserver un terrain en extérieur. Toutefois, depuis le 27 octobre 2025, PadelConnect permet a ses utilisateurs d'anuler une partie et de se faire rembourser 180 minutes avant le début de cette dernière. À noter que la somme est remboursé sur le porte monnaie de l'utilisateur et non pas sur sa carte bancaire. Cette fonctionnalité permet aux utilisateurs de réserver un terrain en extérieur sans avoir à se soucier des conditions météorologiques, car ils peuvent annuler la réservation et se faire rembourser si les conditions météorologiques ne sont pas favorables.
+Concernant les données météorologiques, l'application ne propose pas de fonctionnalité pour vérifier les conditions météorologiques avant de réserver un terrain en extérieur. Il est donc de la responsabilité de l'utilisateur de vérifier les conditions météorologiques avant de réserver un terrain en extérieur. Toutefois, depuis le 27 octobre 2025, PadelConnect permet a ses utilisateurs d'anuler une partie et de se faire rembourser 180 minutes avant le début de cette dernière. À noter que la somme est remboursé sur le porte monnaie de l'utilisateur et non pas sur sa carte bancaire. Cette fonctionnalité permet aux utilisateurs de réserver un terrain en extérieur sans avoir à se soucier des conditions météorologiques, car ils peuvent annuler la réservation et se faire rembourser si les conditions météorologiques ne sont pas favorables.
 \newline\newline
 L'applicaiton permet également d'y renseigner son niveau de jeu allant de 1.0 à 10.0 par palier de 0.25 et son poste (Gauche, droite ou indiférent). Niveau totalement arbritaire et peu représentatif du niveau réel d'un joueur, mais qui permet tout de même de faire un semblant de matchmaking en selectionannt des parties avec des joueurs de notre "estimation" de niveau.
 \newline\newline
@@ -288,7 +288,21 @@ Pour finir, l'application propose une fonctionnalité de recherche de joueurs gr
     \label{fig:padel_connect_app}
 \end{figure}
 \subsubsection{PlayPad}
-Analyse des applications PadelConnect et PlayPad, leurs fonctionnalités, leurs limites et pourquoi pas les retours utilisateurs.
+PlayPad est une application fraichement disponible sur Android et IOS. Actuellement. elle permet d'organiser des parties en Suisse Romande ainsi qu'en France voisine. Bien qu'elle n'ait pas encore été lancée officiellement, elle intègre des fonctionnalités intéressantes.
+\newline\newline
+Contrairement à PadelConnect, la partilcularié de PlayPad est de se concentrer essentiellement sur le classement des joueurs. Pour l'instant, l'application ne ne permet pas de réserver diréctement un terrain, mais de choisir un terrain parmis ceux disponibles, cela est donc de la résponsabilité du créateur de la partie de réserver le terrain choisis. À terme, l'application prévoit d'intégrer la réservation directe dans des clubs partenaires.
+\newline\newline
+Comment mentionné précédemment, le coeur de l'application est son système de classement. En effet, les joueurs collectes des points au fil des leurs matchs pour grimper dans le classement général. Le niveau (Toujours sur une base de 1 à 10) n'est plus une simple auto-évaluation, mais dépend des résultats sur le terrain. Un match gagné augmente le niveau tandis qu'un defaite le stabilise. L'application introduit également un score de fiabilité (De 0 à 100\%) qui fonctionne comme un score d'assiduité, plus le joueurs est actif en mode compétitif, plus son poucentage de fiabilité augmente. 
+\newline\newline
+On y retrouve un système de messagerie instantanée (via des demandes d'amis) ainsi qu'un chat dédié à chaque partie organisée.
+\newline\newline
+Enfin, la saisie des résultats est publique, ce qui permet à l'ensemble de la communauté de suivre les performances de chacun.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/play_pad_app.drawio.png}
+    \caption{Aperçu de l'application PlayPad}
+    \label{fig:play_pad_app}
+\end{figure}
 \subsection{Intelligence artificielle et Model Context Protocol}
 Explication du concept de Model Context Protocol, son fonctionnement (Utilisation de données extenres), ses avantages et comment il peut être utilisé pour améliorer les systèmes de réservation.
 \section{Analyse des besoins et choix technologiques}
