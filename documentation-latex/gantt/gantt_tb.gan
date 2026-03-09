@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><project name="Travail de Bachelor PadelContext - Gantt " company="HEG Genève" webLink="http://" view-date="2026-03-16" view-index="0" gantt-divider-location="591" resource-divider-location="300" version="3.3.3316" locale="fr_CH">
+    <description/>
+    <view zooming-state="default:4" id="gantt-chart">
+        <field id="tpd3" name="Name" width="327" order="0"/>
+        <field id="tpd4" name="Begin date" width="124" order="1"/>
+        <field id="tpd5" name="End date" width="124" order="2"/>
+        <field id="tpd15" name="Notes" width="20" order="3"/>
+        <option id="filter.completedTasks" value="false"/>
+        <option id="filter.dueTodayTasks" value="false"/>
+        <option id="filter.overdueTasks" value="false"/>
+        <option id="filter.inProgressTodayTasks" value="false"/>
+    </view>
+    <view id="resource-table">
+        <field id="0" name="Name" width="210" order="0"/>
+        <field id="1" name="Default role" width="86" order="1"/>
+    </view>
+    <!-- -->
+    <calendars>
+        <day-types>
+            <day-type id="0"/>
+            <day-type id="1"/>
+            <default-week id="1" name="default" sun="1" mon="0" tue="0" wed="0" thu="0" fri="0" sat="1"/>
+            <only-show-weekends value="false"/>
+            <overriden-day-types/>
+            <days/>
+        </day-types>
+    </calendars>
+    <tasks empty-milestones="true">
+        <taskproperties>
+            <taskproperty id="tpd0" name="type" type="default" valuetype="icon"/>
+            <taskproperty id="tpd1" name="priority" type="default" valuetype="icon"/>
+            <taskproperty id="tpd2" name="info" type="default" valuetype="icon"/>
+            <taskproperty id="tpd3" name="name" type="default" valuetype="text"/>
+            <taskproperty id="tpd4" name="begindate" type="default" valuetype="date"/>
+            <taskproperty id="tpd5" name="enddate" type="default" valuetype="date"/>
+            <taskproperty id="tpd6" name="duration" type="default" valuetype="int"/>
+            <taskproperty id="tpd7" name="completion" type="default" valuetype="int"/>
+            <taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
+            <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
+        </taskproperties>
+        <task id="0" uid="cd4b5fc704ab47bca8349ab726570db4" name="Introduction de la documentation" meeting="false" start="2026-03-02" duration="5" complete="0" expand="true">
+            <depend id="2" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="2" uid="18268bec4bb04a7898ea99cf05bdfb86" name="Méthodologie et planification" meeting="false" start="2026-03-09" duration="5" complete="0" expand="true">
+            <depend id="6" type="2" difference="0" hardness="Strong"/>
+        </task>
+        <task id="6" uid="395b813962b942e8a4081df28ea94d35" name="Backend" meeting="false" start="2026-03-16" duration="20" complete="0" expand="true">
+            <task id="3" uid="213baac06a024b30b5f99331c6742f62" name="Modélisation et documentation de la base de données" meeting="false" start="2026-03-16" duration="5" complete="0" expand="true">
+                <depend id="4" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="4" uid="b24d27c24960445ab0add5d0b898969a" name="Étude, choix et documentation des technologies backend" meeting="false" start="2026-03-23" duration="5" complete="0" expand="true">
+                <depend id="5" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="5" uid="d6e6243a539a4e2f8eda431870d95369" name="Création et mise en place du serveur backend" meeting="false" start="2026-03-30" duration="5" complete="0" expand="true">
+                <depend id="17" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="17" uid="9a573ee6cc554aa1937761cb34bbf06e" name="Documentation de l'architecture backend" meeting="false" start="2026-04-06" duration="5" complete="0" expand="true">
+                <depend id="1" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="1" uid="7dc57a36a748405cbc6adbc69d112031" name="Base de données et API opérationnelles" meeting="true" start="2026-04-13" duration="0" complete="0" priority="2" expand="true">
+                <depend id="7" type="2" difference="0" hardness="Strong"/>
+            </task>
+        </task>
+        <task id="7" uid="e29fd6606f7d4f24ab06d5957c7cf5e5" name="MCP - Base de données" meeting="false" start="2026-04-13" duration="10" complete="0" expand="true">
+            <task id="9" uid="80bde1f6c5cc4e57aa31ae5ffbdee47e" name="Documentation et création des tools MCP avec les données internes" meeting="false" start="2026-04-13" duration="5" complete="0" expand="true">
+                <depend id="10" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="10" uid="86ea527b884e4ed6b93a4a77629d451e" name="Création du MVP pour tester les tools" meeting="false" start="2026-04-20" duration="5" complete="0" expand="true">
+                <depend id="11" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="11" uid="99e9c635626b484ab696f8ec9af8f9c6" name="Le serveur MCP est capable d'interroger les données internes de l'application" meeting="true" start="2026-04-27" duration="0" complete="0" expand="true">
+                <depend id="12" type="2" difference="0" hardness="Strong"/>
+            </task>
+        </task>
+        <task id="12" uid="bf671762a4ba4a1db77575f2756a3985" name="MCP - API MeteoSwiss" color="#000000" meeting="false" start="2026-04-27" duration="10" complete="0" expand="true">
+            <task id="13" uid="b3f0ef5dd6264228af9581469801cd28" name="Documentation et création des tools MCP avec l'API MeteoSwiss" color="#8cb6ce" meeting="false" start="2026-04-27" duration="5" complete="0" expand="true">
+                <depend id="14" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="14" uid="028e411be9844333b94464237ca2c3d9" name="Création du MVP pour tester les tools" color="#8cb6ce" meeting="false" start="2026-05-04" duration="5" complete="0" expand="true">
+                <depend id="18" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="18" uid="1dae943285064b92887d65b3a9f07b04" name="Le serveur MCP est capable d'interroger les données de l'API MeteoSwiss" meeting="true" start="2026-05-11" duration="0" complete="0" expand="true">
+                <depend id="19" type="2" difference="0" hardness="Strong"/>
+            </task>
+        </task>
+        <task id="19" uid="a1ef48808ddc4025b821ab905a903046" name="Frontend" meeting="false" start="2026-05-11" duration="10" complete="0" expand="true">
+            <task id="20" uid="2dfe6ce38d2f4d7e9647abab2d23c918" name="Documentation de l'architecture général" meeting="false" start="2026-05-11" duration="5" complete="0" expand="true">
+                <depend id="21" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="21" uid="58e01a297f55463f9e25068455b0e98c" name="Création de l'application WEB minimaliste" meeting="false" start="2026-05-18" duration="5" complete="0" expand="true">
+                <depend id="24" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="24" uid="83a7cc93757a49cd97e9840238497be8" name="Prototype complet et testable" meeting="true" start="2026-05-25" duration="0" complete="0" expand="true">
+                <depend id="22" type="2" difference="0" hardness="Strong"/>
+            </task>
+        </task>
+        <task id="22" uid="c95d1299799246b1a23848cf361c77f8" name="Étude comparative" meeting="false" start="2026-05-25" duration="5" complete="0" expand="true">
+            <task id="23" uid="3575084e97204a97a605451f3975a165" name="Rédaction de l'analyse comparative entre PadelContext et PadelConnect" meeting="false" start="2026-05-25" duration="5" complete="0" expand="true">
+                <depend id="25" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="25" uid="8eb6d8f0054a4d8e83acdb60a2627655" name="Étude complétée et documentée" meeting="true" start="2026-06-01" duration="0" complete="0" expand="true">
+                <depend id="26" type="2" difference="0" hardness="Strong"/>
+            </task>
+        </task>
+        <task id="26" uid="18d9dc6b2a904c2492ad1ea4cf88f856" name="Fonctionnalités optionnelles et conclusion" meeting="false" start="2026-06-01" duration="15" complete="0" expand="true">
+            <task id="27" uid="17f3acbbf5374394915a73a30e6caaaa" name="Développement de l'application mobile native PadelContext" meeting="false" start="2026-06-01" duration="5" complete="0" expand="true">
+                <depend id="28" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="28" uid="0f647b64e3f14f0eb1c354a662ee0125" name="Documentation de la conclusion et des améliorations possibles" meeting="false" start="2026-06-08" duration="5" complete="0" expand="true">
+                <depend id="29" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="29" uid="17c4946815944c8d96efa146a89c52fb" name="Finalisation de la documentation" meeting="false" start="2026-06-15" duration="5" complete="0" expand="true">
+                <depend id="30" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="30" uid="dd996283159b484cb5742bfc431887f5" name="Rendu final du Travail de Bachelor" meeting="true" start="2026-06-22" duration="0" complete="0" expand="true"/>
+        </task>
+    </tasks>
+    <resources/>
+    <allocations/>
+    <vacations/>
+    <previous/>
+    <roles roleset-name="Default"/>
+</project>

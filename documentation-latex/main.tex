@@ -307,7 +307,6 @@ Enfin, la saisie des résultats est publique, ce qui permet à l'ensemble de la 
     \label{fig:play_pad_app}
 \end{figure}
 \subsection{Model Context Protocol}
-
 Explication du concept de Model Context Protocol, son fonctionnement (Utilisation de données extenres), ses avantages et comment il peut être utilisé pour améliorer les systèmes de réservation.
 \section{Méthodologie}
 \subsection{MoSCoW}
@@ -337,7 +336,7 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
         01 & Modélisation de la base de données et création de l'API & Must-have & 30\% \\ \hline
         02 & Mise en place du serveur MCP et intégration de l'IA & Must-have & 10\% \\ \hline
         03 & Création des outils MCP pour interroger la base de données de l'application & Must-have & 10\% \\ \hline
-        04 & Création de l'outil MCP pour interroger l'API Météo & Must-have & 10\% \\ \hline
+        04 & Création des outils MCP pour interroger l'API Météo & Must-have & 10\% \\ \hline
         05 & Création d'une application web minimaliste permettant la gestion de réservation d'un terrain de padel & Should-have & 10\% \\ \hline
         06 & Étude comparative entre les plateformes de réservation traditionnelles et la solution MCP & Should-have & 10\% \\ \hline
         07 & Application mobile native (iOS / Android) & Could-have & 20\% \\ \hline
@@ -347,8 +346,67 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
     \caption{Priorisation des livrables selon la méthodologie MoSCoW}
     \label{tab:moscow_features}
 \end{table}
+\subsection{Gantt}
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|p{10cm}|c|c|}
+        \hline
+        \textbf{Nom de la tâche} & \textbf{Date de début} & \textbf{Date de fin} \\ \hline
+        
+        Introduction de la documentation & 02.03.26 & 06.03.26 \\ \hline
+        Méthodologie et planification & 09.03.26 & 13.03.26 \\ \hline
+        
+        \textbf{Backend} & \textbf{16.03.26} & \textbf{10.04.26} \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Modélisation et documentation de la base de données\vspace{0.15cm}} & 16.03.26 & 20.03.26 \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Étude, choix et documentation des technologies backend\vspace{0.15cm}} & 23.03.26 & 27.03.26 \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création et mise en place du serveur backend\vspace{0.15cm}} & 30.03.26 & 03.04.26 \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation de l'architecture backend\vspace{0.15cm}} & 06.04.26 & 10.04.26 \\ \hline
+        \textbf{$\blacklozenge$ Base de données et API opérationnelles} & \textbf{13.04.26} & \textbf{13.04.26} \\ \hline
+        
+        \textbf{MCP - Base de données} & \textbf{13.04.26} & \textbf{24.04.26} \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation et création des tools MCP avec les données internes\vspace{0.15cm}} & 13.04.26 & 17.04.26 \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création du MVP pour tester les tools\vspace{0.15cm}} & 20.04.26 & 24.04.26 \\ \hline
+        \textbf{$\blacklozenge$ Le serveur MCP est capable d'interroger les données internes de l'application} & \textbf{27.04.26} & \textbf{27.04.26} \\ \hline
+        
+        \textbf{MCP - API MeteoSwiss} & \textbf{27.04.26} & \textbf{08.05.26} \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation et création des tools MCP avec l'API MeteoSwiss\vspace{0.15cm}} & 27.04.26 & 01.05.26 \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création du MVP pour tester les tools\vspace{0.15cm}} & 04.05.26 & 08.05.26 \\ \hline
+        \textbf{$\blacklozenge$ Le serveur MCP est capable d'interroger l'API MeteoSwiss} & \textbf{11.05.26} & \textbf{11.05.26} \\ \hline
+        
+    \end{tabular}
+    \caption{Planification Gantt du projet (Partie 1)}
+    \label{tab:gantt_part1}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|p{10cm}|c|c|}
+        \hline
+        \textbf{Nom de la tâche} & \textbf{Date de début} & \textbf{Date de fin} \\ \hline
+        
+        \textbf{Frontend} & \textbf{11.05.26} & \textbf{22.05.26} \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation de l'architecture générale\vspace{0.15cm}} & 11.05.26 & 15.05.26 \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création de l'application WEB minimaliste\vspace{0.15cm}} & 18.05.26 & 22.05.26 \\ \hline
+        \textbf{$\blacklozenge$ Prototype complet et testable} & \textbf{25.05.26} & \textbf{25.05.26} \\ \hline
+        
+        \textbf{Étude comparative} & \textbf{25.05.26} & \textbf{29.05.26} \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Rédaction de l'analyse comparative (PadelContext vs PadelConnect)\vspace{0.15cm}} & 25.05.26 & 29.05.26 \\ \hline
+        \textbf{$\blacklozenge$ Étude complétée et documentée} & \textbf{01.06.26} & \textbf{01.06.26} \\ \hline
+        
+        \textbf{Fonctionnalités optionnelles et conclusion} & \textbf{01.06.26} & \textbf{19.06.26} \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Développement de l'application mobile native PadelContext\vspace{0.15cm}} & 01.06.26 & 05.06.26 \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation de la conclusion et des améliorations possibles\vspace{0.15cm}} & 08.06.26 & 12.06.26 \\ \hline
+        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Finalisation de la documentation\vspace{0.15cm}} & 15.06.26 & 19.06.26 \\ \hline
+        \textbf{$\blacklozenge$ Rendu final du Travail de Bachelor} & \textbf{22.06.26} & \textbf{22.06.26} \\ \hline
+        
+    \end{tabular}
+    \caption{Planification Gantt du projet (Partie 2)}
+    \label{tab:gantt_part2}
+\end{table}
 \section{Analyse des besoins et choix technologiques}
-\subsection{Idenditification des sources de données}
+\subsection{Identification des sources de données}
 API MeteoSwiss et base de données de l'application
 \subsection{Choix du langage et du framework}
 Pourquoi je veux utiliser javascript et autre outils pour le développement de l'application (Typescript ? Prisma ? React ? etc..)
