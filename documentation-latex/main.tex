@@ -163,7 +163,10 @@ L'utilisation des conclusions et recommendations formulées dans le travail de B
 
 \section{Remerciements}
 % Insérer les remerciements ici
-
+Remercier Hauri pour son aide précieuse au choix du sujet de TB.
+Remercier David Paulino pour son template LaTeX qui m'a permis de gagner un temps précieux lors de la rédaction de ce document.
+Remercier Ludovic Bertin pour son accompagnement tout au long de ce travail de Bachelor, ses conseils avisés et sa disponibilité.
+Remercier mes proches pour leur soutien moral et leur relecture attentive de ce document.
 \newpage
 
 \section{Résumé}
@@ -292,7 +295,7 @@ PlayPad est une application fraichement disponible sur Android et IOS. Actuellem
 \newline\newline
 Contrairement à PadelConnect, la partilcularié de PlayPad est de se concentrer essentiellement sur le classement des joueurs. Pour l'instant, l'application ne ne permet pas de réserver diréctement un terrain, mais de choisir un terrain parmis ceux disponibles, cela est donc de la résponsabilité du créateur de la partie de réserver le terrain choisis. À terme, l'application prévoit d'intégrer la réservation directe dans des clubs partenaires.
 \newline\newline
-Comment mentionné précédemment, le coeur de l'application est son système de classement. En effet, les joueurs collectes des points au fil des leurs matchs pour grimper dans le classement général. Le niveau (Toujours sur une base de 1 à 10) n'est plus une simple auto-évaluation, mais dépend des résultats sur le terrain. Un match gagné augmente le niveau tandis qu'un defaite le stabilise. L'application introduit également un score de fiabilité (De 0 à 100\%) qui fonctionne comme un score d'assiduité, plus le joueurs est actif en mode compétitif, plus son poucentage de fiabilité augmente. 
+Comment mentionné précédemment, le coeur de l'application est son système de classement. En effet, les joueurs collectes des points au fil des leurs matchs pour grimper dans le classement général. Le niveau (Toujours sur une base de 1 à 10) n'est plus une simple auto-évaluation, mais dépend des résultats sur le terrain. Un match gagné augmente le niveau tandis qu'un defaite le stabilise \cite{noauthor_playpad_nodate}. L'application introduit également un score de fiabilité (De 0 à 100\%) qui fonctionne comme un score d'assiduité, plus le joueurs est actif en mode compétitif, plus son poucentage de fiabilité augmente. 
 \newline\newline
 On y retrouve un système de messagerie instantanée (via des demandes d'amis) ainsi qu'un chat dédié à chaque partie organisée.
 \newline\newline
@@ -303,8 +306,47 @@ Enfin, la saisie des résultats est publique, ce qui permet à l'ensemble de la 
     \caption{Aperçu de l'application PlayPad}
     \label{fig:play_pad_app}
 \end{figure}
-\subsection{Intelligence artificielle et Model Context Protocol}
+\subsection{Model Context Protocol}
+
 Explication du concept de Model Context Protocol, son fonctionnement (Utilisation de données extenres), ses avantages et comment il peut être utilisé pour améliorer les systèmes de réservation.
+\section{Méthodologie}
+\subsection{MoSCoW}
+Dans le cadre de ce travail de bachelor, je me suis appuyer sur la méthodologie MoSCoW afin de classer par ordre d'importance les différents livrables dont mon projet va introduire. Cette démarche m'a permis de définir un périmètre clair et précis avant le début de la phase de développement du projet. Ce périmètre m'a permis de gagner en efficacité et de me concentrer sur les éléments les plus importants pour la réussite de mon projet, tout en gardant une certaine flexibilité pour intégrer des fonctionnalités supplémentaires si le temps et les ressources le permettent.
+\newline\newline
+La méthode MoSCoW est une technique de priorisation qui a gagné en popularité en raison de sa grande simplicité et de sa facilité d'adoption \cite{suchetha_vijayakumar_assessing_2024}. Elle permet aux parties prenantes de gérer les attentes et les compromis techniques, tout en se concentrant sur la livraison des éléments les plus importants en classant les fonctionnalités dans les quatre catégories suivantes :
+\newline\newline
+\begin{itemize}
+    \item \textbf{Must-have (Indispensable)} : Les exigences qui comportent des spécifications vitales à la réussite du projet et qui doivent être satisfaites dans les délais impartis. Si ces éléments ne sont pas mis en œuvre, le projet échouera ou aura un impact négatif majeur sur les utilisateurs.
+    \item \textbf{Should-have (Souhaitable)} : Prérequis importants qui sont attrayants mais pas indispensables à la réussite immédiate du projet. Ils ajoutent de la valeur globale au produit et devraient être inclus une fois que toutes les fonctionnalités essentielles ont été satisfaites.
+    \item \textbf{Could-have (Possible)} : Critères supplémentaires qui améliorent le produit mais ne sont pas nécessaires à ses fonctionnalités principales. Ces éléments ne sont pas prioritaires par rapport aux éléments indispensables ou souhaitables, mais ils peuvent être réalisés si le temps et les ressources le permettent.
+    \item \textbf{Won't-have (Non souhaitable pour le moment)} : Besoins qui sont spécifiquement exclus du périmètre actuel du projet. Ils sont soit considérés comme peu prioritaires pour le cycle de développement en cours, soit reportés à des versions ultérieures.
+\end{itemize}\
+\newline
+
+Dans l'objectif de la réalisation de la méthode MoSCoW, je me suis appuyé sur les recommandations du \textit{DSDM Agile Project Framework Handbook} de l'Agile Business Consortium. Parmi ces recommandations, la plus déterminante concerne la répartition stratégique de l'effort de développement. 
+\newline\newline
+Afin de garantir la viabilité du projet et de se prémunir contre les imprévus, le référentiel préconise que les exigences classées comme indispensables (\textit{Must-have}) ne doivent pas excéder 60 \% de l'effort global alloué au projet. Les 40 \% restants agissent comme une marge de contingence et sont alloués aux fonctionnalités souhaitables (\textit{Should-have}) et possibles (\textit{Could-have}), généralement réparties à parts égales (20 \% chacune) \cite{business_moscow_nodate}. 
+\newline\newline
+L'application stricte de cette règle permet d'assurer qu'en cas de complexité sous-estimée ou de contraintes de temps inattendues sur les éléments critiques, le travail de bachelor pourra toujours être livré dans les délais fixés, quitte à sacrifier temporairement des fonctionnalités de moindre priorité. C'est sur la base de ce cadre temporel et de ces pourcentages d'effort que le tableau suivant a été construit.
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|c|p{8cm}|l|c|}
+        \hline
+        \textbf{ID} & \textbf{Fonctionnalité / Tâche} & \textbf{Catégorie} & \textbf{Effort estimé} \\ \hline
+        01 & Modélisation de la base de données et création de l'API & Must-have & 30\% \\ \hline
+        02 & Mise en place du serveur MCP et intégration de l'IA & Must-have & 10\% \\ \hline
+        03 & Création des outils MCP pour interroger la base de données de l'application & Must-have & 10\% \\ \hline
+        04 & Création de l'outil MCP pour interroger l'API Météo & Must-have & 10\% \\ \hline
+        05 & Création d'une application web minimaliste permettant la gestion de réservation d'un terrain de padel & Should-have & 10\% \\ \hline
+        06 & Étude comparative entre les plateformes de réservation traditionnelles et la solution MCP & Should-have & 10\% \\ \hline
+        07 & Application mobile native (iOS / Android) & Could-have & 20\% \\ \hline
+        08 & Interface de messagerie instantanée entre les joueurs & Won't-have & - \\ \hline
+        09 & Paiement intégré lors de la réservation d'un terrain  & Won't-have & - \\ \hline
+    \end{tabular}
+    \caption{Priorisation des livrables selon la méthodologie MoSCoW}
+    \label{tab:moscow_features}
+\end{table}
 \section{Analyse des besoins et choix technologiques}
 \subsection{Idenditification des sources de données}
 API MeteoSwiss et base de données de l'application
