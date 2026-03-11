@@ -295,7 +295,8 @@ PlayPad est une application fraichement disponible sur Android et IOS. Actuellem
 \newline\newline
 Contrairement à PadelConnect, la partilcularié de PlayPad est de se concentrer essentiellement sur le classement des joueurs. Pour l'instant, l'application ne ne permet pas de réserver diréctement un terrain, mais de choisir un terrain parmis ceux disponibles, cela est donc de la résponsabilité du créateur de la partie de réserver le terrain choisis. À terme, l'application prévoit d'intégrer la réservation directe dans des clubs partenaires.
 \newline\newline
-Comment mentionné précédemment, le coeur de l'application est son système de classement. En effet, les joueurs collectes des points au fil des leurs matchs pour grimper dans le classement général. Le niveau (Toujours sur une base de 1 à 10) n'est plus une simple auto-évaluation, mais dépend des résultats sur le terrain. Un match gagné augmente le niveau tandis qu'un defaite le stabilise \cite{noauthor_playpad_nodate}. L'application introduit également un score de fiabilité (De 0 à 100\%) qui fonctionne comme un score d'assiduité, plus le joueurs est actif en mode compétitif, plus son poucentage de fiabilité augmente. 
+Comment mentionné précédemment, le coeur de l'application est son système de classement. En effet, les joueurs collectes des points au fil des leurs matchs pour grimper dans le classement général. Le niveau (Toujours sur une base de 1 à 10) n'est plus une simple auto-évaluation, mais dépend des résultats sur le terrain. Chaque victoire et défaite influence le niveau du joueur. (PlayPad 2024) \cite{noauthor_playpad_nodate}
+L'application introduit également un score de fiabilité (De 0 à 100\%) qui fonctionne comme un score d'assiduité, plus le joueurs est actif en mode compétitif, plus son poucentage de fiabilité augmente. 
 \newline\newline
 On y retrouve un système de messagerie instantanée (via des demandes d'amis) ainsi qu'un chat dédié à chaque partie organisée.
 \newline\newline
@@ -312,19 +313,19 @@ Explication du concept de Model Context Protocol, son fonctionnement (Utilisatio
 \subsection{MoSCoW}
 Dans le cadre de ce travail de bachelor, je me suis appuyer sur la méthodologie MoSCoW afin de classer par ordre d'importance les différents livrables dont mon projet va introduire. Cette démarche m'a permis de définir un périmètre clair et précis avant le début de la phase de développement du projet. Ce périmètre m'a permis de gagner en efficacité et de me concentrer sur les éléments les plus importants pour la réussite de mon projet, tout en gardant une certaine flexibilité pour intégrer des fonctionnalités supplémentaires si le temps et les ressources le permettent.
 \newline\newline
-La méthode MoSCoW est une technique de priorisation qui a gagné en popularité en raison de sa grande simplicité et de sa facilité d'adoption \cite{suchetha_vijayakumar_assessing_2024}. Elle permet aux parties prenantes de gérer les attentes et les compromis techniques, tout en se concentrant sur la livraison des éléments les plus importants en classant les fonctionnalités dans les quatre catégories suivantes :
+La méthode MoSCoW est une technique de priorisation qui a gagné en popularité en raison de sa grande simplicité et de sa facilité d'adoption. Elle permet aux parties prenantes de gérer les attentes et les compromis techniques, tout en se concentrant sur la livraison des éléments les plus importants en classant les fonctionnalités dans les quatre catégories suivantes :
 \newline\newline
 \begin{itemize}
-    \item \textbf{Must-have (Indispensable)} : Les exigences qui comportent des spécifications vitales à la réussite du projet et qui doivent être satisfaites dans les délais impartis. Si ces éléments ne sont pas mis en œuvre, le projet échouera ou aura un impact négatif majeur sur les utilisateurs.
-    \item \textbf{Should-have (Souhaitable)} : Prérequis importants qui sont attrayants mais pas indispensables à la réussite immédiate du projet. Ils ajoutent de la valeur globale au produit et devraient être inclus une fois que toutes les fonctionnalités essentielles ont été satisfaites.
-    \item \textbf{Could-have (Possible)} : Critères supplémentaires qui améliorent le produit mais ne sont pas nécessaires à ses fonctionnalités principales. Ces éléments ne sont pas prioritaires par rapport aux éléments indispensables ou souhaitables, mais ils peuvent être réalisés si le temps et les ressources le permettent.
-    \item \textbf{Won't-have (Non souhaitable pour le moment)} : Besoins qui sont spécifiquement exclus du périmètre actuel du projet. Ils sont soit considérés comme peu prioritaires pour le cycle de développement en cours, soit reportés à des versions ultérieures.
+    \item \textbf{Must-have (Indispensable)} : Les exigences qui comportent des spécifications vitales à la réussite du projet et qui doivent être satisfaites dans les délais impartis. Si ces éléments ne sont pas mis en œuvre, le projet échouera ou aura un impact négatif majeur sur les utilisateurs. (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 2)\cite{suchetha_vijayakumar_assessing_2024}
+    \item \textbf{Should-have (Souhaitable)} : Prérequis importants qui sont attrayants mais pas indispensables à la réussite immédiate du projet. Ils ajoutent de la valeur globale au produit et devraient être inclus une fois que toutes les fonctionnalités essentielles ont été satisfaites. (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 3)\cite{suchetha_vijayakumar_assessing_2024}
+    \item \textbf{Could-have (Possible)} : Critères supplémentaires qui améliorent le produit mais ne sont pas nécessaires à ses fonctionnalités principales. Ces éléments ne sont pas prioritaires par rapport aux éléments indispensables ou souhaitables, mais ils peuvent être réalisés si le temps et les ressources le permettent. (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 3)\cite{suchetha_vijayakumar_assessing_2024}
+    \item \textbf{Won't-have (Non souhaitable pour le moment)} : Besoins qui sont spécifiquement exclus du périmètre actuel du projet. Ils sont soit considérés comme peu prioritaires pour le cycle de développement en cours, soit reportés à des versions ultérieures. (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 3)\cite{suchetha_vijayakumar_assessing_2024}
 \end{itemize}\
 \newline
 
 Dans l'objectif de la réalisation de la méthode MoSCoW, je me suis appuyé sur les recommandations du \textit{DSDM Agile Project Framework Handbook} de l'Agile Business Consortium. Parmi ces recommandations, la plus déterminante concerne la répartition stratégique de l'effort de développement. 
 \newline\newline
-Afin de garantir la viabilité du projet et de se prémunir contre les imprévus, le référentiel préconise que les exigences classées comme indispensables (\textit{Must-have}) ne doivent pas excéder 60 \% de l'effort global alloué au projet. Les 40 \% restants agissent comme une marge de contingence et sont alloués aux fonctionnalités souhaitables (\textit{Should-have}) et possibles (\textit{Could-have}), généralement réparties à parts égales (20 \% chacune) \cite{business_moscow_nodate}. 
+Afin de garantir la viabilité du projet et de se prémunir contre les imprévus, le référentiel préconise que les exigences classées comme indispensables (Must-have) ne doivent pas excéder 60 \% de l'effort global alloué au projet. Les 40 \% restants agissent comme une marge de contingence et sont alloués aux fonctionnalités souhaitables (Should-have) et possibles (Could-have), généralement réparties à parts égales soit 20 \% chacune. (Agile Business Consortium 2014) \cite{business_moscow_nodate}
 \newline\newline
 L'application stricte de cette règle permet d'assurer qu'en cas de complexité sous-estimée ou de contraintes de temps inattendues sur les éléments critiques, le travail de bachelor pourra toujours être livré dans les délais fixés, quitte à sacrifier temporairement des fonctionnalités de moindre priorité. C'est sur la base de ce cadre temporel et de ces pourcentages d'effort que le tableau suivant a été construit.
 \begin{table}[H]
@@ -347,6 +348,9 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
     \label{tab:moscow_features}
 \end{table}
 \subsection{Gantt}
+Dans la continuté de la méthodologie MoSCoW, j'ai également réalisé une planification Gantt du projet. Cette planification m'a permis d'organiser et visualiser l'ensemble des tâches à réaliser, leur ordre chronologique et leur durée estimée. Elle m'a également permis d'identifier les dépendances entre les différentes tâches et à anticiper les éventuels retards ou obstacles qui pourraient survenir au cours du projet.
+\newline\newline
+Les jalons, identifiés par un losange noir ($\blacklozenge$), représentent les points clés du projet, tels que la mise en place d'une base de données et d'une API opérationnelles, ou encore la capacité du serveur MCP à interroger les données internes de l'application et l'API MeteoSwiss. Ces jalons sont essentiels pour mesurer l'avancement du projet et s'assurer que les objectifs intermédiaires sont atteints avant de passer à la phase suivante.
 \begin{table}[H]
     \centering
     \renewcommand{\arraystretch}{1.5}
@@ -362,17 +366,17 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Étude, choix et documentation des technologies backend\vspace{0.15cm}} & 23.03.26 & 27.03.26 \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création et mise en place du serveur backend\vspace{0.15cm}} & 30.03.26 & 03.04.26 \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation de l'architecture backend\vspace{0.15cm}} & 06.04.26 & 10.04.26 \\ \hline
-        \textbf{$\blacklozenge$ Base de données et API opérationnelles} & \textbf{13.04.26} & \textbf{13.04.26} \\ \hline
+        \hspace*{0.5cm}\textbf{$\blacklozenge$ Base de données et API opérationnelles} & \textbf{13.04.26} & \textbf{13.04.26} \\ \hline
         
         \textbf{MCP - Base de données} & \textbf{13.04.26} & \textbf{24.04.26} \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation et création des tools MCP avec les données internes\vspace{0.15cm}} & 13.04.26 & 17.04.26 \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création du MVP pour tester les tools\vspace{0.15cm}} & 20.04.26 & 24.04.26 \\ \hline
-        \textbf{$\blacklozenge$ Le serveur MCP est capable d'interroger les données internes de l'application} & \textbf{27.04.26} & \textbf{27.04.26} \\ \hline
+        \hspace*{0.5cm}\textbf{$\blacklozenge$ Le serveur MCP est capable d'interroger les données internes de l'application} & \textbf{27.04.26} & \textbf{27.04.26} \\ \hline
         
         \textbf{MCP - API MeteoSwiss} & \textbf{27.04.26} & \textbf{08.05.26} \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation et création des tools MCP avec l'API MeteoSwiss\vspace{0.15cm}} & 27.04.26 & 01.05.26 \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création du MVP pour tester les tools\vspace{0.15cm}} & 04.05.26 & 08.05.26 \\ \hline
-        \textbf{$\blacklozenge$ Le serveur MCP est capable d'interroger l'API MeteoSwiss} & \textbf{11.05.26} & \textbf{11.05.26} \\ \hline
+        \hspace*{0.5cm}\textbf{$\blacklozenge$ Le serveur MCP est capable d'interroger l'API MeteoSwiss} & \textbf{11.05.26} & \textbf{11.05.26} \\ \hline
         
     \end{tabular}
     \caption{Planification Gantt du projet (Partie 1)}
@@ -389,17 +393,17 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
         \textbf{Frontend} & \textbf{11.05.26} & \textbf{22.05.26} \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation de l'architecture générale\vspace{0.15cm}} & 11.05.26 & 15.05.26 \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création de l'application WEB minimaliste\vspace{0.15cm}} & 18.05.26 & 22.05.26 \\ \hline
-        \textbf{$\blacklozenge$ Prototype complet et testable} & \textbf{25.05.26} & \textbf{25.05.26} \\ \hline
+        \hspace*{0.5cm}\textbf{$\blacklozenge$ Prototype complet et testable} & \textbf{25.05.26} & \textbf{25.05.26} \\ \hline
         
         \textbf{Étude comparative} & \textbf{25.05.26} & \textbf{29.05.26} \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Rédaction de l'analyse comparative (PadelContext vs PadelConnect)\vspace{0.15cm}} & 25.05.26 & 29.05.26 \\ \hline
-        \textbf{$\blacklozenge$ Étude complétée et documentée} & \textbf{01.06.26} & \textbf{01.06.26} \\ \hline
+        \hspace*{0.5cm}\textbf{$\blacklozenge$ Étude complétée et documentée} & \textbf{01.06.26} & \textbf{01.06.26} \\ \hline
         
         \textbf{Fonctionnalités optionnelles et conclusion} & \textbf{01.06.26} & \textbf{19.06.26} \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Développement de l'application mobile native PadelContext\vspace{0.15cm}} & 01.06.26 & 05.06.26 \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation de la conclusion et des améliorations possibles\vspace{0.15cm}} & 08.06.26 & 12.06.26 \\ \hline
         \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Finalisation de la documentation\vspace{0.15cm}} & 15.06.26 & 19.06.26 \\ \hline
-        \textbf{$\blacklozenge$ Rendu final du Travail de Bachelor} & \textbf{22.06.26} & \textbf{22.06.26} \\ \hline
+        \hspace*{0.5cm}\textbf{$\blacklozenge$ Rendu final du Travail de Bachelor} & \textbf{22.06.26} & \textbf{22.06.26} \\ \hline
         
     \end{tabular}
     \caption{Planification Gantt du projet (Partie 2)}
@@ -409,6 +413,17 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
 \subsection{Identification des sources de données}
 API MeteoSwiss et base de données de l'application
 \subsection{Choix du langage et du framework}
+\subsubsection{Backend}
+Afin d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API\footnote{Application Programming Interface} s'est avéré indispensable. 
+\newline\newline
+Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Mon choix s'est naturellement porté sur l'architecture REST\footnote{REpresentational State Transfer}.
+\newline\newline
+Contrairement a l'architecure SOAP\footnote{Simple Object Access Protocol} qui repose sur des messages XML et une structure de communication plus rigide, l'architecture REST prône la simplicité, une communication sans état et une architecture orientée sur les ressources. 
+\newline\newline
+De plus, REST s'intègre parfaitement aux standards du web et privilégie l'utilisation de formats de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre ma base de données, mes application et mon serveur MCP.
+\newline\newline
+Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard (CRUD\footnote{Create, Read, Update, Delete}) pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée. (Addanki 2025)\cite{addanki_architectural_2025} 
+\subsubsection{Frontend}
 Pourquoi je veux utiliser javascript et autre outils pour le développement de l'application (Typescript ? Prisma ? React ? etc..)
 \subsection{Architecture du Mondel Context Protocol}
 Comment l'IA va interagir avec les différentes sources de données ?
