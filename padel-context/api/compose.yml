@@ -2,7 +2,7 @@
 # Docker Compose Configuration
 # Environnement de développement pour l'API REST padel-context 
 # ========================================
-
+name: padel-context-api
 services:
   # ========================================
   # Backend API Service
@@ -11,7 +11,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: padel-context-api
+    container_name: padel-context-node
     ports:
       - '${APP_PORT:-3000}:3000' 
     environment:
