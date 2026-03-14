@@ -1,17 +1,21 @@
 {
   "compilerOptions": {
-    "target": "ES2022",   /* Version de JavaScript ciblée */
-    "module": "CommonJS", /* Système de modules pour Node.js */
-    "rootDir": "./src",   /* Dossier source du code TypeScript */
+    "module": "ESNext", /* Système de modules pour Node.js */
+    "moduleResolution": "bundler",
+    "target": "ES2023",   /* Version de JavaScript ciblée */
+    
+    "rootDir": ".",       /* Dossier source du code TypeScript */
     "outDir": "./dist",   /* Dossier de destination du code JavaScript compilé */
     
     "strict": true,                             /* Active toutes les vérifications de type strictes */
     "esModuleInterop": true,                    /* Facilite l'import de modules CommonJS */
+    "ignoreDeprecations": "6.0",                 /* Ignore les avertissements de dépréciation */
     "forceConsistentCasingInFileNames": true,   /* Assure la cohérence de la casse des noms de fichiers */
     "skipLibCheck": true                        /* Ignore la vérification des fichiers de déclaration (.d.ts) pour accélérer la compilation */
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "generated/**/*"
   ],
   "exclude": [
     "node_modules",

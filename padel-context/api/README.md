@@ -7,9 +7,9 @@ API REST de l'application padel-context.
 - Service API: image construite depuis `Dockerfile`
 - Base image API: `node:24.14.0-alpine3.23`
 - Service base de données: `postgres:18.3-alpine3.23`
-- Nom du conteneur API: `padel-context-api`
-- Nom du conteneur DB: `padel-context-db`
-- Réseau Docker: `padel-context-network`
+- Nom du stack Docker: `padel-context-api`
+- Nom du conteneur Docker API: `padel-context-node`
+- Nom du conteneur Docker base de données: `padel-context-db`
 
 ## Prérequis
 
@@ -24,49 +24,19 @@ API REST de l'application padel-context.
 - `POSTGRES_USER` (défaut: `padel-context-db_user`)
 - `POSTGRES_PASSWORD` (défaut: `padel-context-db_password`)
 
-## Commandes essentielles
+### Démarrer l'API
 
-### Construire et lancer
+1. Créer et appliquer la migration
+```bash
+npx prisma migrate dev --name init
+```
 
+2. Générer le client Prisma
+```bash
+npx prisma generate
+```
+
+3. Build les conteneurs Docker
 ```bash
 docker compose up --build
 ```
-
-### Construire et lancer en background
-
-```bash
-docker compose up -d --build
-```
-
-### Voir l'état des services
-
-```bash
-docker compose ps
-```
-
-### Suivre les logs en direct
-
-```bash
-docker compose logs -f
-```
-
-### Suivre uniquement les logs API
-
-```bash
-docker compose logs -f api
-```
-
-### Arrêter les services
-
-```bash
-docker compose down
-```
-
-### Arrêter et supprimer aussi les volumes
-
-```bash
-docker compose down -v
-```
-
-
-
