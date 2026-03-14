@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",   /* Version de JavaScript ciblée */
+    "module": "CommonJS", /* Système de modules pour Node.js */
+    "rootDir": "./src",   /* Dossier source du code TypeScript */
+    "outDir": "./dist",   /* Dossier de destination du code JavaScript compilé */
+    
+    "strict": true,                             /* Active toutes les vérifications de type strictes */
+    "esModuleInterop": true,                    /* Facilite l'import de modules CommonJS */
+    "forceConsistentCasingInFileNames": true,   /* Assure la cohérence de la casse des noms de fichiers */
+    "skipLibCheck": true                        /* Ignore la vérification des fichiers de déclaration (.d.ts) pour accélérer la compilation */
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts"
+  ]
+}

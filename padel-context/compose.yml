@@ -1,0 +1,86 @@
+# ========================================
+# Docker Compose Configuration
+# Environnement de développement pour l'API REST padel-context 
+# ========================================
+
+services:
+  # ========================================
+  # Backend API Service
+  # ========================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: padel-context-api
+    ports:
+      - '${APP_PORT:-3000}:3000' 
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: padel-context-db
+      POSTGRES_USER: padel-context-db_user
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-padel-context-db_password}'
+    volumes:
+      - ./src:/app/src
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app/src
+          ignore:
+            - '**/*.test.*'
+            - '**/__tests__/**'
+        - action: rebuild
+          path: ./package.json
+    restart: unless-stopped
+    networks:
+      - padel-context-network
+
+  # ========================================
+  # PostgreSQL Database Service
+  # ========================================
+  db:
+    image: postgres:18.3-alpine3.23
+    container_name: padel-context-db
+    environment:
+      POSTGRES_DB: '${POSTGRES_DB:-padel-context-db}'
+      POSTGRES_USER: '${POSTGRES_USER:-padel-context-db_user}'
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-padel-context-db_password}'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '${DB_PORT:-5433}:5432'
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-padel-context-db_user} -d ${POSTGRES_DB:-padel-context-db}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - padel-context-network
+
+# ========================================
+# Volume Configuration
+# ========================================
+volumes:
+  postgres_data:
+    name: padel-context-postgres-data
+    driver: local
+
+# ========================================
+# Network Configuration
+# ========================================
+networks:
+  padel-context-network:
+    name: padel-context-network
+    driver: bridge
