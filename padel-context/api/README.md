@@ -26,17 +26,7 @@ API REST de l'application padel-context.
 
 ### Démarrer l'API
 
-1. Créer et appliquer la migration
-```bash
-npx prisma migrate dev --name init
-```
-
-2. Générer le client Prisma
-```bash
-npx prisma generate
-```
-
-3. Build les conteneurs Docker
+1. Build les conteneurs Docker
 ```bash
 docker compose up --build
 ```

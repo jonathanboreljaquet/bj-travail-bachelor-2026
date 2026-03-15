@@ -16,7 +16,5 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String   @default("")
-  photo     String?  @default("")
-  name      String?
   createdAt DateTime @default(now())
 }

@@ -9,13 +9,15 @@
     
     "strict": true,                             /* Active toutes les vérifications de type strictes */
     "esModuleInterop": true,                    /* Facilite l'import de modules CommonJS */
+    "types": ["node"],                         /* Expose les types Node.js (process, Buffer, etc.) */
     "ignoreDeprecations": "6.0",                 /* Ignore les avertissements de dépréciation */
     "forceConsistentCasingInFileNames": true,   /* Assure la cohérence de la casse des noms de fichiers */
     "skipLibCheck": true                        /* Ignore la vérification des fichiers de déclaration (.d.ts) pour accélérer la compilation */
   },
   "include": [
     "src/**/*",
-    "generated/**/*"
+    "generated/**/*",
+    "prisma.config.ts"
   ],
   "exclude": [
     "node_modules",
