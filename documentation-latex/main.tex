@@ -417,10 +417,7 @@ Les jalons, identifiés par un losange noir ($\blacklozenge$), représentent les
     \label{tab:gantt_part2}
 \end{table}
 \section{Analyse des besoins et choix technologiques}
-\subsection{Identification des sources de données}
-API MeteoSwiss et base de données de l'application
-\subsection{Choix du langage et du framework}
-\subsubsection{Backend}
+\subsection{Choix de l'architecture de l'API}
 Afin d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
 \newline\newline
 Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Mon choix s'est naturellement porté sur l'architecture REST.
@@ -430,12 +427,22 @@ Contrairement a l'architecure SOAP qui repose sur des messages XML et une struct
 De plus, REST s'intègre parfaitement aux standards du web et privilégie l'utilisation de formats de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre ma base de données, mes application et mon serveur MCP.
 \newline\newline
 Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée. (Addanki 2025)\cite{addanki_architectural_2025} 
+\subsection{Choix du système de base de données}
+Pourquoi j'ai choisis de réalaiser une base de données relationnelle. https://ieeexplore.ieee.org/document/8400041
+Pourquoi j'ai choisis d'utiliser PostgreSQL
+\subsection{Choix de l'environnement, du framework et des outils backend}
+Parler de pourquoi javascript node, pourquoi express.js et pourquoi prisma pour l'orm
+\subsection{Identification des sources de données}
+API MeteoSwiss et base de données de l'application
 \subsubsection{Frontend}
 Pourquoi je veux utiliser javascript et autre outils pour le développement de l'application (Typescript ? Prisma ? React ? etc..)
 \subsection{Architecture du Mondel Context Protocol}
 Comment l'IA va interagir avec les différentes sources de données ?
 \section{Conception et architecture de l'application}
 \subsection{Architecture logicielle}
+\subsection{Modélisation de la base de données}
+\subsubsection{Schéma relationnel}
+\subsubsection{Dictionnaire de données}
 Description complète de l'architecture logicielle de l'application, Backend, Frontend (Client MCP), Base de données, API externes, Serveur MCP, autres... 
 \subsection{Maquettes}
 Maquettes de l'application, comment elle va être organisée, les différentes pages, etc..
