@@ -33,6 +33,10 @@
 \usepackage{pgfplotstable}
 \usepackage{pgf}
 
+\usepackage{cellspace}
+\setlength\cellspacetoplimit{6pt}    
+\setlength\cellspacebottomlimit{6pt} 
+
 % Add references in table of contents
 \usepackage[nottoc]{tocbibind}
 
@@ -331,21 +335,24 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
 \begin{table}[H]
     \centering
     \renewcommand{\arraystretch}{1.3}
-    \begin{tabular}{|c|p{8cm}|l|c|}
+    \begin{tabular}{|c|S{p{9.5cm}}|l|c|}
         \hline
-        \textbf{ID} & \textbf{Fonctionnalité / Tâche} & \textbf{Catégorie} & \textbf{Effort estimé} \\ \hline
-        01 & Modélisation de la base de données et création de l'API & Must-have & 30\% \\ \hline
-        02 & Mise en place du serveur MCP et intégration de l'IA & Must-have & 10\% \\ \hline
-        03 & Création des outils MCP pour interroger la base de données de l'application & Must-have & 10\% \\ \hline
-        04 & Création des outils MCP pour interroger l'API Météo & Must-have & 10\% \\ \hline
-        05 & Création d'une application web minimaliste permettant la gestion de réservation d'un terrain de padel & Should-have & 10\% \\ \hline
-        06 & Étude comparative entre les plateformes de réservation traditionnelles et la solution MCP & Should-have & 10\% \\ \hline
-        07 & Application mobile native (iOS / Android) & Could-have & 20\% \\ \hline
-        08 & Interface de messagerie instantanée entre les joueurs & Won't-have & - \\ \hline
-        09 & Paiement intégré lors de la réservation d'un terrain  & Won't-have & - \\ \hline
+        \textbf{ID} & \textbf{Fonctionnalité / Tâche} & \textbf{Catégorie} & \textbf{Effort} \\ \hline
+        01 & Modélisation de la base de données et création de l'API de base & Must-have & 15\% \\ \hline
+        02 & Mise en place du serveur MCP et intégration du modèle IA & Must-have & 10\% \\ \hline
+        03 & Outil MCP (BDD) : Recherche filtrée des infrastructures (localisation basique par texte, prix, indoor/outdoor, box matériel) & Must-have & 10\% \\ \hline
+        04 & Outil MCP (BDD) : Matchmaking (recherche de parties ouvertes selon le niveau et les places disponibles) & Must-have & 10\% \\ \hline
+        05 & Outil MCP (API) : Interrogation des prévisions météorologiques locales pour la validation des terrains extérieurs & Must-have & 10\% \\ \hline
+        06 & Outil MCP (BDD) : Exécution de la réservation (verrouillage du créneau et intégration des joueurs) & Must-have & 5\% \\ \hline
+        07 & Création d'une application web minimaliste pour la gestion des réservations & Should-have & 10\% \\ \hline
+        08 & Étude comparative entre les plateformes traditionnelles et la solution MCP & Should-have & 10\% \\ \hline
+        09 & Application mobile native (iOS / Android) & Could-have & 15\% \\ \hline
+        10 & Outil MCP (Géolocalisation) : Filtrage avancé des terrains par coordonnées GPS et rayon de distance (en km) & Could-have & 5\% \\ \hline
+        11 & Interface de messagerie instantanée entre les joueurs & Won't-have & - \\ \hline
+        12 & Paiement intégré lors de la réservation d'un terrain & Won't-have & - \\ \hline
     \end{tabular}
-    \caption{Priorisation des livrables selon la méthodologie MoSCoW}
-    \label{tab:moscow_features}
+    \caption{Priorisation détaillée des livrables selon la méthodologie MoSCoW}
+    \label{tab:moscow_features_detail}
 \end{table}
 \subsection{Gantt}
 Dans la continuté de la méthodologie MoSCoW, la réalisation d' une planification Gantt du projet m'a permis d'organiser et visualiser l'ensemble des tâches à réaliser, leur ordre chronologique et leur durée estimée. Elle a également permis d'identifier les dépendances entre les différentes tâches et à anticiper les éventuels retards ou obstacles qui auraient pu survenir au cours du projet.
@@ -414,15 +421,15 @@ Les jalons, identifiés par un losange noir ($\blacklozenge$), représentent les
 API MeteoSwiss et base de données de l'application
 \subsection{Choix du langage et du framework}
 \subsubsection{Backend}
-Afin d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API\footnote{Application Programming Interface} s'est avéré indispensable. 
+Afin d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
 \newline\newline
-Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Mon choix s'est naturellement porté sur l'architecture REST\footnote{REpresentational State Transfer}.
+Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Mon choix s'est naturellement porté sur l'architecture REST.
 \newline\newline
-Contrairement a l'architecure SOAP\footnote{Simple Object Access Protocol} qui repose sur des messages XML et une structure de communication plus rigide, l'architecture REST prône la simplicité, une communication sans état et une architecture orientée sur les ressources. 
+Contrairement a l'architecure SOAP qui repose sur des messages XML et une structure de communication plus rigide, l'architecture REST prône la simplicité, une communication sans état et une architecture orientée sur les ressources. 
 \newline\newline
 De plus, REST s'intègre parfaitement aux standards du web et privilégie l'utilisation de formats de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre ma base de données, mes application et mon serveur MCP.
 \newline\newline
-Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard (CRUD\footnote{Create, Read, Update, Delete}) pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée. (Addanki 2025)\cite{addanki_architectural_2025} 
+Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée. (Addanki 2025)\cite{addanki_architectural_2025} 
 \subsubsection{Frontend}
 Pourquoi je veux utiliser javascript et autre outils pour le développement de l'application (Typescript ? Prisma ? React ? etc..)
 \subsection{Architecture du Mondel Context Protocol}
