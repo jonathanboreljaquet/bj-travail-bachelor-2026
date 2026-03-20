@@ -299,7 +299,7 @@ PlayPad est une application fraichement disponible sur Android et IOS. Actuellem
 \newline\newline
 Contrairement à PadelConnect, la partilcularié de PlayPad est de se concentrer essentiellement sur le classement des joueurs. Pour l'instant, l'application ne ne permet pas de réserver diréctement un terrain, mais de choisir un terrain parmis ceux disponibles, cela est donc de la résponsabilité du créateur de la partie de réserver le terrain choisis. À terme, l'application prévoit d'intégrer la réservation directe dans des clubs partenaires.
 \newline\newline
-Comment mentionné précédemment, le coeur de l'application est son système de classement. En effet, les joueurs collectes des points au fil des leurs matchs pour grimper dans le classement général. Le niveau (Toujours sur une base de 1 à 10) n'est plus une simple auto-évaluation, mais dépend des résultats sur le terrain. Chaque victoire et défaite influence le niveau du joueur. (PlayPad 2024) \cite{noauthor_playpad_nodate}
+Comment mentionné précédemment, le coeur de l'application est son système de classement. En effet, les joueurs collectes des points au fil des leurs matchs pour grimper dans le classement général. Le niveau (Toujours sur une base de 1 à 10) n'est plus une simple auto-évaluation, mais dépend des résultats sur le terrain. << Chaque victoire et défaite influence le niveau du joueur >> (PlayPad 2024) \cite{noauthor_playpad_nodate}. 
 L'application introduit également un score de fiabilité (De 0 à 100\%) qui fonctionne comme un score d'assiduité, plus le joueurs est actif en mode compétitif, plus son poucentage de fiabilité augmente. 
 \newline\newline
 On y retrouve un système de messagerie instantanée (via des demandes d'amis) ainsi qu'un chat dédié à chaque partie organisée.
@@ -320,16 +320,16 @@ Dans le cadre de ce travail de bachelor, je me suis appuyer sur la méthodologie
 La méthode MoSCoW est une technique de priorisation qui a gagné en popularité en raison de sa grande simplicité et de sa facilité d'adoption. Elle permet aux parties prenantes de gérer les attentes et les compromis techniques, tout en se concentrant sur la livraison des éléments les plus importants en classant les fonctionnalités dans les quatre catégories suivantes :
 \newline\newline
 \begin{itemize}
-    \item \textbf{Must-have (Indispensable)} : Les exigences qui comportent des spécifications vitales à la réussite du projet et qui doivent être satisfaites dans les délais impartis. Si ces éléments ne sont pas mis en œuvre, le projet échouera ou aura un impact négatif majeur sur les utilisateurs. (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 2)\cite{suchetha_vijayakumar_assessing_2024}
-    \item \textbf{Should-have (Souhaitable)} : Prérequis importants qui sont attrayants mais pas indispensables à la réussite immédiate du projet. Ils ajoutent de la valeur globale au produit et devraient être inclus une fois que toutes les fonctionnalités essentielles ont été satisfaites. (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 3)\cite{suchetha_vijayakumar_assessing_2024}
-    \item \textbf{Could-have (Possible)} : Critères supplémentaires qui améliorent le produit mais ne sont pas nécessaires à ses fonctionnalités principales. Ces éléments ne sont pas prioritaires par rapport aux éléments indispensables ou souhaitables, mais ils peuvent être réalisés si le temps et les ressources le permettent. (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 3)\cite{suchetha_vijayakumar_assessing_2024}
-    \item \textbf{Won't-have (Non souhaitable pour le moment)} : Besoins qui sont spécifiquement exclus du périmètre actuel du projet. Ils sont soit considérés comme peu prioritaires pour le cycle de développement en cours, soit reportés à des versions ultérieures. (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 3)\cite{suchetha_vijayakumar_assessing_2024}
+    \item \textbf{Must-have (Indispensable)} : Les exigences qui comportent des spécifications vitales à la réussite du projet et qui doivent être satisfaites dans les délais impartis. Si ces éléments ne sont pas mis en œuvre, le projet échouera ou aura un impact négatif majeur sur les utilisateurs (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 2) \cite{suchetha_vijayakumar_assessing_2024}.
+    \item \textbf{Should-have (Souhaitable)} : Prérequis importants qui sont attrayants mais pas indispensables à la réussite immédiate du projet. Ils ajoutent de la valeur globale au produit et devraient être inclus une fois que toutes les fonctionnalités essentielles ont été satisfaites (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 3) \cite{suchetha_vijayakumar_assessing_2024}.
+    \item \textbf{Could-have (Possible)} : Critères supplémentaires qui améliorent le produit mais ne sont pas nécessaires à ses fonctionnalités principales. Ces éléments ne sont pas prioritaires par rapport aux éléments indispensables ou souhaitables, mais ils peuvent être réalisés si le temps et les ressources le permettent (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 3) \cite{suchetha_vijayakumar_assessing_2024}.
+    \item \textbf{Won't-have (Non souhaitable pour le moment)} : Besoins qui sont spécifiquement exclus du périmètre actuel du projet. Ils sont soit considérés comme peu prioritaires pour le cycle de développement en cours, soit reportés à des versions ultérieures (trad. de Vijayakumar, Prasad K, Holla M 2024, p. 3) \cite{suchetha_vijayakumar_assessing_2024}.
 \end{itemize}\
 \newline
 
 Dans l'objectif de la réalisation de la méthode MoSCoW, je me suis appuyé sur les recommandations du \textit{DSDM Agile Project Framework Handbook} de l'Agile Business Consortium. Parmi ces recommandations, la plus déterminante concerne la répartition stratégique de l'effort de développement. 
 \newline\newline
-Afin de garantir la viabilité du projet et de se prémunir contre les imprévus, le référentiel préconise que les exigences classées comme indispensables (Must-have) ne doivent pas excéder 60 \% de l'effort global alloué au projet. Les 40 \% restants agissent comme une marge de contingence et sont alloués aux fonctionnalités souhaitables (Should-have) et possibles (Could-have), généralement réparties à parts égales soit 20 \% chacune. (Agile Business Consortium 2014) \cite{business_moscow_nodate}
+Afin de garantir la viabilité du projet et de se prémunir contre les imprévus, le référentiel préconise que les exigences classées comme indispensables (Must-have) ne doivent pas excéder 60 \% de l'effort global alloué au projet. Les 40 \% restants agissent comme une marge de contingence et sont alloués aux fonctionnalités souhaitables (Should-have) et possibles (Could-have), généralement réparties à parts égales soit 20 \% chacune (Agile Business Consortium 2014) \cite{business_moscow_nodate}.
 \newline\newline
 L'application stricte de cette règle permet d'assurer qu'en cas de complexité sous-estimée ou de contraintes de temps inattendues sur les éléments critiques, le travail de bachelor pourra toujours être livré dans les délais fixés, quitte à sacrifier temporairement des fonctionnalités de moindre priorité. C'est sur la base de ce cadre temporel et de ces pourcentages d'effort que le tableau suivant a été construit.
 \begin{table}[H]
@@ -346,10 +346,11 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
         06 & Outil MCP (BDD) : Exécution de la réservation (verrouillage du créneau et intégration des joueurs) & Must-have & 5\% \\ \hline
         07 & Création d'une application web minimaliste pour la gestion des réservations & Should-have & 10\% \\ \hline
         08 & Étude comparative entre les plateformes traditionnelles et la solution MCP & Should-have & 10\% \\ \hline
-        09 & Application mobile native (iOS / Android) & Could-have & 15\% \\ \hline
-        10 & Outil MCP (Géolocalisation) : Filtrage avancé des terrains par coordonnées GPS et rayon de distance (en km) & Could-have & 5\% \\ \hline
-        11 & Interface de messagerie instantanée entre les joueurs & Won't-have & - \\ \hline
-        12 & Paiement intégré lors de la réservation d'un terrain & Won't-have & - \\ \hline
+        09 & Application mobile native (iOS / Android) & Could-have & 10\% \\ \hline
+        10 & Outil MCP (BDD) : Calculs avancés du niveau réel des joueurs par rapport à leur historique de parties & Could-have & 5\% \\ \hline
+        11 & Outil MCP (Géolocalisation) : Filtrage avancé des terrains par coordonnées GPS & Could-have & 5\% \\ \hline
+        12 & Interface de messagerie instantanée entre les joueurs & Won't-have & - \\ \hline
+        13 & Paiement intégré lors de la réservation d'un terrain & Won't-have & - \\ \hline
     \end{tabular}
     \caption{Priorisation détaillée des livrables selon la méthodologie MoSCoW}
     \label{tab:moscow_features_detail}
@@ -418,18 +419,28 @@ Les jalons, identifiés par un losange noir ($\blacklozenge$), représentent les
 \end{table}
 \section{Analyse des besoins et choix technologiques}
 \subsection{Choix de l'architecture de l'API}
-Afin d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
+Dans l'objectif d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
 \newline\newline
-Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Mon choix s'est naturellement porté sur l'architecture REST.
+Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Dans le cadre de ce projet, j'ai choisi d'utiliser l'architecture REST.
+En effet, contrairement a l'architecure SOAP qui repose sur des messages XML et une structure de communication plus rigide, l'architecture REST prône la simplicité et une communication sans état. 
 \newline\newline
-Contrairement a l'architecure SOAP qui repose sur des messages XML et une structure de communication plus rigide, l'architecture REST prône la simplicité, une communication sans état et une architecture orientée sur les ressources. 
+De plus, REST s'intègre parfaitement aux standards WEB en priviliégant fortement l'utilisation de format de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre ma base de données, mes application et mon serveur MCP.
 \newline\newline
-De plus, REST s'intègre parfaitement aux standards du web et privilégie l'utilisation de formats de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre ma base de données, mes application et mon serveur MCP.
-\newline\newline
-Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée. (Addanki 2025)\cite{addanki_architectural_2025} 
+Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée (Addanki 2025) \cite{addanki_architectural_2025}.
 \subsection{Choix du système de base de données}
-Pourquoi j'ai choisis de réalaiser une base de données relationnelle. https://ieeexplore.ieee.org/document/8400041
-Pourquoi j'ai choisis d'utiliser PostgreSQL
+Afin de stocker et gérer efficacement les données nécessaires à mon application et dans le but de permettre à mon API REST d'écrire et founir des données, il a fallu choisir quel type de système de base de données utiliser entre une base de données relationnelle SQL et une base de données non relationnelle NoSQL.
+\newline\newline
+Le choix le plus judicieux a été une base de données relationnelle SQL. En effet, les bases de données relationnelles sont particulièrement adaptées pour gérer des données structurées avec des relations complexes entre les différentes entités, ce qui est le cas dans une application de réservation de terrains de padel. Les données telles que les utilisateurs, les réservations, les matchs, les terrains, etc., sont toutes interconnectées et nécessitent une gestion rigoureuse des relations entre elles.
+\newline\newline
+De plus, le respect des propriétés ACID (Atomicité, Cohérence, Isolation, Durabilité) inhérent aux bases de données relationnelles permet de garantir une fiabilité et une intégrité absolues des données lors des transactions. Dans le contexte d'une plateforme de réservation, cela s'avère indispensable pour gérer les accès concurrents, comme s'assurer que deux groupes de joueurs ne puissent pas réserver le même terrain au même instant, ou garantir qu'une opération d'enregistrement s'annule complètement si une erreur survient en cours de processus.
+\newline\newline
+<< Dès lors que les propriétés ACID sont indispensables pour une base de données, il ne fait aucun doute que le seul choix possible est la base de données relationnelle. >> (trad. de Sahatqija et al. 2018, p. 5) \cite{lupu_concurrent_2024}.
+\newline\newline
+Une fois le choix le type de système de base de données effectué, il a fallu choisir quel SGBDR (Système de Gestion de Base de Données Relationnel) utiliser. Parmi les deux options open-source les plus populaires se trouvent MySQL et PostgreSQL.
+\newline\newline
+Suite à l'analyse d'une étude récente de 2024 comparant les performances de ces deux moteurs de base de données, mon choix s'est définitivement porté sur PostgreSQL. En effet, cette recherche a mis en évidence la performance significative de PostgreSQL par rapport à MySQL à travers plusieurs tests  simulant des conditions de production. Les résultats ont notamment démontré que le temps d'exécution pour la récupération d'une très grande quantité d'enregistrements était environ 13 fois plus rapide avec PostgreSQL qu'avec MySQL. Par ailleurs, pour les requêtes de sélection intégrant une clause de recherche spécifique, PostgreSQL s'est également révélé être environ 9 fois plus efficace MySQL (Sanket Vilas et Ouda 2024, p. 1) \cite{salunke_performance_2024}.
+
+
 \subsection{Choix de l'environnement, du framework et des outils backend}
 Parler de pourquoi javascript node, pourquoi express.js et pourquoi prisma pour l'orm
 \subsection{Identification des sources de données}
@@ -440,10 +451,11 @@ Pourquoi je veux utiliser javascript et autre outils pour le développement de l
 Comment l'IA va interagir avec les différentes sources de données ?
 \section{Conception et architecture de l'application}
 \subsection{Architecture logicielle}
+Description complète de l'architecture logicielle de l'application, Backend, Frontend (Client MCP), Base de données, API externes, Serveur MCP, autres... 
+
 \subsection{Modélisation de la base de données}
 \subsubsection{Schéma relationnel}
 \subsubsection{Dictionnaire de données}
-Description complète de l'architecture logicielle de l'application, Backend, Frontend (Client MCP), Base de données, API externes, Serveur MCP, autres... 
 \subsection{Maquettes}
 Maquettes de l'application, comment elle va être organisée, les différentes pages, etc..
 \subsection{Définitions des outils MCP}
