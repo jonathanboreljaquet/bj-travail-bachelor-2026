@@ -418,7 +418,8 @@ Les jalons, identifiés par un losange noir ($\blacklozenge$), représentent les
     \label{tab:gantt_part2}
 \end{table}
 \section{Analyse des besoins et choix technologiques}
-\subsection{Choix de l'architecture de l'API}
+\subsection{Backend}
+\subsubsection{Choix de l'architecture de l'API}
 Dans l'objectif d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
 \newline\newline
 Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Dans le cadre de ce projet, j'ai choisi d'utiliser l'architecture REST.
@@ -427,7 +428,7 @@ En effet, contrairement a l'architecure SOAP qui repose sur des messages XML et 
 De plus, REST s'intègre parfaitement aux standards WEB en priviliégant fortement l'utilisation de format de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre ma base de données, mes application et mon serveur MCP.
 \newline\newline
 Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée (Addanki 2025) \cite{addanki_architectural_2025}.
-\subsection{Choix du système de base de données}
+\subsubsection{Choix du système de base de données}
 Afin de stocker et gérer efficacement les données nécessaires à mon application et dans le but de permettre à mon API REST d'écrire et founir des données, il a fallu choisir quel type de système de base de données utiliser entre une base de données relationnelle SQL et une base de données non relationnelle NoSQL.
 \newline\newline
 Le choix le plus judicieux a été une base de données relationnelle SQL. En effet, les bases de données relationnelles sont particulièrement adaptées pour gérer des données structurées avec des relations complexes entre les différentes entités, ce qui est le cas dans une application de réservation de terrains de padel. Les données telles que les utilisateurs, les réservations, les matchs, les terrains, etc., sont toutes interconnectées et nécessitent une gestion rigoureuse des relations entre elles.
@@ -441,11 +442,22 @@ Une fois le choix le type de système de base de données effectué, il a fallu 
 Suite à l'analyse d'une étude récente de 2024 comparant les performances de ces deux moteurs de base de données, mon choix s'est définitivement porté sur PostgreSQL. En effet, cette recherche a mis en évidence la performance significative de PostgreSQL par rapport à MySQL à travers plusieurs tests  simulant des conditions de production. Les résultats ont notamment démontré que le temps d'exécution pour la récupération d'une très grande quantité d'enregistrements était environ 13 fois plus rapide avec PostgreSQL qu'avec MySQL. Par ailleurs, pour les requêtes de sélection intégrant une clause de recherche spécifique, PostgreSQL s'est également révélé être environ 9 fois plus efficace MySQL (Sanket Vilas et Ouda 2024, p. 1) \cite{salunke_performance_2024}.
 
 
-\subsection{Choix de l'environnement, du framework et des outils backend}
-Parler de pourquoi javascript node, pourquoi express.js et pourquoi prisma pour l'orm
+\subsubsection{Choix du framework et des outils de développement}
+Pour clôturer les choix technologiques liés à la conception du backend, il a fallu déterminer le framework à utiliser pour développer l'API REST. Mon choix s'est porté sur l'environnement Node.js associé au framework Express.js. Cette décision s'articule autour de trois critères majeurs.
+\newline\newline
+Le premier critère repose sur le fait d'avoir déjà eu l'opportunité d'utiliser Express.js lors d'un projet de développement sur mandat au cours de mes études à la HEG, possédant une bonne maîtrise de ce framework et du langage JavaScript, cela me permet de développer l'API plus efficacement. 
+\newline
+Le second critère concerne la popularité du language JavaScript. En effet, selon l'enquête de 2025 de Stack Overflow, JavaScript demeure le langage de programmation le plus utilisé sur la plateforme (Stack Overflow 2025) \cite{noauthor_technology_nodate}, Stack Overflow étant un forum largemnt répendu et connu, la consultation de celui-ci est avantageuse lors de la réalisation d'un projet académique de cet envergure.
+\newline\newline
+Afin de gagner en efficacité et de réduire le temps de développement de l'API REST, j'ai également choisi d'utiliser Prisma pour la gestion de ma base de données. Cet ORM (Object-Relational Mapping) simplifie considérablement les interactions avec la base de données en offrant une interface de programmation intuitive. Il permet d'automatiser des tâches chronophages et critiques telles que la validation des données, la gestion des migrations structurelles, et la génération de requêtes SQL optimisées et sécurisées.
+\newline\newline
+Au-delà du confort de développement, ce choix s'appuie sur des critères de performance concrets. Prisma offre les meilleures performances lorsqu'il est soumis à des charges parallèles par rapport à des alternatives comme Sequelize ou TypeORM (Zhadko-Bazilevych 2025) \cite{zhadko-bazilevych_analysis_2025}. Pour une plateforme de réservation comme PadelContext, où plusieurs utilisateurs peuvent solliciter l'API simultanément pour rechercher ou réserver un créneau via le serveur MCP, cette capacité à maintenir de hautes performances sous une charge parallèle est un atout technique décisif.
+\newline\newline
+Enfin, pour assurer la fiabilité de mon API REST, j'ai opté pour le framework de test Jest. Jest est un framework qui ne nécessite aucune configuration au préalable. De plus, il fournit un système de mocks intégré ainsi qu'une couverture de code complète (Donvir 2024) \cite{donvir_comparative_2024}. De manière similaire à Prisma, le choix de Jest est principalement justifié par sa rapidité d'intégration et son efficacité, dans l'objectif d'optimiser le temps alloué au développement de l'API REST.
+\subsection{Frontend}
 \subsection{Identification des sources de données}
 API MeteoSwiss et base de données de l'application
-\subsubsection{Frontend}
+
 Pourquoi je veux utiliser javascript et autre outils pour le développement de l'application (Typescript ? Prisma ? React ? etc..)
 \subsection{Architecture du Mondel Context Protocol}
 Comment l'IA va interagir avec les différentes sources de données ?
@@ -455,6 +467,12 @@ Description complète de l'architecture logicielle de l'application, Backend, Fr
 
 \subsection{Modélisation de la base de données}
 \subsubsection{Schéma relationnel}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{img/api_entity_relationship_diagram.png}
+    \caption{Schéma relationnel de la base de données de l'application PadelConnect}
+    \label{fig:api_entity_relationship_diagram}
+\end{figure}
 \subsubsection{Dictionnaire de données}
 \subsection{Maquettes}
 Maquettes de l'application, comment elle va être organisée, les différentes pages, etc..
