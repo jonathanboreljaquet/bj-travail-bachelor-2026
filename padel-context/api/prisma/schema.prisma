@@ -12,7 +12,6 @@ datasource db {
   provider = "postgresql"
 }
 
-
 enum CourtType {
   INDOOR
   OUTDOOR
@@ -26,63 +25,63 @@ enum matchStatus {
 }
 
 model User {
-  id              String        @id @default(uuid())
-  firstname       String
-  lastname        String
-  email           String        @unique
-  password        String
-  level           Int           @default(1)
-  createdAt       DateTime      @default(now())
+  id        Int      @id @default(autoincrement())
+  firstname String
+  lastname  String
+  email     String   @unique
+  password  String
+  level     Int      @default(1)
+  createdAt DateTime @default(now())
 
-  createdMatches  Match[]       @relation("MatchCreator")
-  participations  Participant[]
+  createdMatches Match[]       @relation("MatchCreator")
+  participations Participant[]
 }
 
 model Club {
-  id              String    @id @default(uuid())
-  name            String
-  city            String
-  openingTime     String    
-  closingTime     String    
+  id          Int    @id @default(autoincrement())
+  name        String
+  city        String
+  openingTime String
+  closingTime String
 
-  courts          Court[]
+  courts Court[]
 }
 
 model Court {
-  id                  String   @id @default(uuid())
-  name                String
-  type                CourtType @default(OUTDOOR)
-  hasEquipmentBox     Boolean
-  pricePerPerson      Float
-  slotDurationMin     Int      
+  id              Int       @id @default(autoincrement())
+  name            String
+  type            CourtType @default(OUTDOOR)
+  hasEquipmentBox Boolean
+  pricePerPerson  Float
+  slotDuration    Int
 
-  club_id             String  
-  club                Club     @relation(fields: [club_id], references: [id])
-  matches             Match[]
+  club_id Int
+  club    Club    @relation(fields: [club_id], references: [id])
+  matches Match[]
 }
 
 model Match {
-  id                  String        @id @default(uuid())
-  startTime           DateTime
-  endTime             DateTime
-  status              matchStatus @default(OPEN)
-  availableSpots      Int           
-  equipmentRental     Boolean
+  id              Int         @id @default(autoincrement())
+  startTime       DateTime
+  endTime         DateTime
+  status          matchStatus @default(OPEN)
+  availableSpots  Int
+  equipmentRental Boolean
 
-  court_id            String
-  court               Court         @relation(fields: [court_id], references: [id])
-  creator_id          String
-  creator             User          @relation("MatchCreator", fields: [creator_id], references: [id])
-  participants        Participant[]
+  court_id     Int
+  court        Court         @relation(fields: [court_id], references: [id])
+  creator_id   Int
+  creator      User          @relation("MatchCreator", fields: [creator_id], references: [id])
+  participants Participant[]
 }
 
 model Participant {
-  user_id          String
-  match_id         String
-  joinedAt         DateTime @default(now())
+  user_id  Int
+  match_id Int
+  joinedAt DateTime @default(now())
 
-  user            User     @relation(fields: [user_id], references: [id])
-  match           Match    @relation(fields: [match_id], references: [id])
+  user  User  @relation(fields: [user_id], references: [id])
+  match Match @relation(fields: [match_id], references: [id])
 
   @@id([user_id, match_id])
 }
