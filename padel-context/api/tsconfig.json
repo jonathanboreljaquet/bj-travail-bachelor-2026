@@ -1,18 +1,18 @@
 {
   "compilerOptions": {
-    "module": "ESNext", /* Système de modules pour Node.js */
+    "module": "ESNext", 
     "moduleResolution": "bundler",
-    "target": "ES2023",   /* Version de JavaScript ciblée */
+    "target": "ES2023",   
     
-    "rootDir": ".",       /* Dossier source du code TypeScript */
-    "outDir": "./dist",   /* Dossier de destination du code JavaScript compilé */
+    "rootDir": ".",       
+    "outDir": "./dist",   
     
-    "strict": true,                             /* Active toutes les vérifications de type strictes */
-    "esModuleInterop": true,                    /* Facilite l'import de modules CommonJS */
-    "types": ["node"],                         /* Expose les types Node.js (process, Buffer, etc.) */
-    "ignoreDeprecations": "6.0",                 /* Ignore les avertissements de dépréciation */
-    "forceConsistentCasingInFileNames": true,   /* Assure la cohérence de la casse des noms de fichiers */
-    "skipLibCheck": true                        /* Ignore la vérification des fichiers de déclaration (.d.ts) pour accélérer la compilation */
+    "strict": true,                             
+    "esModuleInterop": true,                    
+    "types": ["node"],                         
+    "ignoreDeprecations": "5.0",                 
+    "forceConsistentCasingInFileNames": true,   
+    "skipLibCheck": true                        
   },
   "include": [
     "src/**/*",

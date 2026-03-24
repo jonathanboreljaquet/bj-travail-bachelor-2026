@@ -15,5 +15,4 @@ COPY . .
 # Port sur lequel l'application va tourner
 EXPOSE 3000
 
-# Recharge le serveur à chaque modification d'un fichier
-CMD ["sh", "-c", "npx prisma db push --force-reset && npx prisma generate && npm run test && npx prisma db seed && npm run dev"]
+CMD ["sh", "-c", "npx prisma db push --force-reset && npx prisma generate && npx prisma db seed && npm run dev"]
