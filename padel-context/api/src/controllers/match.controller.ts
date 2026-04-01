@@ -1,18 +1,18 @@
-import { Request, Response } from 'express';
-import prisma from '../db';
+import { Request, Response } from "express";
+import prisma from "../db";
 
-type MatchStatus = 'OPEN' | 'COMPLETED' | 'CANCELED';
+type MatchStatus = "OPEN" | "COMPLETED" | "CANCELED";
 
 const parseBoolean = (value: unknown): boolean | undefined => {
-    if (typeof value !== 'string') {
+    if (typeof value !== "string") {
         return undefined;
     }
 
     const normalizedValue = value.trim().toLowerCase();
-    if (normalizedValue === 'true') {
+    if (normalizedValue === "true") {
         return true;
     }
-    if (normalizedValue === 'false') {
+    if (normalizedValue === "false") {
         return false;
     }
 
@@ -20,7 +20,7 @@ const parseBoolean = (value: unknown): boolean | undefined => {
 };
 
 const parseNumber = (value: unknown): number | undefined => {
-    if (typeof value !== 'string') {
+    if (typeof value !== "string") {
         return undefined;
     }
 
@@ -33,7 +33,7 @@ const parseNumber = (value: unknown): number | undefined => {
 };
 
 const parseDate = (value: unknown): Date | undefined => {
-    if (typeof value !== 'string') {
+    if (typeof value !== "string") {
         return undefined;
     }
 
@@ -46,22 +46,29 @@ const parseDate = (value: unknown): Date | undefined => {
 };
 
 const parseStatus = (value: unknown): MatchStatus => {
-    if (typeof value !== 'string') {
-        return 'OPEN';
+    if (typeof value !== "string") {
+        return "OPEN";
     }
 
     const normalizedStatus = value.trim().toUpperCase();
-    if (normalizedStatus === 'OPEN' || normalizedStatus === 'COMPLETED' || normalizedStatus === 'CANCELED') {
+    if (
+        normalizedStatus === "OPEN" ||
+        normalizedStatus === "COMPLETED" ||
+        normalizedStatus === "CANCELED"
+    ) {
         return normalizedStatus;
     }
 
-    return 'OPEN';
+    return "OPEN";
 };
 
 export const getMatches = async (req: Request, res: Response): Promise<any> => {
     try {
         const status = parseStatus(req.query.status);
-        const city = typeof req.query.city === 'string' ? req.query.city.trim() : undefined;
+        const city =
+            typeof req.query.city === "string"
+                ? req.query.city.trim()
+                : undefined;
         const hasEquipmentBox = parseBoolean(req.query.hasEquipmentBox);
         const minPricePerPerson = parseNumber(req.query.minPricePerPerson);
         const maxPricePerPerson = parseNumber(req.query.maxPricePerPerson);
@@ -74,26 +81,17 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
         const startTimeTo = parseDate(req.query.startTimeTo);
         const endTimeFrom = parseDate(req.query.endTimeFrom);
         const endTimeTo = parseDate(req.query.endTimeTo);
-        const participantAverageLevel = parseNumber(req.query.participantAverageLevel);
-        const participantAverageLevelTolerance = parseNumber(req.query.participantAverageLevelTolerance) ?? 0.5;
-        const includeParam = typeof req.query.include === 'string' ? req.query.include : '';
-
-        const includes = new Set(
-            includeParam
-                .split(',')
-                .map((includeValue) => includeValue.trim().toLowerCase())
-                .filter(Boolean),
+        const participantAverageLevel = parseNumber(
+            req.query.participantAverageLevel,
         );
-
-        const includeParticipants = includes.size === 0 || includes.has('participants');
-        const includeClub = includes.size === 0 || includes.has('club');
-        const includeCourt = includes.size === 0 || includes.has('court');
+        const participantAverageLevelTolerance =
+            parseNumber(req.query.participantAverageLevelTolerance) ?? 0.5;
 
         const where: any = {
             status,
         };
 
-        if (status === 'OPEN') {
+        if (status === "OPEN") {
             where.availableSpots = {
                 ...(where.availableSpots ?? {}),
                 gt: 0,
@@ -103,7 +101,7 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
         if (availableSpots !== undefined) {
             where.availableSpots = {
                 ...(where.availableSpots ?? {}),
-                gte: availableSpots,
+                equals: availableSpots,
             };
         }
 
@@ -144,7 +142,6 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
             where.court.club = {
                 city: {
                     equals: city,
-                    mode: 'insensitive',
                 },
             };
         }
@@ -153,18 +150,33 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
             where.court.hasEquipmentBox = hasEquipmentBox;
         }
 
-        if (minPricePerPerson !== undefined || maxPricePerPerson !== undefined) {
+        if (
+            minPricePerPerson !== undefined ||
+            maxPricePerPerson !== undefined
+        ) {
             where.court.pricePerPerson = {
-                ...(minPricePerPerson !== undefined ? { gte: minPricePerPerson } : {}),
-                ...(maxPricePerPerson !== undefined ? { lte: maxPricePerPerson } : {}),
+                ...(minPricePerPerson !== undefined
+                    ? { gte: minPricePerPerson }
+                    : {}),
+                ...(maxPricePerPerson !== undefined
+                    ? { lte: maxPricePerPerson }
+                    : {}),
             };
         }
 
-        if (slotDuration !== undefined || minSlotDuration !== undefined || maxSlotDuration !== undefined) {
+        if (
+            slotDuration !== undefined ||
+            minSlotDuration !== undefined ||
+            maxSlotDuration !== undefined
+        ) {
             where.court.slotDuration = {
                 ...(slotDuration !== undefined ? { equals: slotDuration } : {}),
-                ...(minSlotDuration !== undefined ? { gte: minSlotDuration } : {}),
-                ...(maxSlotDuration !== undefined ? { lte: maxSlotDuration } : {}),
+                ...(minSlotDuration !== undefined
+                    ? { gte: minSlotDuration }
+                    : {}),
+                ...(maxSlotDuration !== undefined
+                    ? { lte: maxSlotDuration }
+                    : {}),
             };
         }
 
@@ -209,54 +221,35 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
             },
         });
 
-        const formattedMatches = matches
-            .map((match) => ({
-            id: match.id,
-            startTime: match.startTime,
-            endTime: match.endTime,
-            status: match.status,
-            availableSpots: match.availableSpots,
-            equipmentRental: match.equipmentRental,
-            club: match.court.club,
-            court: {
-                name: match.court.name,
-                type: match.court.type,
-                hasEquipmentBox: match.court.hasEquipmentBox,
-                pricePerPerson: match.court.pricePerPerson,
-                slotDuration: match.court.slotDuration,
-            },
-            participants: match.participants.map((participant) => participant.user),
-            }))
-            .filter((match) => {
-                if (participantAverageLevel === undefined) {
-                    return true;
-                }
+        const formattedMatches = matches.filter((match) => {
+            if (participantAverageLevel === undefined) {
+                return true;
+            }
 
-                if (match.participants.length === 0) {
-                    return false;
-                }
+            if (match.participants.length === 0) {
+                return false;
+            }
 
-                const averageLevel =
-                    match.participants.reduce((accumulator, participant) => accumulator + participant.level, 0) /
-                    match.participants.length;
+            const averageLevel =
+                match.participants.reduce(
+                    (accumulator, participant) =>
+                        accumulator + participant.user.level,
+                    0,
+                ) / match.participants.length;
 
-                return Math.abs(averageLevel - participantAverageLevel) <= participantAverageLevelTolerance;
-            })
-            .map((match) => ({
-                id: match.id,
-                startTime: match.startTime,
-                endTime: match.endTime,
-                status: match.status,
-                availableSpots: match.availableSpots,
-                equipmentRental: match.equipmentRental,
-                ...(includeClub ? { club: match.club } : {}),
-                ...(includeCourt ? { court: match.court } : {}),
-                ...(includeParticipants ? { participants: match.participants } : {}),
-            }));
+            return (
+                Math.abs(averageLevel - participantAverageLevel) <=
+                participantAverageLevelTolerance
+            );
+        });
 
         res.status(200).json(formattedMatches);
     } catch (error) {
-        res.status(500).json({ message: 'Error while fetching open matches' });
+        res.status(500).json({ message: "Error while fetching matches" });
     }
 };
 
+export const getAvailableSlots = async (
+    req: Request,
+    res: Response,
+): Promise<any> => {};

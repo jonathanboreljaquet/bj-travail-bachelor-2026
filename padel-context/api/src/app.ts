@@ -12,9 +12,9 @@ app.use("/api/users", userRoutes);
 app.use("/api/matches", matchRoutes);
 
 if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () => {
-    console.log("Serveur démarré avec succès!");
-  });
+    app.listen(PORT, () => {
+        console.log("Serveur démarré avec succès!");
+    });
 }
 
 export default app;

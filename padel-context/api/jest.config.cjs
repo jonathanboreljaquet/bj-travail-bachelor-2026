@@ -1,5 +1,6 @@
 module.exports = {
   preset: 'ts-jest/presets/default-esm',
+  verbose: true,
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   testMatch: ['**/*.test.ts'],
@@ -10,8 +11,10 @@ module.exports = {
       {
         useESM: true,
         tsconfig: {
-          module: 'ESNext',
-          moduleResolution: 'bundler',
+          module: 'NodeNext',
+          moduleResolution: 'NodeNext',
+          isolatedModules: true,
+          target: 'ES2023',
         },
       },
     ],

@@ -1,7 +1,5 @@
 import { Router } from "express";
-import {
-  getMatches,
-} from "../controllers/match.controller";
+import { getMatches } from "../controllers/match.controller";
 
 const router = Router();
 
