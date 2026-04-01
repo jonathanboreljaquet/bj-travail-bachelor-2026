@@ -31,7 +31,7 @@ API REST de l'application padel-context.
 docker compose up --build
 ```
 
-2. Lancer les tests d'intégration
+2. Lancer les tests unitaires et les tests d'intégration
 ```bash
-docker compose exec api npm run test:integration
+docker compose exec api npm run test
 ```
