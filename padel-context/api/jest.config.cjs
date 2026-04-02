@@ -5,6 +5,7 @@ module.exports = {
   roots: ['<rootDir>/tests'],
   testMatch: ['**/*.test.ts'],
   extensionsToTreatAsEsm: ['.ts'],
+  setupFiles: ['<rootDir>/jest.setup.ts'],
   transform: {
     '^.+\\.ts$': [
       'ts-jest',

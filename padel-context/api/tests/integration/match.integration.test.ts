@@ -4,127 +4,267 @@ import { describe, it, expect, afterAll, beforeAll } from "@jest/globals";
 import app from "../../src/app";
 import prisma from "../../src/db";
 
-describe("[INTEGRATION TEST] GET /api/matches (query-based)", () => {
-    const uniquePrefix = `mcp-query-${Date.now()}`;
+describe("[INTEGRATION TEST] GET /api/matches", () => {
+    const uniquePrefix = `integration-test-${Date.now()}`;
 
-    let createdClubId: number;
-    let createdCourtId: number;
-    let createdMatchId: number;
+    let createdClubIds: number[] = [];
+    let createdCourtIds: number[] = [];
+    let createdMatchIds: number[] = [];
     let createdUserIds: number[] = [];
-    let scenarioStartTimeIso: string;
-    let scenarioEndTimeIso: string;
+    let matchOneStartTimeIso: string;
+    let matchOneEndTimeIso: string;
+    let matchOneId: number;
+    let matchOneCity: string;
+    let matchTwoId: number;
+    let matchTwoCity: string;
+    let matchTwoStartTimeIso: string;
+    let matchTwoEndTimeIso: string;
 
-    beforeAll(async () => {
-        const creator = await prisma.user.create({
+    const createUser = async ({
+        suffix,
+        firstname,
+        lastname,
+        level,
+    }: {
+        suffix: string;
+        firstname: string;
+        lastname: string;
+        level: number;
+    }) => {
+        const user = await prisma.user.create({
             data: {
-                firstname: "Scenario",
-                lastname: "Creator",
-                email: `${uniquePrefix}-creator@test.dev`,
+                firstname,
+                lastname,
+                email: `${uniquePrefix}-${suffix}@test.dev`,
                 password: "password123",
-                level: 3,
+                level,
             },
         });
 
-        const participantOne = await prisma.user.create({
-            data: {
-                firstname: "Scenario",
-                lastname: "P1",
-                email: `${uniquePrefix}-p1@test.dev`,
-                password: "password123",
-                level: 2,
-            },
-        });
+        createdUserIds.push(user.id);
+        return user;
+    };
 
-        const participantTwo = await prisma.user.create({
-            data: {
-                firstname: "Scenario",
-                lastname: "P2",
-                email: `${uniquePrefix}-p2@test.dev`,
-                password: "password123",
-                level: 4,
-            },
-        });
-
-        createdUserIds = [creator.id, participantOne.id, participantTwo.id];
-
+    const createMatchScenario = async ({
+        clubName,
+        city,
+        courtName,
+        type,
+        hasEquipmentBox,
+        pricePerPerson,
+        slotDuration,
+        status,
+        availableSpots,
+        equipmentRental,
+        startTime,
+        durationMinutes,
+        participantIds,
+        creatorId,
+    }: {
+        clubName: string;
+        city: string;
+        courtName: string;
+        type: "INDOOR" | "OUTDOOR";
+        hasEquipmentBox: boolean;
+        pricePerPerson: number;
+        slotDuration: number;
+        status: "OPEN" | "COMPLETED" | "CANCELED";
+        availableSpots: number;
+        equipmentRental: boolean;
+        startTime: Date;
+        durationMinutes: number;
+        participantIds: number[];
+        creatorId: number;
+    }) => {
         const club = await prisma.club.create({
             data: {
-                name: `${uniquePrefix}-club`,
-                city: "Lancy",
+                name: `${uniquePrefix}-${clubName}`,
+                city,
                 openingTime: "08:00",
                 closingTime: "23:00",
             },
         });
 
-        createdClubId = club.id;
+        createdClubIds.push(club.id);
 
         const court = await prisma.court.create({
             data: {
-                name: `${uniquePrefix}-court`,
-                type: "INDOOR",
-                hasEquipmentBox: true,
-                pricePerPerson: 15,
-                slotDuration: 120,
+                name: `${uniquePrefix}-${courtName}`,
+                type,
+                hasEquipmentBox,
+                pricePerPerson,
+                slotDuration,
                 club_id: club.id,
             },
         });
 
-        createdCourtId = court.id;
-
-        const startTime = new Date();
-        startTime.setDate(startTime.getDate() + 2);
-        startTime.setHours(18, 0, 0, 0);
+        createdCourtIds.push(court.id);
 
         const endTime = new Date(startTime);
-        endTime.setMinutes(endTime.getMinutes() + 120);
-
-        scenarioStartTimeIso = startTime.toISOString();
-        scenarioEndTimeIso = endTime.toISOString();
+        endTime.setMinutes(endTime.getMinutes() + durationMinutes);
 
         const match = await prisma.match.create({
             data: {
                 startTime,
                 endTime,
-                status: "OPEN",
-                availableSpots: 2,
-                equipmentRental: true,
+                status,
+                availableSpots,
+                equipmentRental,
                 court_id: court.id,
-                creator_id: creator.id,
+                creator_id: creatorId,
             },
         });
 
-        createdMatchId = match.id;
+        createdMatchIds.push(match.id);
 
         await prisma.participant.createMany({
-            data: [
-                { user_id: participantOne.id, match_id: match.id },
-                { user_id: participantTwo.id, match_id: match.id },
-            ],
+            data: participantIds.map((userId) => ({
+                user_id: userId,
+                match_id: match.id,
+            })),
         });
+
+        return {
+            matchId: match.id,
+            startTime,
+            endTime,
+            city,
+            hasEquipmentBox,
+            pricePerPerson,
+            slotDuration,
+            availableSpots,
+        };
+    };
+
+    beforeAll(async () => {
+        const creator = await createUser({
+            suffix: "creator",
+            firstname: "Scenario",
+            lastname: "Creator",
+            level: 3,
+        });
+
+        const participantOne = await createUser({
+            suffix: "p1",
+            firstname: "Scenario",
+            lastname: "P1",
+            level: 2,
+        });
+
+        const participantTwo = await createUser({
+            suffix: "p2",
+            firstname: "Scenario",
+            lastname: "P2",
+            level: 4,
+        });
+
+        const participantThree = await createUser({
+            suffix: "p3",
+            firstname: "Scenario",
+            lastname: "P3",
+            level: 5,
+        });
+
+        const participantFour = await createUser({
+            suffix: "p4",
+            firstname: "Scenario",
+            lastname: "P4",
+            level: 6,
+        });
+
+        const participantFive = await createUser({
+            suffix: "p5",
+            firstname: "Scenario",
+            lastname: "P5",
+            level: 5,
+        });
+
+        const matchOneStartTime = new Date();
+        matchOneStartTime.setDate(matchOneStartTime.getDate() + 2);
+        matchOneStartTime.setHours(18, 0, 0, 0);
+
+        const matchTwoStartTime = new Date();
+        matchTwoStartTime.setDate(matchTwoStartTime.getDate() + 3);
+        matchTwoStartTime.setHours(18, 30, 0, 0);
+
+        const matchOne = await createMatchScenario({
+            clubName: "club-1",
+            city: `Lancy-${uniquePrefix}`,
+            courtName: "court-1",
+            type: "INDOOR",
+            hasEquipmentBox: true,
+            pricePerPerson: 15,
+            slotDuration: 120,
+            status: "OPEN",
+            availableSpots: 2,
+            equipmentRental: true,
+            startTime: matchOneStartTime,
+            durationMinutes: 120,
+            participantIds: [participantOne.id, participantTwo.id],
+            creatorId: creator.id,
+        });
+
+        const matchTwo = await createMatchScenario({
+            clubName: "club-2",
+            city: `Geneva-${uniquePrefix}`,
+            courtName: "court-2",
+            type: "OUTDOOR",
+            hasEquipmentBox: false,
+            pricePerPerson: 25,
+            slotDuration: 90,
+            status: "OPEN",
+            availableSpots: 1,
+            equipmentRental: false,
+            startTime: matchTwoStartTime,
+            durationMinutes: 90,
+            participantIds: [
+                participantThree.id,
+                participantFour.id,
+                participantFive.id,
+            ],
+            creatorId: creator.id,
+        });
+
+        matchOneId = matchOne.matchId;
+        matchTwoId = matchTwo.matchId;
+        matchOneCity = matchOne.city;
+        matchTwoCity = matchTwo.city;
+        matchOneStartTimeIso = matchOne.startTime.toISOString();
+        matchOneEndTimeIso = matchOne.endTime.toISOString();
+        matchTwoStartTimeIso = matchTwo.startTime.toISOString();
+        matchTwoEndTimeIso = matchTwo.endTime.toISOString();
     });
 
     afterAll(async () => {
         await prisma.participant.deleteMany({
             where: {
-                match_id: createdMatchId,
+                match_id: {
+                    in: createdMatchIds,
+                },
             },
         });
 
         await prisma.match.deleteMany({
             where: {
-                id: createdMatchId,
+                id: {
+                    in: createdMatchIds,
+                },
             },
         });
 
         await prisma.court.deleteMany({
             where: {
-                id: createdCourtId,
+                id: {
+                    in: createdCourtIds,
+                },
             },
         });
 
         await prisma.club.deleteMany({
             where: {
-                id: createdClubId,
+                id: {
+                    in: createdClubIds,
+                },
             },
         });
 
@@ -139,82 +279,246 @@ describe("[INTEGRATION TEST] GET /api/matches (query-based)", () => {
         await prisma.$disconnect();
     });
 
-    it("returns HTTP code 200 for query-based endpoint", async () => {
+    it("returns HTTP code 200", async () => {
         const response = await request(app).get("/api/matches");
 
         expect(response.status).toBe(200);
     });
 
-    it("returns matches filtered with complete MCP criteria", async () => {
+    it("returns both matches when no filter is provided", async () => {
+        const response = await request(app).get("/api/matches");
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches.length).toBeGreaterThanOrEqual(2);
+        expect(matches.map((match) => match.id)).toEqual(
+            expect.arrayContaining([matchOneId, matchTwoId]),
+        );
+    });
+
+    it("returns both matches when status is OPEN", async () => {
         const response = await request(app).get("/api/matches").query({
-            status: "OPEN",
-            city: "Lancy",
+            status: "open",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches.length).toBeGreaterThanOrEqual(2);
+        expect(matches.map((match) => match.id)).toEqual(
+            expect.arrayContaining([matchOneId, matchTwoId]),
+        );
+    });
+
+    it("returns only the first match when city matches it", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+        expect(matches[0].court.club.city).toBe(matchOneCity);
+    });
+
+    it("returns only the second match when minPricePerPerson is 20", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchTwoCity,
+            minPricePerPerson: "20",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchTwoId);
+        expect(matches[0].court.pricePerPerson).toBeGreaterThanOrEqual(20);
+    });
+
+    it("returns only the first match when hasEquipmentBox is true", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            hasEquipmentBox: "true",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+        expect(matches[0].court.hasEquipmentBox).toBe(true);
+    });
+
+    it("returns only the first match when minSlotDuration is 100", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            minSlotDuration: "100",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+        expect(matches[0].court.slotDuration).toBeGreaterThanOrEqual(100);
+    });
+
+    it("returns only the second match when maxSlotDuration is 100", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchTwoCity,
+            maxSlotDuration: "100",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchTwoId);
+        expect(matches[0].court.slotDuration).toBeLessThanOrEqual(100);
+    });
+
+    it("returns only the first match when maxPricePerPerson is 15", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            maxPricePerPerson: "15",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+        expect(matches[0].court.pricePerPerson).toBeLessThanOrEqual(15);
+    });
+
+    it("returns only the first match when availableSpots is 2", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            availableSpots: "2",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+        expect(matches[0].availableSpots).toBe(2);
+    });
+
+    it("returns only the first match when slotDuration is 120", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            slotDuration: "120",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+        expect(matches[0].court.slotDuration).toBe(120);
+    });
+
+    it("returns only the second match when startTimeFrom matches it", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchTwoCity,
+            startTimeFrom: matchTwoStartTimeIso,
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchTwoId);
+    });
+
+    it("returns only the first match when startTimeTo matches it", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            startTimeTo: matchOneStartTimeIso,
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+    });
+
+    it("returns only the second match when endTimeFrom matches it", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchTwoCity,
+            endTimeFrom: matchTwoStartTimeIso,
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchTwoId);
+    });
+
+    it("returns only the first match when endTimeTo matches it", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            endTimeTo: matchOneEndTimeIso,
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+    });
+
+    it("returns only the first match with minAvailableSpots 2", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            minAvailableSpots: "2",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+        expect(matches[0].availableSpots).toBeGreaterThanOrEqual(2);
+    });
+
+    it("returns only the first match with participant average level 3 and tolerance 0.1", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            participantAverageLevel: "3",
+            participantAverageLevelTolerance: "0.1",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+    });
+
+    it("returns only the second match with participant average level 5.33 and tolerance 0.1", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchTwoCity,
+            participantAverageLevel: "5.33",
+            participantAverageLevelTolerance: "0.1",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchTwoId);
+    });
+
+    it("returns only the first match when the full query matches it", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
             hasEquipmentBox: "true",
             maxPricePerPerson: "15",
             slotDuration: "120",
             minAvailableSpots: "2",
             participantAverageLevel: "3",
             participantAverageLevelTolerance: "0.1",
-            startTimeFrom: scenarioStartTimeIso,
-            endTimeTo: scenarioEndTimeIso,
-            include: "participants,club,court",
+            startTimeFrom: matchOneStartTimeIso,
+            endTimeTo: matchOneEndTimeIso,
         });
-
         const matches = response.body as any[];
 
         expect(response.status).toBe(200);
-        expect(Array.isArray(matches)).toBe(true);
-        expect(matches.length).toBeGreaterThan(0);
-        expect(matches.some((match: any) => match.id === createdMatchId)).toBe(
-            true,
-        );
-
-        matches.forEach((match: any) => {
-            //Match informations
-            expect(match).toHaveProperty("id");
-            expect(match).toHaveProperty("startTime");
-            expect(match).toHaveProperty("endTime");
-            expect(match).toHaveProperty("status", "OPEN");
-            expect(match).toHaveProperty("availableSpots");
-            expect(match.availableSpots).toBeGreaterThanOrEqual(2);
-            //Club informations (nested in court)
-            expect(match).toHaveProperty("court");
-            expect(match.court).toHaveProperty("club");
-            expect(match.court.club).toHaveProperty("name");
-            expect(match.court.club).toHaveProperty("city", "Lancy");
-            expect(match.court.club).toHaveProperty("openingTime");
-            expect(match.court.club).toHaveProperty("closingTime");
-            //Court informations
-            expect(match).toHaveProperty("court");
-            expect(match.court).toHaveProperty("name");
-            expect(match.court).toHaveProperty("type");
-            expect(match.court).toHaveProperty("hasEquipmentBox", true);
-            expect(match.court).toHaveProperty("pricePerPerson");
-            expect(match.court.pricePerPerson).toBeLessThanOrEqual(15);
-            expect(match.court).toHaveProperty("slotDuration", 120);
-            //Participants informations
-            expect(match).toHaveProperty("participants");
-            expect(Array.isArray(match.participants)).toBe(true);
-            expect(match.participants.length).toBeGreaterThan(0);
-
-            const averageLevel =
-                match.participants.reduce(
-                    (accumulator: number, participant: any) =>
-                        accumulator + participant.user.level,
-                    0,
-                ) / match.participants.length;
-            expect(averageLevel).toBeCloseTo(3, 1);
-
-            match.participants.forEach((participant: any) => {
-                expect(participant).toHaveProperty("user");
-                expect(participant.user).toHaveProperty("firstname");
-                expect(participant.user).toHaveProperty("lastname");
-                expect(participant.user).toHaveProperty("email");
-                expect(participant.user).toHaveProperty("level");
-                expect(participant.user).not.toHaveProperty("id");
-                expect(participant.user).not.toHaveProperty("password");
-                expect(participant.user).not.toHaveProperty("createdAt");
-            });
-        });
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+        expect(matches[0].court.club.city).toBe(matchOneCity);
+        expect(matches[0].court.hasEquipmentBox).toBe(true);
+        expect(matches[0].court.pricePerPerson).toBeLessThanOrEqual(15);
+        expect(matches[0].court.slotDuration).toBe(120);
     });
 });

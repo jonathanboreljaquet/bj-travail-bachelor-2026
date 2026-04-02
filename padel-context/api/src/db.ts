@@ -5,13 +5,10 @@ const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL,
 });
 
-const isTestEnvironment =
-    process.env.NODE_ENV === "test" ||
-    typeof process.env.JEST_WORKER_ID !== "undefined";
-
-const prismaLogLevels: Prisma.LogLevel[] = isTestEnvironment
-    ? ["error"]
-    : ["query", "info", "warn", "error"];
+const prismaLogLevels: Prisma.LogLevel[] =
+    process.env.NODE_ENV === "test"
+        ? ["error"]
+        : ["query", "info", "warn", "error"];
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 

@@ -133,94 +133,400 @@ const createMatchTwo = () => ({
     ],
 });
 
-const toExpectedMatch = (match: ReturnType<typeof createMatchOne>) => match;
+const expectedSelect = {
+    id: true,
+    startTime: true,
+    endTime: true,
+    status: true,
+    availableSpots: true,
+    equipmentRental: true,
+    court: {
+        select: {
+            name: true,
+            type: true,
+            hasEquipmentBox: true,
+            pricePerPerson: true,
+            slotDuration: true,
+            club: {
+                select: {
+                    name: true,
+                    city: true,
+                    openingTime: true,
+                    closingTime: true,
+                },
+            },
+        },
+    },
+    participants: {
+        select: {
+            user: {
+                select: {
+                    firstname: true,
+                    lastname: true,
+                    email: true,
+                    level: true,
+                },
+            },
+        },
+    },
+};
+
+const buildOpenWhere = (extra: Record<string, unknown> = {}) => ({
+    status: "OPEN",
+    availableSpots: {
+        gt: 0,
+    },
+    ...extra,
+});
+
+const runGetMatchesCase = async ({
+    query = {},
+    mockMatches,
+    expectedWhere,
+    expectedResponse = mockMatches,
+}: {
+    query?: Record<string, unknown>;
+    mockMatches: unknown[];
+    expectedWhere: Record<string, unknown>;
+    expectedResponse?: unknown[];
+}) => {
+    prismaMock.match.findMany.mockResolvedValueOnce(mockMatches);
+
+    const request = createMockRequest(query);
+    const response = createMockResponse();
+
+    await getMatches(request, response);
+
+    expect(prismaMock.match.findMany).toHaveBeenCalledWith({
+        where: expectedWhere,
+        select: expectedSelect,
+    });
+    expect(response.status).toHaveBeenCalledWith(200);
+    expect(response.json).toHaveBeenCalledWith(expectedResponse);
+
+    return response;
+};
 
 describe("[UNIT TEST] getMatches", () => {
     it("returns all matches when no filter is provided", async () => {
         const matchOne = createMatchOne();
         const matchTwo = createMatchTwo();
-        prismaMock.match.findMany.mockResolvedValueOnce([matchOne, matchTwo]);
 
-        const request = createMockRequest();
-        const response = createMockResponse();
-
-        await getMatches(request, response);
-
-        expect(prismaMock.match.findMany).toHaveBeenCalledWith({
-            where: {
-                status: "OPEN",
-                availableSpots: {
-                    gt: 0,
-                },
-            },
-            select: {
-                id: true,
-                startTime: true,
-                endTime: true,
-                status: true,
-                availableSpots: true,
-                equipmentRental: true,
-                court: {
-                    select: {
-                        name: true,
-                        type: true,
-                        hasEquipmentBox: true,
-                        pricePerPerson: true,
-                        slotDuration: true,
-                        club: {
-                            select: {
-                                name: true,
-                                city: true,
-                                openingTime: true,
-                                closingTime: true,
-                            },
-                        },
-                    },
-                },
-                participants: {
-                    select: {
-                        user: {
-                            select: {
-                                firstname: true,
-                                lastname: true,
-                                email: true,
-                                level: true,
-                            },
-                        },
-                    },
-                },
-            },
+        await runGetMatchesCase({
+            mockMatches: [matchOne, matchTwo],
+            expectedWhere: buildOpenWhere(),
         });
-
-        expect(response.status).toHaveBeenCalledWith(200);
-        expect(response.json).toHaveBeenCalledWith([
-            toExpectedMatch(matchOne),
-            toExpectedMatch(matchTwo),
-        ]);
     });
 
-    it("returns one match when query parameters are provided", async () => {
+    it("filters matches by status", async () => {
         const matchOne = createMatchOne();
-        prismaMock.match.findMany.mockResolvedValueOnce([matchOne]);
 
-        const request = createMockRequest({
-            city: "Lancy",
-            hasEquipmentBox: "true",
-            minPricePerPerson: "10",
-            maxPricePerPerson: "20",
-            slotDuration: "120",
-            availableSpots: "2",
+        await runGetMatchesCase({
+            query: {
+                status: "completed",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: {
+                status: "COMPLETED",
+            },
         });
-        const response = createMockResponse();
+    });
 
-        await getMatches(request, response);
+    it("filters matches by city", async () => {
+        const matchOne = createMatchOne();
 
-        expect(prismaMock.match.findMany).toHaveBeenCalledWith({
-            where: {
+        await runGetMatchesCase({
+            query: {
+                city: "Lancy",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                court: {
+                    club: {
+                        city: {
+                            equals: "Lancy",
+                        },
+                    },
+                },
+            }),
+        });
+    });
+
+    it("filters matches by hasEquipmentBox", async () => {
+        const matchOne = createMatchOne();
+
+        await runGetMatchesCase({
+            query: {
+                hasEquipmentBox: "true",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                court: {
+                    hasEquipmentBox: true,
+                },
+            }),
+        });
+    });
+
+    it("filters matches by minPricePerPerson", async () => {
+        const matchOne = createMatchOne();
+
+        await runGetMatchesCase({
+            query: {
+                minPricePerPerson: "10",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                court: {
+                    pricePerPerson: {
+                        gte: 10,
+                    },
+                },
+            }),
+        });
+    });
+
+    it("filters matches by maxPricePerPerson", async () => {
+        const matchOne = createMatchOne();
+
+        await runGetMatchesCase({
+            query: {
+                maxPricePerPerson: "20",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                court: {
+                    pricePerPerson: {
+                        lte: 20,
+                    },
+                },
+            }),
+        });
+    });
+
+    it("filters matches by slotDuration", async () => {
+        const matchOne = createMatchOne();
+
+        await runGetMatchesCase({
+            query: {
+                slotDuration: "120",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                court: {
+                    slotDuration: {
+                        equals: 120,
+                    },
+                },
+            }),
+        });
+    });
+
+    it("filters matches by minSlotDuration", async () => {
+        const matchOne = createMatchOne();
+
+        await runGetMatchesCase({
+            query: {
+                minSlotDuration: "100",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                court: {
+                    slotDuration: {
+                        gte: 100,
+                    },
+                },
+            }),
+        });
+    });
+
+    it("filters matches by maxSlotDuration", async () => {
+        const matchOne = createMatchOne();
+
+        await runGetMatchesCase({
+            query: {
+                maxSlotDuration: "100",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                court: {
+                    slotDuration: {
+                        lte: 100,
+                    },
+                },
+            }),
+        });
+    });
+
+    it("filters matches by availableSpots", async () => {
+        const matchOne = createMatchOne();
+
+        await runGetMatchesCase({
+            query: {
+                availableSpots: "2",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                availableSpots: {
+                    gt: 0,
+                    equals: 2,
+                },
+            }),
+        });
+    });
+
+    it("filters matches by minAvailableSpots", async () => {
+        const matchOne = createMatchOne();
+
+        await runGetMatchesCase({
+            query: {
+                minAvailableSpots: "2",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                availableSpots: {
+                    gt: 0,
+                    gte: 2,
+                },
+            }),
+        });
+    });
+
+    it("filters matches by startTimeFrom", async () => {
+        const matchOne = createMatchOne();
+        const startTimeFrom = new Date("2026-04-15T00:00:00.000Z");
+
+        await runGetMatchesCase({
+            query: {
+                startTimeFrom: startTimeFrom.toISOString(),
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                startTime: {
+                    gte: startTimeFrom,
+                },
+            }),
+        });
+    });
+
+    it("filters matches by startTimeTo", async () => {
+        const matchOne = createMatchOne();
+        const startTimeTo = new Date("2026-04-16T00:00:00.000Z");
+
+        await runGetMatchesCase({
+            query: {
+                startTimeTo: startTimeTo.toISOString(),
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                startTime: {
+                    lte: startTimeTo,
+                },
+            }),
+        });
+    });
+
+    it("filters matches by endTimeFrom", async () => {
+        const matchOne = createMatchOne();
+        const endTimeFrom = new Date("2026-04-15T19:00:00.000Z");
+
+        await runGetMatchesCase({
+            query: {
+                endTimeFrom: endTimeFrom.toISOString(),
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                endTime: {
+                    gte: endTimeFrom,
+                },
+            }),
+        });
+    });
+
+    it("filters matches by endTimeTo", async () => {
+        const matchOne = createMatchOne();
+        const endTimeTo = new Date("2026-04-15T21:00:00.000Z");
+
+        await runGetMatchesCase({
+            query: {
+                endTimeTo: endTimeTo.toISOString(),
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                endTime: {
+                    lte: endTimeTo,
+                },
+            }),
+        });
+    });
+
+    it("filters matches by participantAverageLevel", async () => {
+        const matchOne = createMatchOne();
+        const matchTwo = createMatchTwo();
+
+        await runGetMatchesCase({
+            query: {
+                participantAverageLevel: "5",
+            },
+            mockMatches: [matchOne, matchTwo],
+            expectedWhere: buildOpenWhere(),
+            expectedResponse: [matchTwo],
+        });
+    });
+
+    it("filters matches by participantAverageLevelTolerance", async () => {
+        const matchOne = createMatchOne();
+        const matchTwo = createMatchTwo();
+
+        await runGetMatchesCase({
+            query: {
+                participantAverageLevel: "5.33",
+                participantAverageLevelTolerance: "0.01",
+            },
+            mockMatches: [matchOne, matchTwo],
+            expectedWhere: buildOpenWhere(),
+            expectedResponse: [matchTwo],
+        });
+    });
+
+    it("filters matches with all query parameters combined", async () => {
+        const matchOne = createMatchOne();
+        const matchTwo = createMatchTwo();
+
+        await runGetMatchesCase({
+            query: {
+                status: "open",
+                city: "Lancy",
+                hasEquipmentBox: "true",
+                minPricePerPerson: "10",
+                maxPricePerPerson: "20",
+                slotDuration: "120",
+                minSlotDuration: "100",
+                maxSlotDuration: "130",
+                availableSpots: "2",
+                minAvailableSpots: "2",
+                startTimeFrom: matchOne.startTime.toISOString(),
+                startTimeTo: matchOne.startTime.toISOString(),
+                endTimeFrom: matchOne.endTime.toISOString(),
+                endTimeTo: matchOne.endTime.toISOString(),
+                participantAverageLevel: "3",
+                participantAverageLevelTolerance: "0.1",
+            },
+            mockMatches: [matchOne, matchTwo],
+            expectedWhere: {
                 status: "OPEN",
                 availableSpots: {
                     gt: 0,
                     equals: 2,
+                    gte: 2,
+                },
+                startTime: {
+                    gte: matchOne.startTime,
+                    lte: matchOne.startTime,
+                },
+                endTime: {
+                    gte: matchOne.endTime,
+                    lte: matchOne.endTime,
                 },
                 court: {
                     club: {
@@ -235,150 +541,13 @@ describe("[UNIT TEST] getMatches", () => {
                     },
                     slotDuration: {
                         equals: 120,
+                        gte: 100,
+                        lte: 130,
                     },
                 },
             },
-            select: {
-                id: true,
-                startTime: true,
-                endTime: true,
-                status: true,
-                availableSpots: true,
-                equipmentRental: true,
-                court: {
-                    select: {
-                        name: true,
-                        type: true,
-                        hasEquipmentBox: true,
-                        pricePerPerson: true,
-                        slotDuration: true,
-                        club: {
-                            select: {
-                                name: true,
-                                city: true,
-                                openingTime: true,
-                                closingTime: true,
-                            },
-                        },
-                    },
-                },
-                participants: {
-                    select: {
-                        user: {
-                            select: {
-                                firstname: true,
-                                lastname: true,
-                                email: true,
-                                level: true,
-                            },
-                        },
-                    },
-                },
-            },
+            expectedResponse: [matchOne],
         });
-
-        expect(response.status).toHaveBeenCalledWith(200);
-        expect(response.json).toHaveBeenCalledWith([toExpectedMatch(matchOne)]);
-    });
-
-    it("returns the correct match when the level average filter is provided", async () => {
-        const matchOne = createMatchOne();
-        const matchTwo = createMatchTwo();
-        prismaMock.match.findMany.mockResolvedValueOnce([matchOne, matchTwo]);
-
-        const request = createMockRequest({
-            participantAverageLevel: "5",
-            participantAverageLevelTolerance: "0.5",
-        });
-        const response = createMockResponse();
-
-        await getMatches(request, response);
-
-        expect(response.status).toHaveBeenCalledWith(200);
-        expect(response.json).toHaveBeenCalledWith([toExpectedMatch(matchTwo)]);
-    });
-
-    it("returns no matches when the level average filter is provided but no matches are found", async () => {
-        const matchOne = createMatchOne();
-        const matchTwo = createMatchTwo();
-        prismaMock.match.findMany.mockResolvedValueOnce([matchOne, matchTwo]);
-
-        const request = createMockRequest({
-            participantAverageLevel: "4",
-            participantAverageLevelTolerance: "0.25",
-        });
-        const response = createMockResponse();
-
-        await getMatches(request, response);
-
-        expect(response.status).toHaveBeenCalledWith(200);
-        expect(response.json).toHaveBeenCalledWith([]);
-    });
-
-    it("returns matches with 2 participants when availableSpots is 2", async () => {
-        const matchOne = createMatchOne();
-        prismaMock.match.findMany.mockResolvedValueOnce([matchOne]);
-
-        const request = createMockRequest({
-            availableSpots: "2",
-        });
-        const response = createMockResponse();
-
-        await getMatches(request, response);
-
-        expect(prismaMock.match.findMany).toHaveBeenCalledWith({
-            where: {
-                status: "OPEN",
-                availableSpots: {
-                    gt: 0,
-                    equals: 2,
-                },
-            },
-            select: {
-                id: true,
-                startTime: true,
-                endTime: true,
-                status: true,
-                availableSpots: true,
-                equipmentRental: true,
-                court: {
-                    select: {
-                        name: true,
-                        type: true,
-                        hasEquipmentBox: true,
-                        pricePerPerson: true,
-                        slotDuration: true,
-                        club: {
-                            select: {
-                                name: true,
-                                city: true,
-                                openingTime: true,
-                                closingTime: true,
-                            },
-                        },
-                    },
-                },
-                participants: {
-                    select: {
-                        user: {
-                            select: {
-                                firstname: true,
-                                lastname: true,
-                                email: true,
-                                level: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-
-        expect(response.status).toHaveBeenCalledWith(200);
-        expect(response.json).toHaveBeenCalledWith([toExpectedMatch(matchOne)]);
-
-        const responsePayload = (response.json as jest.Mock).mock
-            .calls[0][0] as any[];
-        expect(responsePayload[0].participants).toHaveLength(2);
     });
 
     it("returns a 500 response when Prisma fails", async () => {
