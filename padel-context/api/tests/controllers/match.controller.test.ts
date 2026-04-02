@@ -51,7 +51,6 @@ const createMatchOne = () => ({
     endTime: new Date("2026-04-15T20:00:00.000Z"),
     status: "OPEN",
     availableSpots: 2,
-    equipmentRental: true,
     court: {
         name: "Court Alpha",
         type: "INDOOR",
@@ -91,7 +90,6 @@ const createMatchTwo = () => ({
     endTime: new Date("2026-04-16T20:00:00.000Z"),
     status: "OPEN",
     availableSpots: 1,
-    equipmentRental: false,
     court: {
         name: "Court Beta",
         type: "OUTDOOR",
@@ -139,7 +137,6 @@ const expectedSelect = {
     endTime: true,
     status: true,
     availableSpots: true,
-    equipmentRental: true,
     court: {
         select: {
             name: true,

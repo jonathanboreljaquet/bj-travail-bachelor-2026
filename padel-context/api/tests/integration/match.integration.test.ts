@@ -55,7 +55,6 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
         slotDuration,
         status,
         availableSpots,
-        equipmentRental,
         startTime,
         durationMinutes,
         participantIds,
@@ -70,7 +69,6 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
         slotDuration: number;
         status: "OPEN" | "COMPLETED" | "CANCELED";
         availableSpots: number;
-        equipmentRental: boolean;
         startTime: Date;
         durationMinutes: number;
         participantIds: number[];
@@ -109,7 +107,6 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
                 endTime,
                 status,
                 availableSpots,
-                equipmentRental,
                 court_id: court.id,
                 creator_id: creatorId,
             },
@@ -197,7 +194,6 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             slotDuration: 120,
             status: "OPEN",
             availableSpots: 2,
-            equipmentRental: true,
             startTime: matchOneStartTime,
             durationMinutes: 120,
             participantIds: [participantOne.id, participantTwo.id],
@@ -214,7 +210,6 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             slotDuration: 90,
             status: "OPEN",
             availableSpots: 1,
-            equipmentRental: false,
             startTime: matchTwoStartTime,
             durationMinutes: 90,
             participantIds: [

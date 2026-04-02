@@ -188,7 +188,6 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
                 endTime: true,
                 status: true,
                 availableSpots: true,
-                equipmentRental: true,
                 court: {
                     select: {
                         name: true,

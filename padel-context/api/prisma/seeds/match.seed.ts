@@ -87,7 +87,6 @@ export async function seedMatch(prisma: PrismaClient) {
             endTime,
             status: config.status,
             availableSpots: config.availableSpots,
-            equipmentRental: faker.datatype.boolean(),
             court_id: court.id,
             creator_id: faker.helpers.arrayElement(users).id,
           },
