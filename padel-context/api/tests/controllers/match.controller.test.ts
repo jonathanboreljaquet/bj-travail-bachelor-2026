@@ -1,5 +1,6 @@
 import {
     beforeAll,
+    beforeEach,
     afterEach,
     describe,
     expect,
@@ -27,8 +28,16 @@ beforeAll(async () => {
     ({ getMatches } = await import("../../src/controllers/match.controller"));
 });
 
+const mockedNow = new Date("2026-04-10T10:00:00.000Z");
+
+beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(mockedNow);
+});
+
 afterEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers();
 });
 
 const createMockResponse = () => {
@@ -173,6 +182,9 @@ const buildOpenWhere = (extra: Record<string, unknown> = {}) => ({
     availableSpots: {
         gt: 0,
     },
+    startTime: {
+        gte: mockedNow,
+    },
     ...extra,
 });
 
@@ -212,20 +224,6 @@ describe("[UNIT TEST] getMatches", () => {
         await runGetMatchesCase({
             mockMatches: [matchOne, matchTwo],
             expectedWhere: buildOpenWhere(),
-        });
-    });
-
-    it("filters matches by status", async () => {
-        const matchOne = createMatchOne();
-
-        await runGetMatchesCase({
-            query: {
-                status: "completed",
-            },
-            mockMatches: [matchOne],
-            expectedWhere: {
-                status: "COMPLETED",
-            },
         });
     });
 
@@ -417,6 +415,7 @@ describe("[UNIT TEST] getMatches", () => {
             mockMatches: [matchOne],
             expectedWhere: buildOpenWhere({
                 startTime: {
+                    gte: mockedNow,
                     lte: startTimeTo,
                 },
             }),
@@ -486,13 +485,28 @@ describe("[UNIT TEST] getMatches", () => {
         });
     });
 
+    it("filters matches by courtType", async () => {
+        const matchOne = createMatchOne();
+
+        await runGetMatchesCase({
+            query: {
+                courtType: "indoor",
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                court: {
+                    type: "INDOOR",
+                },
+            }),
+        });
+    });
+
     it("filters matches with all query parameters combined", async () => {
         const matchOne = createMatchOne();
         const matchTwo = createMatchTwo();
 
         await runGetMatchesCase({
             query: {
-                status: "open",
                 city: "Lancy",
                 hasEquipmentBox: "true",
                 minPricePerPerson: "10",
@@ -508,6 +522,7 @@ describe("[UNIT TEST] getMatches", () => {
                 endTimeTo: matchOne.endTime.toISOString(),
                 participantAverageLevel: "3",
                 participantAverageLevelTolerance: "0.1",
+                courtType: "INDOOR",
             },
             mockMatches: [matchOne, matchTwo],
             expectedWhere: {
@@ -541,9 +556,27 @@ describe("[UNIT TEST] getMatches", () => {
                         gte: 100,
                         lte: 130,
                     },
+                    type: "INDOOR",
                 },
             },
             expectedResponse: [matchOne],
+        });
+    });
+
+    it("keeps mockedNow when startTimeFrom is in the past", async () => {
+        const matchOne = createMatchOne();
+        const pastStartTimeFrom = new Date("2026-04-01T00:00:00.000Z");
+
+        await runGetMatchesCase({
+            query: {
+                startTimeFrom: pastStartTimeFrom.toISOString(),
+            },
+            mockMatches: [matchOne],
+            expectedWhere: buildOpenWhere({
+                startTime: {
+                    gte: mockedNow,
+                },
+            }),
         });
     });
 

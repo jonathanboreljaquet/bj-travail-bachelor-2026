@@ -32,13 +32,8 @@ export async function seedMatch(prisma: PrismaClient) {
   const courts = await prisma.court.findMany({ include: { club: true } });
   const users = await prisma.user.findMany();
 
-  if (users.length === 0) {
-    console.warn("No users found, skipping match seeding");
-    return;
-  }
-
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setUTCHours(0, 0, 0, 0);
 
   for (const court of courts) {
     const allSlots = getAllSlots(
@@ -69,17 +64,33 @@ export async function seedMatch(prisma: PrismaClient) {
         const slotMinutes = selectedSlots[i];
         const config = matchConfigs[i];
 
+        const openingMinutes = timeToMinutes(court.club.openingTime);
+        const closingMinutes = timeToMinutes(court.club.closingTime);
+
+        if (
+          slotMinutes < openingMinutes ||
+          slotMinutes + court.slotDuration > closingMinutes
+        ) {
+          continue;
+        }
+
         const startTime = new Date(today);
-        startTime.setDate(startTime.getDate() + day);
-        startTime.setHours(
+        startTime.setUTCDate(startTime.getUTCDate() + day);
+        startTime.setUTCHours(
           Math.floor(slotMinutes / 60),
           slotMinutes % 60,
           0,
           0,
         );
 
-        const endTime = new Date(startTime);
-        endTime.setMinutes(endTime.getMinutes() + court.slotDuration);
+        const endTime = new Date(today);
+        endTime.setUTCDate(endTime.getUTCDate() + day);
+        endTime.setUTCHours(
+          Math.floor((slotMinutes + court.slotDuration) / 60),
+          (slotMinutes + court.slotDuration) % 60,
+          0,
+          0,
+        );
 
         await prisma.match.create({
           data: {

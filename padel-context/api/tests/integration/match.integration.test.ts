@@ -19,6 +19,8 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     let matchTwoCity: string;
     let matchTwoStartTimeIso: string;
     let matchTwoEndTimeIso: string;
+    let pastMatchId: number;
+    let pastMatchCity: string;
 
     const createUser = async ({
         suffix,
@@ -184,6 +186,10 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
         matchTwoStartTime.setDate(matchTwoStartTime.getDate() + 3);
         matchTwoStartTime.setHours(18, 30, 0, 0);
 
+        const pastMatchStartTime = new Date();
+        pastMatchStartTime.setDate(pastMatchStartTime.getDate() - 2);
+        pastMatchStartTime.setHours(18, 30, 0, 0);
+
         const matchOne = await createMatchScenario({
             clubName: "club-1",
             city: `Lancy-${uniquePrefix}`,
@@ -220,6 +226,22 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             creatorId: creator.id,
         });
 
+        const pastMatch = await createMatchScenario({
+            clubName: "club-past",
+            city: `Past-${uniquePrefix}`,
+            courtName: "court-past",
+            type: "OUTDOOR",
+            hasEquipmentBox: true,
+            pricePerPerson: 12,
+            slotDuration: 90,
+            status: "OPEN",
+            availableSpots: 2,
+            startTime: pastMatchStartTime,
+            durationMinutes: 90,
+            participantIds: [participantOne.id, participantTwo.id],
+            creatorId: creator.id,
+        });
+
         matchOneId = matchOne.matchId;
         matchTwoId = matchTwo.matchId;
         matchOneCity = matchOne.city;
@@ -228,6 +250,8 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
         matchOneEndTimeIso = matchOne.endTime.toISOString();
         matchTwoStartTimeIso = matchTwo.startTime.toISOString();
         matchTwoEndTimeIso = matchTwo.endTime.toISOString();
+        pastMatchId = pastMatch.matchId;
+        pastMatchCity = pastMatch.city;
     });
 
     afterAll(async () => {
@@ -289,19 +313,17 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
         expect(matches.map((match) => match.id)).toEqual(
             expect.arrayContaining([matchOneId, matchTwoId]),
         );
+        expect(matches.map((match) => match.id)).not.toContain(pastMatchId);
     });
 
-    it("returns both matches when status is OPEN", async () => {
+    it("does not return a past OPEN match even when filtering by its city", async () => {
         const response = await request(app).get("/api/matches").query({
-            status: "open",
+            city: pastMatchCity,
         });
         const matches = response.body as any[];
 
         expect(response.status).toBe(200);
-        expect(matches.length).toBeGreaterThanOrEqual(2);
-        expect(matches.map((match) => match.id)).toEqual(
-            expect.arrayContaining([matchOneId, matchTwoId]),
-        );
+        expect(matches).toHaveLength(0);
     });
 
     it("returns only the first match when city matches it", async () => {
@@ -314,6 +336,19 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
         expect(matches).toHaveLength(1);
         expect(matches[0].id).toBe(matchOneId);
         expect(matches[0].court.club.city).toBe(matchOneCity);
+    });
+
+    it("returns only the first match when courtType is INDOOR", async () => {
+        const response = await request(app).get("/api/matches").query({
+            city: matchOneCity,
+            courtType: "INDOOR",
+        });
+        const matches = response.body as any[];
+
+        expect(response.status).toBe(200);
+        expect(matches).toHaveLength(1);
+        expect(matches[0].id).toBe(matchOneId);
+        expect(matches[0].court.type).toBe("INDOOR");
     });
 
     it("returns only the second match when minPricePerPerson is 20", async () => {

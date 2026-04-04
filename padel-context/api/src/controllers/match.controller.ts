@@ -1,73 +1,22 @@
 import { Request, Response } from "express";
 import prisma from "../db";
-
-type MatchStatus = "OPEN" | "COMPLETED" | "CANCELED";
-
-const parseBoolean = (value: unknown): boolean | undefined => {
-    if (typeof value !== "string") {
-        return undefined;
-    }
-
-    const normalizedValue = value.trim().toLowerCase();
-    if (normalizedValue === "true") {
-        return true;
-    }
-    if (normalizedValue === "false") {
-        return false;
-    }
-
-    return undefined;
-};
-
-const parseNumber = (value: unknown): number | undefined => {
-    if (typeof value !== "string") {
-        return undefined;
-    }
-
-    const numberValue = Number(value);
-    if (Number.isNaN(numberValue)) {
-        return undefined;
-    }
-
-    return numberValue;
-};
-
-const parseDate = (value: unknown): Date | undefined => {
-    if (typeof value !== "string") {
-        return undefined;
-    }
-
-    const dateValue = new Date(value);
-    if (Number.isNaN(dateValue.getTime())) {
-        return undefined;
-    }
-
-    return dateValue;
-};
-
-const parseStatus = (value: unknown): MatchStatus => {
-    if (typeof value !== "string") {
-        return "OPEN";
-    }
-
-    const normalizedStatus = value.trim().toUpperCase();
-    if (
-        normalizedStatus === "OPEN" ||
-        normalizedStatus === "COMPLETED" ||
-        normalizedStatus === "CANCELED"
-    ) {
-        return normalizedStatus;
-    }
-
-    return "OPEN";
-};
+import { parseBoolean, parseDate, parseNumber } from "../utils/helper";
 
 export const getMatches = async (req: Request, res: Response): Promise<any> => {
     try {
-        const status = parseStatus(req.query.status);
         const city =
             typeof req.query.city === "string"
                 ? req.query.city.trim()
+                : undefined;
+        const courtType =
+            typeof req.query.courtType === "string"
+                ? req.query.courtType.trim().toUpperCase()
+                : undefined;
+        const normalizedCourtType =
+            courtType === "INDOOR" ||
+            courtType === "OUTDOOR" ||
+            courtType === "COVERED"
+                ? courtType
                 : undefined;
         const hasEquipmentBox = parseBoolean(req.query.hasEquipmentBox);
         const minPricePerPerson = parseNumber(req.query.minPricePerPerson);
@@ -86,17 +35,23 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
         );
         const participantAverageLevelTolerance =
             parseNumber(req.query.participantAverageLevelTolerance) ?? 0.5;
+        const now = new Date();
 
         const where: any = {
-            status,
+            status: "OPEN",
         };
 
-        if (status === "OPEN") {
-            where.availableSpots = {
-                ...(where.availableSpots ?? {}),
-                gt: 0,
-            };
-        }
+        const effectiveStartTimeFrom =
+            startTimeFrom && startTimeFrom > now ? startTimeFrom : now;
+        where.startTime = {
+            gte: effectiveStartTimeFrom,
+            ...(startTimeTo ? { lte: startTimeTo } : {}),
+        };
+
+        where.availableSpots = {
+            ...(where.availableSpots ?? {}),
+            gt: 0,
+        };
 
         if (availableSpots !== undefined) {
             where.availableSpots = {
@@ -112,13 +67,6 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
             };
         }
 
-        if (startTimeFrom || startTimeTo) {
-            where.startTime = {
-                ...(startTimeFrom ? { gte: startTimeFrom } : {}),
-                ...(startTimeTo ? { lte: startTimeTo } : {}),
-            };
-        }
-
         if (endTimeFrom || endTimeTo) {
             where.endTime = {
                 ...(endTimeFrom ? { gte: endTimeFrom } : {}),
@@ -128,6 +76,7 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
 
         if (
             city ||
+            normalizedCourtType ||
             hasEquipmentBox !== undefined ||
             minPricePerPerson !== undefined ||
             maxPricePerPerson !== undefined ||
@@ -148,6 +97,10 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
 
         if (hasEquipmentBox !== undefined) {
             where.court.hasEquipmentBox = hasEquipmentBox;
+        }
+
+        if (normalizedCourtType) {
+            where.court.type = normalizedCourtType;
         }
 
         if (
@@ -247,8 +200,3 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
         res.status(500).json({ message: "Error while fetching matches" });
     }
 };
-
-export const getAvailableSlots = async (
-    req: Request,
-    res: Response,
-): Promise<any> => {};

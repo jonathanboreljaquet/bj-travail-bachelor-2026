@@ -62,8 +62,8 @@ model Court {
 
 model Match {
   id              Int         @id @default(autoincrement())
-  startTime       DateTime
-  endTime         DateTime
+  startTime       DateTime    @db.Timestamptz(3)
+  endTime         DateTime    @db.Timestamptz(3)
   status          matchStatus @default(OPEN)
   availableSpots  Int
 
