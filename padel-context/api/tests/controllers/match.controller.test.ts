@@ -11,11 +11,23 @@ import type { Request, Response } from "express";
 
 const findManyMock =
     jest.fn<(args: Record<string, unknown>) => Promise<unknown[]>>();
+const findUniqueMock = jest.fn<(...args: any[]) => Promise<any>>();
+const updateMock = jest.fn<(...args: any[]) => Promise<any>>();
+const participantFindUniqueMock = jest.fn<(...args: any[]) => Promise<any>>();
+const participantCreateMock = jest.fn<(...args: any[]) => Promise<any>>();
+const transactionMock = jest.fn<(...args: any[]) => Promise<any>>();
 
 const prismaMock = {
     match: {
         findMany: findManyMock,
+        findUnique: findUniqueMock,
+        update: updateMock,
     },
+    participant: {
+        findUnique: participantFindUniqueMock,
+        create: participantCreateMock,
+    },
+    $transaction: transactionMock,
 };
 
 await jest.unstable_mockModule("../../src/db", () => ({
@@ -23,9 +35,11 @@ await jest.unstable_mockModule("../../src/db", () => ({
 }));
 
 let getMatches: typeof import("../../src/controllers/match.controller").getMatches;
+let joinMatch: typeof import("../../src/controllers/match.controller").joinMatch;
 
 beforeAll(async () => {
-    ({ getMatches } = await import("../../src/controllers/match.controller"));
+    ({ getMatches, joinMatch } =
+        await import("../../src/controllers/match.controller"));
 });
 
 const mockedNow = new Date("2026-04-10T10:00:00.000Z");
@@ -593,6 +607,378 @@ describe("[UNIT TEST] getMatches", () => {
         expect(response.status).toHaveBeenCalledWith(500);
         expect(response.json).toHaveBeenCalledWith({
             message: "Error while fetching matches",
+        });
+    });
+});
+
+describe("[UNIT TEST] joinMatch", () => {
+    const mockAuthUser = { userId: 1, email: "user@test.dev" };
+
+    const createMockRequestForJoin = (matchId: string | number) =>
+        ({
+            params: { matchId: String(matchId) },
+        }) as unknown as Request;
+
+    const createMockResponseWithAuthUser = (
+        authUser?: { userId: number; email: string } | null,
+    ) => {
+        const response = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn(),
+            locals: {
+                authUser: authUser !== null ? authUser : undefined,
+            },
+        };
+
+        return response as unknown as Response;
+    };
+
+    it("returns 400 when matchId is not numeric", async () => {
+        const request = createMockRequestForJoin("invalid");
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        await joinMatch(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(400);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "invalid match ID",
+        });
+    });
+
+    it("returns 401 when authUser is missing", async () => {
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(null);
+
+        await joinMatch(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(401);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "unauthorized",
+        });
+    });
+
+    it("returns 404 when match is not found", async () => {
+        const request = createMockRequestForJoin(999);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        findUniqueMock.mockResolvedValueOnce(null);
+
+        await joinMatch(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(404);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "match not found",
+        });
+    });
+
+    it("returns 400 when match is not OPEN", async () => {
+        const matchData = {
+            id: 123,
+            status: "COMPLETED",
+            availableSpots: 2,
+            startTime: new Date("2026-04-15T18:00:00.000Z"),
+            endTime: new Date("2026-04-15T20:00:00.000Z"),
+            creator_id: 999,
+            court_id: 1,
+            court: {
+                name: "Court A",
+                type: "INDOOR",
+                club: { name: "Club A", city: "City A" },
+            },
+        };
+
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        findUniqueMock.mockResolvedValueOnce(matchData);
+
+        await joinMatch(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(400);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "match is not open",
+        });
+    });
+
+    it("returns 400 when availableSpots is 0", async () => {
+        const matchData = {
+            id: 123,
+            status: "OPEN",
+            availableSpots: 0,
+            startTime: new Date("2026-04-15T18:00:00.000Z"),
+            endTime: new Date("2026-04-15T20:00:00.000Z"),
+            creator_id: 999,
+            court_id: 1,
+            court: {
+                name: "Court A",
+                type: "INDOOR",
+                club: { name: "Club A", city: "City A" },
+            },
+        };
+
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        findUniqueMock.mockResolvedValueOnce(matchData);
+
+        await joinMatch(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(400);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "no available spots",
+        });
+    });
+
+    it("returns 400 when user is already a participant", async () => {
+        const matchData = {
+            id: 123,
+            status: "OPEN",
+            availableSpots: 2,
+            startTime: new Date("2026-04-15T18:00:00.000Z"),
+            endTime: new Date("2026-04-15T20:00:00.000Z"),
+            creator_id: 999,
+            court_id: 1,
+            court: {
+                name: "Court A",
+                type: "INDOOR",
+                club: { name: "Club A", city: "City A" },
+            },
+        };
+
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        findUniqueMock.mockResolvedValueOnce(matchData);
+        participantFindUniqueMock.mockResolvedValueOnce({
+            user_id: 1,
+            match_id: 123,
+        });
+
+        await joinMatch(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(400);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "user already joined this match",
+        });
+    });
+
+    it("returns 200 and successfully joins the match", async () => {
+        const matchData = {
+            id: 123,
+            status: "OPEN",
+            availableSpots: 3,
+            startTime: new Date("2026-04-15T18:00:00.000Z"),
+            endTime: new Date("2026-04-15T20:00:00.000Z"),
+            creator_id: 999,
+            court_id: 1,
+            court: {
+                name: "Court A",
+                type: "INDOOR",
+                club: { name: "Club A", city: "City A" },
+            },
+        };
+
+        const updatedMatch = {
+            id: 123,
+            status: "OPEN",
+            availableSpots: 2,
+            startTime: new Date("2026-04-15T18:00:00.000Z"),
+            endTime: new Date("2026-04-15T20:00:00.000Z"),
+            creator_id: 999,
+            court: {
+                name: "Court A",
+                type: "INDOOR",
+                club: { name: "Club A", city: "City A" },
+            },
+            participants: [
+                {
+                    user: {
+                        id: 1,
+                        firstname: "John",
+                        lastname: "Doe",
+                        email: "user@test.dev",
+                        level: 3,
+                    },
+                    joinedAt: mockedNow,
+                },
+            ],
+        };
+
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        findUniqueMock.mockResolvedValueOnce(matchData);
+        participantFindUniqueMock.mockResolvedValueOnce(null);
+
+        transactionMock.mockImplementation(async (callback) => {
+            return await callback({
+                participant: { create: participantCreateMock },
+                match: { update: updateMock },
+            });
+        });
+
+        updateMock.mockResolvedValueOnce(updatedMatch);
+
+        await joinMatch(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(200);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "successfully joined match",
+            match: updatedMatch,
+        });
+    });
+
+    it("decrements availableSpots correctly", async () => {
+        const matchData = {
+            id: 123,
+            status: "OPEN",
+            availableSpots: 2,
+            startTime: new Date("2026-04-15T18:00:00.000Z"),
+            endTime: new Date("2026-04-15T20:00:00.000Z"),
+            creator_id: 999,
+            court_id: 1,
+            court: {
+                name: "Court A",
+                type: "INDOOR",
+                club: { name: "Club A", city: "City A" },
+            },
+        };
+
+        const updatedMatch = {
+            ...matchData,
+            availableSpots: 1,
+            participants: [
+                {
+                    user: mockAuthUser,
+                    joinedAt: mockedNow,
+                },
+            ],
+        };
+
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        findUniqueMock.mockResolvedValueOnce(matchData);
+        participantFindUniqueMock.mockResolvedValueOnce(null);
+
+        transactionMock.mockImplementation(async (callback) => {
+            return await callback({
+                participant: { create: participantCreateMock },
+                match: { update: updateMock },
+            });
+        });
+
+        updateMock.mockResolvedValueOnce(updatedMatch);
+
+        await joinMatch(request, response);
+
+        expect(updateMock).toHaveBeenCalledWith({
+            where: { id: 123 },
+            data: {
+                availableSpots: 1,
+                status: "OPEN",
+            },
+            select: expect.any(Object),
+        });
+    });
+
+    it("sets match status to COMPLETED when last spot is filled", async () => {
+        const matchData = {
+            id: 123,
+            status: "OPEN",
+            availableSpots: 1,
+            startTime: new Date("2026-04-15T18:00:00.000Z"),
+            endTime: new Date("2026-04-15T20:00:00.000Z"),
+            creator_id: 999,
+            court_id: 1,
+            court: {
+                name: "Court A",
+                type: "INDOOR",
+                club: { name: "Club A", city: "City A" },
+            },
+        };
+
+        const updatedMatch = {
+            ...matchData,
+            availableSpots: 0,
+            status: "COMPLETED",
+            participants: [
+                {
+                    user: mockAuthUser,
+                    joinedAt: mockedNow,
+                },
+            ],
+        };
+
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        findUniqueMock.mockResolvedValueOnce(matchData);
+        participantFindUniqueMock.mockResolvedValueOnce(null);
+
+        transactionMock.mockImplementation(async (callback) => {
+            return await callback({
+                participant: { create: participantCreateMock },
+                match: { update: updateMock },
+            });
+        });
+
+        updateMock.mockResolvedValueOnce(updatedMatch);
+
+        await joinMatch(request, response);
+
+        expect(updateMock).toHaveBeenCalledWith({
+            where: { id: 123 },
+            data: {
+                availableSpots: 0,
+                status: "COMPLETED",
+            },
+            select: expect.any(Object),
+        });
+    });
+
+    it("returns 500 when Prisma findUnique fails", async () => {
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        findUniqueMock.mockRejectedValueOnce(new Error("database unavailable"));
+
+        await joinMatch(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(500);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "Error while joining match",
+        });
+    });
+
+    it("returns 500 when transaction fails", async () => {
+        const matchData = {
+            id: 123,
+            status: "OPEN",
+            availableSpots: 2,
+            startTime: new Date("2026-04-15T18:00:00.000Z"),
+            endTime: new Date("2026-04-15T20:00:00.000Z"),
+            creator_id: 999,
+            court_id: 1,
+            court: {
+                name: "Court A",
+                type: "INDOOR",
+                club: { name: "Club A", city: "City A" },
+            },
+        };
+
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        findUniqueMock.mockResolvedValueOnce(matchData);
+        participantFindUniqueMock.mockResolvedValueOnce(null);
+        transactionMock.mockRejectedValueOnce(new Error("transaction failed"));
+
+        await joinMatch(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(500);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "Error while joining match",
         });
     });
 });

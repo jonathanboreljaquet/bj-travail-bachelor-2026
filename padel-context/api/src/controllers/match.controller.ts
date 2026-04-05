@@ -200,3 +200,143 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
         res.status(500).json({ message: "Error while fetching matches" });
     }
 };
+
+export const joinMatch = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const matchIdParam = req.params.matchId;
+        const authUser = res.locals.authUser as
+            | { userId: number; email: string }
+            | undefined;
+
+        if (!matchIdParam || isNaN(Number(matchIdParam))) {
+            res.status(400).json({ message: "invalid match ID" });
+            return;
+        }
+
+        if (!authUser) {
+            res.status(401).json({ message: "unauthorized" });
+            return;
+        }
+
+        const matchId = Number(matchIdParam);
+        const userId = authUser.userId;
+
+        const match = await prisma.match.findUnique({
+            where: { id: matchId },
+            select: {
+                id: true,
+                status: true,
+                availableSpots: true,
+                startTime: true,
+                endTime: true,
+                court_id: true,
+                creator_id: true,
+                court: {
+                    select: {
+                        name: true,
+                        type: true,
+                        club: {
+                            select: {
+                                name: true,
+                                city: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!match) {
+            res.status(404).json({ message: "match not found" });
+            return;
+        }
+
+        if (match.status !== "OPEN") {
+            res.status(400).json({ message: "match is not open" });
+            return;
+        }
+
+        if (match.availableSpots <= 0) {
+            res.status(400).json({ message: "no available spots" });
+            return;
+        }
+
+        const existingParticipant = await prisma.participant.findUnique({
+            where: {
+                user_id_match_id: {
+                    user_id: userId,
+                    match_id: matchId,
+                },
+            },
+        });
+
+        if (existingParticipant) {
+            res.status(400).json({ message: "user already joined this match" });
+            return;
+        }
+
+        const result = await prisma.$transaction(async (tx) => {
+            await tx.participant.create({
+                data: {
+                    user_id: userId,
+                    match_id: matchId,
+                },
+            });
+
+            const newAvailableSpots = match.availableSpots - 1;
+            const newStatus =
+                newAvailableSpots === 0 ? "COMPLETED" : match.status;
+
+            const updatedMatch = await tx.match.update({
+                where: { id: matchId },
+                data: {
+                    availableSpots: newAvailableSpots,
+                    status: newStatus,
+                },
+                select: {
+                    id: true,
+                    status: true,
+                    availableSpots: true,
+                    startTime: true,
+                    endTime: true,
+                    creator_id: true,
+                    court: {
+                        select: {
+                            name: true,
+                            type: true,
+                            club: {
+                                select: {
+                                    name: true,
+                                    city: true,
+                                },
+                            },
+                        },
+                    },
+                    participants: {
+                        select: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    firstname: true,
+                                    lastname: true,
+                                    email: true,
+                                    level: true,
+                                },
+                            },
+                            joinedAt: true,
+                        },
+                    },
+                },
+            });
+
+            return updatedMatch;
+        });
+
+        res.status(200).json({
+            message: "successfully joined match",
+            match: result,
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error while joining match" });
+    }
+};
