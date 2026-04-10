@@ -27,11 +27,16 @@ export const getAvailableSlots = async (
         const startTimeTo = parseDate(req.query.startTimeTo);
         const endTimeFrom = parseDate(req.query.endTimeFrom);
         const endTimeTo = parseDate(req.query.endTimeTo);
-        const courtType = typeof req.query.courtType === "string" 
-            ? req.query.courtType.trim().toUpperCase() : undefined;
-        const normalizedCourtType = 
-            courtType === "INDOOR" || courtType === "OUTDOOR" || courtType === "COVERED"
-                ? courtType : undefined;
+        const courtType =
+            typeof req.query.courtType === "string"
+                ? req.query.courtType.trim().toUpperCase()
+                : undefined;
+        const normalizedCourtType =
+            courtType === "INDOOR" ||
+            courtType === "OUTDOOR" ||
+            courtType === "COVERED"
+                ? courtType
+                : undefined;
         const now = new Date();
 
         const dayStart = new Date(now);
@@ -186,7 +191,8 @@ export const getAvailableSlots = async (
 
                 const currentMinutes =
                     windowStart > currentDayStart && windowStart < currentDayEnd
-                        ? windowStart.getUTCHours() * 60 + windowStart.getUTCMinutes()
+                        ? windowStart.getUTCHours() * 60 +
+                          windowStart.getUTCMinutes()
                         : openingMinutes;
                 const effectiveOpeningMinutes = Math.max(
                     openingMinutes,
@@ -244,6 +250,198 @@ export const getAvailableSlots = async (
     } catch (error) {
         res.status(500).json({
             message: "Error while fetching available slots",
+        });
+    }
+};
+
+export const createMatchFromSlot = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
+    try {
+        const authUser = res.locals.authUser as
+            | { userId: number; email: string }
+            | undefined;
+
+        if (!authUser) {
+            res.status(401).json({ message: "unauthorized" });
+            return;
+        }
+
+        const courtId = Number(req.body?.courtId);
+        const startTime = parseDate(req.body?.startTime);
+        const endTime = parseDate(req.body?.endTime);
+
+        if (
+            !Number.isInteger(courtId) ||
+            courtId <= 0 ||
+            !startTime ||
+            !endTime
+        ) {
+            res.status(400).json({
+                message: "courtId, startTime and endTime are required",
+            });
+            return;
+        }
+
+        if (startTime >= endTime) {
+            res.status(400).json({ message: "invalid slot range" });
+            return;
+        }
+
+        const court = await prisma.court.findUnique({
+            where: { id: courtId },
+            select: {
+                id: true,
+                slotDuration: true,
+                club: {
+                    select: {
+                        openingTime: true,
+                        closingTime: true,
+                    },
+                },
+            },
+        });
+
+        if (!court) {
+            res.status(404).json({ message: "court not found" });
+            return;
+        }
+
+        const slotDurationMinutes =
+            (endTime.getTime() - startTime.getTime()) / (60 * 1000);
+
+        if (slotDurationMinutes !== court.slotDuration) {
+            res.status(400).json({
+                message: "slot duration does not match court slotDuration",
+            });
+            return;
+        }
+
+        const openingMinutes = toMinutes(court.club.openingTime);
+        const closingMinutes = toMinutes(court.club.closingTime);
+        const startMinutes =
+            startTime.getUTCHours() * 60 + startTime.getUTCMinutes();
+        const endMinutes = endTime.getUTCHours() * 60 + endTime.getUTCMinutes();
+
+        if (startMinutes < openingMinutes || endMinutes > closingMinutes) {
+            res.status(400).json({
+                message: "slot is outside club opening hours",
+            });
+            return;
+        }
+
+        if ((startMinutes - openingMinutes) % court.slotDuration !== 0) {
+            res.status(400).json({
+                message: "slot is not aligned with court slotDuration",
+            });
+            return;
+        }
+
+        const now = new Date();
+        const dayStart = new Date(now);
+        dayStart.setUTCHours(0, 0, 0, 0);
+        const windowEnd = new Date(dayStart);
+        windowEnd.setUTCDate(windowEnd.getUTCDate() + 7);
+
+        if (startTime < now || endTime > windowEnd) {
+            res.status(400).json({
+                message: "slot must be within the next 7 days",
+            });
+            return;
+        }
+
+        const overlappingMatch = await prisma.match.findFirst({
+            where: {
+                court_id: courtId,
+                status: {
+                    in: ["OPEN", "COMPLETED"],
+                },
+                startTime: {
+                    lt: endTime,
+                },
+                endTime: {
+                    gt: startTime,
+                },
+            },
+            select: {
+                id: true,
+            },
+        });
+
+        if (overlappingMatch) {
+            res.status(409).json({ message: "slot is no longer available" });
+            return;
+        }
+
+        const match = await prisma.$transaction(async (tx) => {
+            const createdMatch = await tx.match.create({
+                data: {
+                    startTime,
+                    endTime,
+                    status: "OPEN",
+                    availableSpots: 3,
+                    court_id: courtId,
+                    creator_id: authUser.userId,
+                },
+                select: {
+                    id: true,
+                },
+            });
+
+            await tx.participant.create({
+                data: {
+                    user_id: authUser.userId,
+                    match_id: createdMatch.id,
+                },
+            });
+
+            return tx.match.findUnique({
+                where: { id: createdMatch.id },
+                select: {
+                    id: true,
+                    status: true,
+                    availableSpots: true,
+                    startTime: true,
+                    endTime: true,
+                    creator_id: true,
+                    court: {
+                        select: {
+                            name: true,
+                            type: true,
+                            club: {
+                                select: {
+                                    name: true,
+                                    city: true,
+                                },
+                            },
+                        },
+                    },
+                    participants: {
+                        select: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    firstname: true,
+                                    lastname: true,
+                                    email: true,
+                                    level: true,
+                                },
+                            },
+                            joinedAt: true,
+                        },
+                    },
+                },
+            });
+        });
+
+        res.status(201).json({
+            message: "match created from slot",
+            match,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error while creating match from slot",
         });
     }
 };
