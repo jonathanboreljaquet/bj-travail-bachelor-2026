@@ -19,6 +19,8 @@
 \usepackage{amsfonts}
 \usepackage{amscd}
 \usepackage{amstext}
+\usepackage{tabularx}
+\usepackage[table]{xcolor}
 
 \usepackage{hyperref}
 \usepackage{xcolor}
@@ -504,6 +506,101 @@ Description complète de l'architecture logicielle de l'application, Backend, Fr
     \label{fig:api_entity_relationship_diagram}
 \end{figure}
 \subsubsection{Dictionnaire de données}
+Le dictionnaire de données ci-dessous détaille la structure des tables de la base de données relationnelle (PostgreSQL) générée par l'ORM Prisma. 
+Il est important de noter la présence de deux énumérations (\textit{Enums}) utilisées pour restreindre les valeurs de certains champs :
+\begin{itemize}
+    \item \textbf{CourtType} : Définit le type de terrain (\texttt{INDOOR}, \texttt{OUTDOOR}, \texttt{COVERED}).
+    \item \textbf{matchStatus} : Définit l'état actuel d'une partie (\texttt{OPEN}, \texttt{COMPLETED}, \texttt{CANCELED}).
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|l|X|}
+    \hline
+    \multicolumn{4}{|c|}{\cellcolor[gray]{0.9} \textbf{User}} \\ \hline
+    \textbf{Attribut} & \textbf{Type} & \textbf{Contraintes / Clés} & \textbf{Description} \\ \hline
+    \texttt{id} & Int & PK, Auto-incrément & Identifiant unique du joueur. \\ \hline
+    \texttt{firstname} & String & Requis & Prénom du joueur. \\ \hline
+    \texttt{lastname} & String & Requis & Nom de famille du joueur. \\ \hline
+    \texttt{email} & String & Requis, Unique & Adresse e-mail. \\ \hline
+    \texttt{password} & String & Requis & Mot de passe haché. \\ \hline
+    \texttt{level} & Int & Défaut : 1 & Niveau du joueur. \\ \hline
+    \texttt{createdAt} & DateTime & Défaut : now() & Date et heure d'inscription sur la plateforme. \\ \hline
+    \end{tabularx}
+    \caption{Dictionnaire de données - Table User}
+    \label{tab:dict_user}
+\end{table}
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|l|X|}
+    \hline
+    \multicolumn{4}{|c|}{\cellcolor[gray]{0.9} \textbf{Club}} \\ \hline
+    \textbf{Attribut} & \textbf{Type} & \textbf{Contraintes / Clés} & \textbf{Description} \\ \hline
+    \texttt{id} & Int & PK, Auto-incrément & Identifiant unique du club. \\ \hline
+    \texttt{name} & String & Requis & Nom du club. \\ \hline
+    \texttt{city} & String & Requis & Ville où se situe le club. \\ \hline
+    \texttt{openingTime} & String & Requis & Heure d'ouverture habituelle quotidienne. \\ \hline
+    \texttt{closingTime} & String & Requis & Heure de fermeture habituelle quotidienne. \\ \hline
+    \end{tabularx}
+    \caption{Dictionnaire de données - Table Club}
+    \label{tab:dict_club}
+\end{table}
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|l|X|}
+    \hline
+    \multicolumn{4}{|c|}{\cellcolor[gray]{0.9} \textbf{Court}} \\ \hline
+    \textbf{Attribut} & \textbf{Type} & \textbf{Contraintes / Clés} & \textbf{Description} \\ \hline
+    \texttt{id} & Int & PK, Auto-incrément & Identifiant unique du terrain. \\ \hline
+    \texttt{name} & String & Requis & Nom d'identification du terrain. \\ \hline
+    \texttt{type} & CourtType & Défaut : OUTDOOR & Type du terrain. \\ \hline
+    \texttt{hasEquipmentBox} & Boolean & Requis & Indique si le terrain met du matériel à disposition. \\ \hline
+    \texttt{pricePerPerson} & Float & Requis & Prix de la réservation par joueur. \\ \hline
+    \texttt{slotDuration} & Int & Requis & Durée standard d'un créneau de jeu en minutes. \\ \hline
+    \texttt{club\_id} & Int & FK & Référence au club propriétaire du terrain. \\ \hline
+    \end{tabularx}
+    \caption{Dictionnaire de données - Table Court}
+    \label{tab:dict_court}
+\end{table}
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|l|X|}
+    \hline
+    \multicolumn{4}{|c|}{\cellcolor[gray]{0.9} \textbf{Match}} \\ \hline
+    \textbf{Attribut} & \textbf{Type} & \textbf{Contraintes / Clés} & \textbf{Description} \\ \hline
+    \texttt{id} & Int & PK, Auto-incrément & Identifiant unique de la partie. \\ \hline
+    \texttt{startTime} & DateTime & Requis & Date et heure précises du début du match. \\ \hline
+    \texttt{endTime} & DateTime & Requis & Date et heure précises de la fin du match. \\ \hline
+    \texttt{status} & matchStatus & Défaut : OPEN & État actuel du match. \\ \hline
+    \texttt{availableSpots} & Int & Requis & Nombre de places encore disponibles pour ce match. \\ \hline
+    \texttt{court\_id} & Int & FK  & Référence au terrain sur lequel se joue le match. \\ \hline
+    \texttt{creator\_id} & Int & FK & Référence au joueur ayant initié la création du match. \\ \hline
+    \end{tabularx}
+    \caption{Dictionnaire de données - Table Match}
+    \label{tab:dict_match}
+\end{table}
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|l|X|}
+    \hline
+    \multicolumn{4}{|c|}{\cellcolor[gray]{0.9} \textbf{Participant}} \\ \hline
+    \textbf{Attribut} & \textbf{Type} & \textbf{Contraintes / Clés} & \textbf{Description} \\ \hline
+    \texttt{user\_id} & Int & PK, FK & Identifiant du joueur rejoignant le match. \\ \hline
+    \texttt{match\_id} & Int & PK, FK & Identifiant du match rejoint. \\ \hline
+    \texttt{joinedAt} & DateTime & Défaut : now() & Date et heure de l'inscription du joueur à la partie. \\ \hline
+    \end{tabularx}
+    \caption{Dictionnaire de données - Table Participant}
+    \label{tab:dict_participant}
+\end{table}
 \subsection{Maquettes}
 Maquettes de l'application, comment elle va être organisée, les différentes pages, etc..
 \subsection{Définitions des outils MCP}
