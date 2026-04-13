@@ -32,6 +32,7 @@
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
 \usepackage{pgf}
+\usepackage{rotating}
 
 \usepackage{cellspace}
 \setlength\cellspacetoplimit{6pt}    
@@ -462,7 +463,36 @@ Pourquoi je veux utiliser javascript et autre outils pour le développement de l
 \subsection{Architecture du Mondel Context Protocol}
 Comment l'IA va interagir avec les différentes sources de données ?
 \section{Conception et architecture de l'application}
-\subsection{Architecture logicielle}
+\subsection{Modélisation fonctionnelle}
+\subsubsection{Diagramme de cas d'utilisation}
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{img/use_case_diagram.drawio.png}
+\caption{Diagramme de cas d'utilisation de l'application PadelContext}
+\label{fig:use_case_diagram}
+\end{figure}
+
+\subsubsection{Description des acteurs et des fonctionnalités}
+Afin de bien délimiter le périmètre d'action de l'application PadelContext, il est essentiel de définir les différents acteurs interagissant avec le système, ainsi que les scénarios d'utilisation principaux qui en découlent. Contrairement à une application classique, l'intégration du Model Context Protocol modifie l'interaction entre les acteurs. L'utilisateur ne se renseigne pas et ne navigue pas uniquement via des clics dans des menus, mais dialogue avec un assistant IA qui orchestre les requêtes de manière proactive.
+\newline\newline
+Les acteurs principaux de l'application sont les suivants :
+\newline
+\begin{itemize}
+\item \textbf{Le Joueur} : Il s'agit de l'utilisateur final de l'application. Son objectif est de trouver des partenaires, de consulter la disponibilité des terrains et de planifier des parties de padel tout en s'affranchissant de la charge mentale logistique (météo, équipement sur place, niveau des autres joueurs, etc.).
+\item \textbf{L'Assistant IA} : Utilisant un LLM et connecté au serveur MCP, il agit comme un assistant proactif. Il comprend les requêtes en langage naturel du joueur et utilise les outils mis à sa disposition pour interroger l'API REST de l'application ainsi que l'API externe MeteoSwiss.
+\item \textbf{API MeteoSwiss} : Système externe interrogé par l'Assistant IA pour valider les prévisions météorologiques avant la proposition d'un terrain en extérieur.
+\end{itemize}\
+\newline
+Les scénarios d'utilisation principaux sont les suivants :
+\newline
+\begin{itemize}
+\item \textbf{Connexion} : Le joueur s'authentifie sur l'application. Cette étape permet de personnaliser ses futures requêtes auprès de l'Assistant IA et de l'autoriser à exécuter des actions nécessitant une identification (comme rejoindre une partie ou réserver un terrain).
+\item \textbf{Afficher les parties existantes} : Le joueur exprime à l'Assistant IA son désir de participer à un match, par exemple : << Je cherche à rejoindre une partie pour demain à 18h00 avec des joueurs d'un niveau moyen de 5.0 >>. L'Assistant IA fait appel au serveur MCP pour interroger l'outil approprié. Il analyse les matchs ouverts et filtre les résultats pour ne proposer que ceux correspondant au niveau du joueur et à la tranche horaire souhaitée.
+\item \textbf{Rejoindre une partie existante} : Si le joueur valide la proposition de l'Assistant IA, ce dernier vérifie l'état de connexion du joueur, puis exécute l'action nécessaire pour l'inscrire à la partie sélectionnée.
+\item \textbf{Afficher les terrains disponibles} : Le joueur formule le souhait de réserver un terrain pour une date et une heure précises, par exemple : << Je souhaite réserver un terrain extérieur pour samedi prochain à 14h00 >>. L'Assistant IA interroge le serveur MCP pour lister les terrains disponibles et filtre les résultats selon la tranche horaire et le type de terrain demandés. De plus, avant de finaliser sa proposition, l'Assistant IA consulte l'API MeteoSwiss pour s'assurer que les conditions climatiques seront favorables.
+\item \textbf{Réserver un terrain} : Une fois la proposition validée par le joueur, l'Assistant IA vérifie que l'utilisateur est connecté et procède à la réservation effective du terrain.
+\end{itemize}
+    \subsection{Architecture logicielle}
 Description complète de l'architecture logicielle de l'application, Backend, Frontend (Client MCP), Base de données, API externes, Serveur MCP, autres... 
 
 \subsection{Modélisation de la base de données}
@@ -615,4 +645,18 @@ Une fois la source dans le fichier \textbf{bibliography.bib} et citée, elle ser
 % * \addbibresource{bibliography.bib} pour indiquer le lien vers la ressource
 % * retirer les commandes précédentes et les remplacer par /printbibliography
 % * pour finir veiller à utiliser \parencite au lieu de \cite pour ajouter des parenthèses aux citations.
+\newpage
+\section{Annexes}
+\begin{center}
+    \rotatebox{90}{
+        \begin{minipage}{0.8\textheight} 
+            \centering
+            % Il suffit de mettre l'extension .pdf
+            \includegraphics[width=\linewidth, page=4]{gantt/gantt_tb_cropped.pdf}
+            \vspace{10pt} 
+            \captionof{figure}{Diagramme Gantt du projet PadelContext}
+            \label{fig:gantt_full}
+        \end{minipage}
+    }
+\end{center}
 \end{document}

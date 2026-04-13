@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?><project name="Travail de Bachelor PadelContext - Gantt " company="HEG Genève" webLink="http://" view-date="2026-03-16" view-index="0" gantt-divider-location="591" resource-divider-location="300" version="3.3.3316" locale="fr_CH">
+<?xml version="1.0" encoding="UTF-8"?><project name="Travail de Bachelor PadelContext - Gantt " company="HEG Genève" webLink="http://" view-date="2026-04-06" view-index="0" gantt-divider-location="944" resource-divider-location="300" version="3.3.3316" locale="fr_FR">
     <description/>
     <view zooming-state="default:4" id="gantt-chart">
-        <field id="tpd3" name="Name" width="327" order="0"/>
-        <field id="tpd4" name="Begin date" width="124" order="1"/>
-        <field id="tpd5" name="End date" width="124" order="2"/>
+        <field id="tpd3" name="Nom" width="527" order="0"/>
+        <field id="tpd4" name="Date de début" width="200" order="1"/>
+        <field id="tpd5" name="Date de fin" width="201" order="2"/>
         <field id="tpd15" name="Notes" width="20" order="3"/>
         <option id="filter.completedTasks" value="false"/>
         <option id="filter.dueTodayTasks" value="false"/>
@@ -11,8 +11,8 @@
         <option id="filter.inProgressTodayTasks" value="false"/>
     </view>
     <view id="resource-table">
-        <field id="0" name="Name" width="210" order="0"/>
-        <field id="1" name="Default role" width="86" order="1"/>
+        <field id="0" name="Nom" width="210" order="0"/>
+        <field id="1" name="Rôle par défaut" width="86" order="1"/>
     </view>
     <!-- -->
     <calendars>
