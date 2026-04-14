@@ -35,3 +35,6 @@ docker compose up --build
 ```bash
 docker compose exec api npm run test
 ```
+
+### Documentation Swagger
+http://localhost:{APP_PORT}/api-docs/
