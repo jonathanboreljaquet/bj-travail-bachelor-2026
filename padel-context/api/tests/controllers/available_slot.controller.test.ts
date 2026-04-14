@@ -374,76 +374,80 @@ describe("[UNIT TEST] getAvailableSlots", () => {
         });
     });
 
-    it("filters slots by startTimeFrom", async () => {
+    it("Filters slots by timeFrom", async () => {
         const court = createCourtOne();
-        const startTimeFrom = new Date("2026-04-15T10:00:00.000Z");
+        const timeFrom = new Date("2026-04-15T10:00:00.000Z");
 
         await runGetAvailableSlotsCase({
             query: {
-                startTimeFrom: startTimeFrom.toISOString(),
-            },
-            mockCourts: [court],
-            expectedCourtWhere: buildCourtWhere(),
-            expectedMatchWhere: {
-                startTime: {
-                    gte: startTimeFrom,
-                },
-            },
-        });
-    });
-
-    it("filters slots by startTimeTo", async () => {
-        const court = createCourtOne();
-        const startTimeTo = new Date("2026-04-16T00:00:00.000Z");
-
-        await runGetAvailableSlotsCase({
-            query: {
-                startTimeTo: startTimeTo.toISOString(),
-            },
-            mockCourts: [court],
-            expectedCourtWhere: buildCourtWhere(),
-            expectedMatchWhere: {
-                startTime: {
-                    lte: startTimeTo,
-                },
-            },
-        });
-    });
-
-    it("filters slots by endTimeFrom", async () => {
-        const court = createCourtOne();
-        const endTimeFrom = new Date("2026-04-15T09:00:00.000Z");
-
-        await runGetAvailableSlotsCase({
-            query: {
-                endTimeFrom: endTimeFrom.toISOString(),
+                timeFrom: timeFrom.toISOString(),
             },
             mockCourts: [court],
             expectedCourtWhere: buildCourtWhere(),
             expectedMatchWhere: {
                 endTime: {
-                    gte: endTimeFrom,
+                    gt: timeFrom,
                 },
             },
         });
     });
 
-    it("filters slots by endTimeTo", async () => {
+    it("Filters slots by timeTo", async () => {
         const court = createCourtOne();
-        const endTimeTo = new Date("2026-04-15T12:00:00.000Z");
+        const timeTo = new Date("2026-04-16T00:00:00.000Z");
 
         await runGetAvailableSlotsCase({
             query: {
-                endTimeTo: endTimeTo.toISOString(),
+                timeTo: timeTo.toISOString(),
             },
             mockCourts: [court],
             expectedCourtWhere: buildCourtWhere(),
             expectedMatchWhere: {
-                endTime: {
-                    lte: endTimeTo,
+                startTime: {
+                    lt: timeTo,
                 },
             },
         });
+    });
+
+    it("Filters slots by timeFrom and timeTo", async () => {
+        const court = createCourtOne();
+        const timeFrom = new Date("2026-04-15T09:00:00.000Z");
+        const timeTo = new Date("2026-04-15T10:00:00.000Z");
+
+        await runGetAvailableSlotsCase({
+            query: {
+                timeFrom: timeFrom.toISOString(),
+                timeTo: timeTo.toISOString(),
+            },
+            mockCourts: [court],
+            expectedCourtWhere: buildCourtWhere(),
+            expectedMatchWhere: {
+                startTime: {
+                    lt: timeTo,
+                },
+                endTime: {
+                    gt: timeFrom,
+                },
+            },
+        });
+    });
+
+    it("returns a 400 response when timeTo is before timeFrom", async () => {
+        const request = createMockRequest({
+            timeFrom: "2026-04-15T10:00:00.000Z",
+            timeTo: "2026-04-15T09:00:00.000Z",
+        });
+        const response = createMockResponse();
+
+        await getAvailableSlots(request, response);
+
+        expect(response.status).toHaveBeenCalledWith(400);
+        expect(response.json).toHaveBeenCalledWith({
+            message: "timeTo must be greater than timeFrom",
+        });
+        expect(findCourtsMock).not.toHaveBeenCalled();
+        expect(findMatchesMock).not.toHaveBeenCalled();
     });
 
     it("returns slots with occupied matches excluded", async () => {
@@ -479,10 +483,8 @@ describe("[UNIT TEST] getAvailableSlots", () => {
 
     it("filters slots with all query parameters combined", async () => {
         const court = createCourtOne();
-        const startTimeFrom = new Date("2026-04-15T08:00:00.000Z");
-        const startTimeTo = new Date("2026-04-16T00:00:00.000Z");
-        const endTimeFrom = new Date("2026-04-15T09:00:00.000Z");
-        const endTimeTo = new Date("2026-04-15T12:00:00.000Z");
+        const timeFrom = new Date("2026-04-15T08:00:00.000Z");
+        const timeTo = new Date("2026-04-16T00:00:00.000Z");
 
         await runGetAvailableSlotsCase({
             query: {
@@ -493,10 +495,8 @@ describe("[UNIT TEST] getAvailableSlots", () => {
                 slotDuration: "60",
                 minSlotDuration: "50",
                 maxSlotDuration: "90",
-                startTimeFrom: startTimeFrom.toISOString(),
-                startTimeTo: startTimeTo.toISOString(),
-                endTimeFrom: endTimeFrom.toISOString(),
-                endTimeTo: endTimeTo.toISOString(),
+                timeFrom: timeFrom.toISOString(),
+                timeTo: timeTo.toISOString(),
                 courtType: "INDOOR",
             },
             mockCourts: [court],
@@ -520,12 +520,10 @@ describe("[UNIT TEST] getAvailableSlots", () => {
             }),
             expectedMatchWhere: {
                 startTime: {
-                    gte: startTimeFrom,
-                    lte: startTimeTo,
+                    lt: timeTo,
                 },
                 endTime: {
-                    gte: endTimeFrom,
-                    lte: endTimeTo,
+                    gt: timeFrom,
                 },
             },
         });

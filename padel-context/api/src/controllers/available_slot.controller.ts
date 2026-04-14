@@ -23,10 +23,8 @@ export const getAvailableSlots = async (
         const slotDuration = parseNumber(req.query.slotDuration);
         const minSlotDuration = parseNumber(req.query.minSlotDuration);
         const maxSlotDuration = parseNumber(req.query.maxSlotDuration);
-        const startTimeFrom = parseDate(req.query.startTimeFrom);
-        const startTimeTo = parseDate(req.query.startTimeTo);
-        const endTimeFrom = parseDate(req.query.endTimeFrom);
-        const endTimeTo = parseDate(req.query.endTimeTo);
+        const timeFrom = parseDate(req.query.timeFrom);
+        const timeTo = parseDate(req.query.timeTo);
         const courtType =
             typeof req.query.courtType === "string"
                 ? req.query.courtType.trim().toUpperCase()
@@ -42,12 +40,16 @@ export const getAvailableSlots = async (
         const dayStart = new Date(now);
         dayStart.setUTCHours(0, 0, 0, 0);
 
-        const windowStart = now;
-        const windowEnd = new Date(dayStart);
-        windowEnd.setUTCDate(windowEnd.getUTCDate() + 7);
+        const defaultWindowStart = now;
+        const defaultWindowEnd = new Date(dayStart);
+        defaultWindowEnd.setUTCDate(defaultWindowEnd.getUTCDate() + 7);
+        const windowStart = timeFrom ?? defaultWindowStart;
+        const windowEnd = timeTo ?? defaultWindowEnd;
 
         if (windowEnd <= windowStart) {
-            res.status(200).json([]);
+            res.status(400).json({
+                message: "timeTo must be greater than timeFrom",
+            });
             return;
         }
 
@@ -134,13 +136,9 @@ export const getAvailableSlots = async (
                 in: ["OPEN", "COMPLETED"],
             },
             startTime: {
-                ...(startTimeFrom ? { gte: startTimeFrom } : {}),
-                ...(startTimeTo ? { lte: startTimeTo } : {}),
                 lt: windowEnd,
             },
             endTime: {
-                ...(endTimeFrom ? { gte: endTimeFrom } : {}),
-                ...(endTimeTo ? { lte: endTimeTo } : {}),
                 gt: windowStart,
             },
         };
@@ -178,9 +176,14 @@ export const getAvailableSlots = async (
             const occupied = byCourt.get(court.id) ?? [];
 
             const slots: Array<{ startTime: string; endTime: string }> = [];
-            for (let dayOffset = 0; dayOffset < 7; dayOffset += 1) {
-                const dayReference = new Date(dayStart);
-                dayReference.setUTCDate(dayReference.getUTCDate() + dayOffset);
+            const rangeDayStart = new Date(windowStart);
+            rangeDayStart.setUTCHours(0, 0, 0, 0);
+
+            for (
+                let dayReference = new Date(rangeDayStart);
+                dayReference < windowEnd;
+                dayReference.setUTCDate(dayReference.getUTCDate() + 1)
+            ) {
                 const currentDayStart = new Date(dayReference);
                 currentDayStart.setUTCHours(0, 0, 0, 0);
 

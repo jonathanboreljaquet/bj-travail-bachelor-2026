@@ -349,13 +349,55 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
         expect(payload[0].court.type).toBe("INDOOR");
     });
 
-    it("filters slots by startTimeFrom", async () => {
-        const startTimeFrom = createUtcDate(matchDay, 9, 30);
+    it("filters by timeFrom", async () => {
+        const timeFrom = createUtcDate(matchDay, 12, 0);
+        const response = await request(app)
+            .get("/api/available-slots")
+            .query({ city: mainCity, timeFrom: timeFrom.toISOString() });
+        const payload = response.body as Array<{
+            court: { id: number };
+            availableSlots: Array<{ startTime: string; endTime: string }>;
+        }>;
+
+        const mainCourt = getCourt(payload, mainCourtId);
+        const daySlots = mainCourt.availableSlots.filter((slot) =>
+            slot.startTime.startsWith(matchDay.toISOString().slice(0, 10)),
+        );
+        const slotStarts = daySlots.map((slot) => slot.startTime);
+
+        expect(slotStarts).not.toContain(createUtcDate(matchDay, 11, 0).toISOString());
+        expect(slotStarts).toContain(canceledMatchStart.toISOString());
+    });
+
+    it("filters by timeTo", async () => {
+        const timeTo = createUtcDate(matchDay, 11, 0);
+        const response = await request(app)
+            .get("/api/available-slots")
+            .query({ city: mainCity, timeTo: timeTo.toISOString() });
+        const payload = response.body as Array<{
+            court: { id: number };
+            availableSlots: Array<{ startTime: string; endTime: string }>;
+        }>;
+
+        const mainCourt = getCourt(payload, mainCourtId);
+        const daySlots = mainCourt.availableSlots.filter((slot) =>
+            slot.startTime.startsWith(matchDay.toISOString().slice(0, 10)),
+        );
+        const slotStarts = daySlots.map((slot) => slot.startTime);
+
+        expect(slotStarts).not.toContain(createUtcDate(matchDay, 11, 0).toISOString());
+        expect(slotStarts).toContain(createUtcDate(matchDay, 10, 0).toISOString());
+    });
+
+    it("filters by timeFrom and timeTo", async () => {
+        const timeFrom = createUtcDate(matchDay, 10, 0);
+        const timeTo = createUtcDate(matchDay, 14, 0);
         const response = await request(app)
             .get("/api/available-slots")
             .query({
                 city: mainCity,
-                startTimeFrom: startTimeFrom.toISOString(),
+                timeFrom: timeFrom.toISOString(),
+                timeTo: timeTo.toISOString(),
             });
         const payload = response.body as Array<{
             court: { id: number };
@@ -368,67 +410,27 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
         );
         const slotStarts = daySlots.map((slot) => slot.startTime);
 
-        expect(slotStarts).toContain(openMatchStart.toISOString());
+        expect(slotStarts).toContain(createUtcDate(matchDay, 10, 0).toISOString());
+        expect(slotStarts).not.toContain(createUtcDate(matchDay, 11, 0).toISOString());
+        expect(slotStarts).toContain(createUtcDate(matchDay, 13, 0).toISOString());
     });
 
-    it("filters slots by startTimeTo", async () => {
-        const response = await request(app)
-            .get("/api/available-slots")
-            .query({ city: mainCity, startTimeTo: openMatchStart.toISOString() });
-        const payload = response.body as Array<{
-            court: { id: number };
-            availableSlots: Array<{ startTime: string; endTime: string }>;
-        }>;
+    it("returns 400 when timeTo is not greater than timeFrom", async () => {
+        const timeFrom = createUtcDate(matchDay, 12, 0);
+        const timeTo = createUtcDate(matchDay, 11, 0);
 
-        const mainCourt = getCourt(payload, mainCourtId);
-        const daySlots = mainCourt.availableSlots.filter((slot) =>
-            slot.startTime.startsWith(matchDay.toISOString().slice(0, 10)),
-        );
-        const slotStarts = daySlots.map((slot) => slot.startTime);
-
-        expect(slotStarts).not.toContain(openMatchStart.toISOString());
-        expect(slotStarts).toContain(completedMatchStart.toISOString());
-    });
-
-    it("filters slots by endTimeFrom", async () => {
         const response = await request(app)
             .get("/api/available-slots")
             .query({
                 city: mainCity,
-                endTimeFrom: completedMatchStart.toISOString(),
+                timeFrom: timeFrom.toISOString(),
+                timeTo: timeTo.toISOString(),
             });
-        const payload = response.body as Array<{
-            court: { id: number };
-            availableSlots: Array<{ startTime: string; endTime: string }>;
-        }>;
 
-        const mainCourt = getCourt(payload, mainCourtId);
-        const daySlots = mainCourt.availableSlots.filter((slot) =>
-            slot.startTime.startsWith(matchDay.toISOString().slice(0, 10)),
-        );
-        const slotStarts = daySlots.map((slot) => slot.startTime);
-
-        expect(slotStarts).toContain(openMatchStart.toISOString());
-        expect(slotStarts).not.toContain(completedMatchStart.toISOString());
-    });
-
-    it("filters slots by endTimeTo", async () => {
-        const response = await request(app)
-            .get("/api/available-slots")
-            .query({ city: mainCity, endTimeTo: openMatchStart.toISOString() });
-        const payload = response.body as Array<{
-            court: { id: number };
-            availableSlots: Array<{ startTime: string; endTime: string }>;
-        }>;
-
-        const mainCourt = getCourt(payload, mainCourtId);
-        const daySlots = mainCourt.availableSlots.filter((slot) =>
-            slot.startTime.startsWith(matchDay.toISOString().slice(0, 10)),
-        );
-        const slotStarts = daySlots.map((slot) => slot.startTime);
-
-        expect(slotStarts).toContain(openMatchStart.toISOString());
-        expect(slotStarts).toContain(completedMatchStart.toISOString());
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            message: "timeTo must be greater than timeFrom",
+        });
     });
 
         it("keeps CANCELED matches available", async () => {
