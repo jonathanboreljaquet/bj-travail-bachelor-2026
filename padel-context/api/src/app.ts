@@ -4,17 +4,26 @@ import availableSlotRoutes from "./routes/available_slot.route";
 import authRoutes from "./routes/auth.route";
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
-    
+
 const swaggerOptions = {
     definition: {
         openapi: "3.0.0",
         info: {
             title: "Padel Context API",
             version: "1.0.0",
-            description: "API du travail de bachelor Padel Context"
-        }
+            description: "API du travail de bachelor Padel Context",
+        },
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+            },
+        },
     },
-    apis: ["./src/routes/*.ts"]
+    apis: ["./src/routes/*.ts"],
 };
 
 const swaggerDocs = swaggerJSDoc(swaggerOptions);

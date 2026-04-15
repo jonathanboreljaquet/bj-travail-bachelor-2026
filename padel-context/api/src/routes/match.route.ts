@@ -210,14 +210,14 @@ const router = Router();
  *                           properties:
  *                             firstname:
  *                               type: string
- *                               example: Ana
+ *                               example: Jonathan
  *                             lastname:
  *                               type: string
- *                               example: Martinez
+ *                               example: Borel-Jaquet
  *                             email:
  *                               type: string
  *                               format: email
- *                               example: ana@test.dev
+ *                               example: jonathan.borel@padelcontext.com
  *                             level:
  *                               type: integer
  *                               example: 2
@@ -234,6 +234,161 @@ const router = Router();
  */
 router.get("/", getMatches);
 router.post("/from-slot", authenticateJwt, createMatchFromSlot);
+/**
+ * @swagger
+ * /api/matches/{matchId}/join:
+ *   post:
+ *     summary: Rejoindre un match ouvert
+ *     description: Permet à un utilisateur authentifié de rejoindre un match ouvert s'il reste des places disponibles.
+ *     tags:
+ *       - Matches
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: matchId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Identifiant du match à rejoindre.
+ *         example: 101
+ *     responses:
+ *       200:
+ *         description: Match rejoint avec succès.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: successfully joined match
+ *                 match:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 101
+ *                     status:
+ *                       type: string
+ *                       example: OPEN
+ *                     availableSpots:
+ *                       type: integer
+ *                       example: 1
+ *                     startTime:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2026-04-15T18:00:00.000Z
+ *                     endTime:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2026-04-15T20:00:00.000Z
+ *                     creator_id:
+ *                       type: integer
+ *                       example: 12
+ *                     court:
+ *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                           example: Court Alpha
+ *                         type:
+ *                           type: string
+ *                           example: INDOOR
+ *                         club:
+ *                           type: object
+ *                           properties:
+ *                             name:
+ *                               type: string
+ *                               example: Geneva Club
+ *                             city:
+ *                               type: string
+ *                               example: Lancy
+ *                     participants:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                                 example: 21
+ *                               firstname:
+ *                                 type: string
+ *                                 example: Jonathan
+ *                               lastname:
+ *                                 type: string
+ *                                 example: Borel-Jaquet
+ *                               email:
+ *                                 type: string
+ *                                 format: email
+ *                                 example: jonathan.borel@padelcontext.com
+ *                               level:
+ *                                 type: integer
+ *                                 example: 2
+ *                           joinedAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: 2026-04-15T17:30:00.000Z
+ *       400:
+ *         description: Identifiant de match invalide, match fermé, plus de place indisponible ou utilisateur déjà inscrit.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             examples:
+ *               invalid_match_id:
+ *                 summary: Identifiant invalide
+ *                 value:
+ *                   message: invalid match ID
+ *               not_open:
+ *                 summary: Match fermé
+ *                 value:
+ *                   message: match is not open
+ *               no_spots:
+ *                 summary: Plus de place disponible
+ *                 value:
+ *                   message: no available spots
+ *               already_joined:
+ *                 summary: Joueur déjà inscrit
+ *                 value:
+ *                   message: user already joined this match
+ *       401:
+ *         description: Utilisateur non authentifié.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: unauthorized
+ *       404:
+ *         description: Match introuvable.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: match not found
+ *       500:
+ *         description: Erreur interne lors de la participation au match.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error while joining match
+ */
 router.post("/:matchId/join", authenticateJwt, joinMatch);
 
 export default router;

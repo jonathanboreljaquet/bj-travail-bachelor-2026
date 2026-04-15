@@ -26,11 +26,11 @@ const router = Router();
  *                 type: string
  *                 format: email
  *                 description: L'adresse email de l'utilisateur
- *                 example: "jon.borel@trackit.com"
+ *                 example: "jonathan.borel@padelcontext.com"
  *               password:
  *                 type: string
  *                 description: Le mot de passe de l'utilisateur
- *                 example: "password123"
+ *                 example: "pomme123"
  *     responses:
  *       200:
  *         description: Authentification réussie
@@ -66,7 +66,7 @@ const router = Router();
  *                       type: string
  *                       format: email
  *                       description: Adresse email de l'utilisateur
- *                       example: "jon.borel@trackit.com"
+ *                       example: "jonathan.borel@padelcontext.com"
  *                     level:
  *                       type: string
  *                       description: Niveau de compétence en padel
