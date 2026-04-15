@@ -233,6 +233,197 @@ const router = Router();
  *                   example: Error while fetching matches
  */
 router.get("/", getMatches);
+/**
+ * @swagger
+ * /api/matches/from-slot:
+ *   post:
+ *     summary: Créer un match depuis un créneau disponible
+ *     description: Permet à un utilisateur authentifié de créer un match à partir d'un slot disponible, puis de s'y inscrire automatiquement.
+ *     tags:
+ *       - Matches
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       description: Informations du créneau à transformer en match.
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - courtId
+ *               - startTime
+ *               - endTime
+ *             properties:
+ *               courtId:
+ *                 type: integer
+ *                 description: Identifiant du terrain concerné.
+ *                 example: 12
+ *               startTime:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Date/heure UTC de début du créneau.
+ *                 example: 2026-04-15T18:00:00.000Z
+ *               endTime:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Date/heure UTC de fin du créneau.
+ *                 example: 2026-04-15T19:00:00.000Z
+ *     responses:
+ *       201:
+ *         description: Match créé avec succès depuis le créneau.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: match created from slot
+ *                 match:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 101
+ *                     status:
+ *                       type: string
+ *                       example: OPEN
+ *                     availableSpots:
+ *                       type: integer
+ *                       example: 3
+ *                     startTime:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2026-04-15T18:00:00.000Z
+ *                     endTime:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2026-04-15T19:00:00.000Z
+ *                     creator_id:
+ *                       type: integer
+ *                       example: 12
+ *                     court:
+ *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                           example: Court Alpha
+ *                         type:
+ *                           type: string
+ *                           example: INDOOR
+ *                         club:
+ *                           type: object
+ *                           properties:
+ *                             name:
+ *                               type: string
+ *                               example: Geneva Club
+ *                             city:
+ *                               type: string
+ *                               example: Lancy
+ *                     participants:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           user:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                                 example: 21
+ *                               firstname:
+ *                                 type: string
+ *                                 example: Jonathan
+ *                               lastname:
+ *                                 type: string
+ *                                 example: Borel-Jaquet
+ *                               email:
+ *                                 type: string
+ *                                 format: email
+ *                                 example: jonathan.borel@padelcontext.com
+ *                               level:
+ *                                 type: integer
+ *                                 example: 2
+ *                           joinedAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: 2026-04-15T17:30:00.000Z
+ *       400:
+ *         description: Données invalides ou créneau non conforme aux règles métier.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             examples:
+ *               missing_fields:
+ *                 summary: Paramètres requis manquants
+ *                 value:
+ *                   message: courtId, startTime and endTime are required
+ *               invalid_range:
+ *                 summary: Intervalle invalide
+ *                 value:
+ *                   message: invalid slot range
+ *               invalid_duration:
+ *                 summary: Durée non conforme au terrain
+ *                 value:
+ *                   message: slot duration does not match court slotDuration
+ *               outside_opening_hours:
+ *                 summary: Hors heures d'ouverture
+ *                 value:
+ *                   message: slot is outside club opening hours
+ *               misaligned_slot:
+ *                 summary: Créneau non aligné
+ *                 value:
+ *                   message: slot is not aligned with court slotDuration
+ *               outside_7_days_window:
+ *                 summary: Hors fenêtre de 7 jours
+ *                 value:
+ *                   message: slot must be within the next 7 days
+ *       401:
+ *         description: Utilisateur non authentifié.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: unauthorized
+ *       404:
+ *         description: Terrain introuvable.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: court not found
+ *       409:
+ *         description: Le créneau n'est plus disponible.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: slot is no longer available
+ *       500:
+ *         description: Erreur interne lors de la création du match depuis le créneau.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error while creating match from slot
+ */
 router.post("/from-slot", authenticateJwt, createMatchFromSlot);
 /**
  * @swagger
