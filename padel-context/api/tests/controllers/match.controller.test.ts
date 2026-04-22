@@ -254,6 +254,7 @@ describe("[UNIT TEST] getMatches", () => {
                     club: {
                         city: {
                             equals: "Lancy",
+                            mode: "insensitive",
                         },
                     },
                 },
@@ -558,6 +559,7 @@ describe("[UNIT TEST] getMatches", () => {
                     club: {
                         city: {
                             equals: "Lancy",
+                            mode: "insensitive",
                         },
                     },
                     hasEquipmentBox: true,

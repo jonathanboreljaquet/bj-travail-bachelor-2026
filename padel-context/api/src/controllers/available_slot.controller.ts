@@ -59,6 +59,7 @@ export const getAvailableSlots = async (
             courtWhere.club = {
                 city: {
                     equals: city,
+                    mode: "insensitive",
                 },
             };
         }

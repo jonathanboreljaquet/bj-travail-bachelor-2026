@@ -91,6 +91,7 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
             where.court.club = {
                 city: {
                     equals: city,
+                    mode: "insensitive",
                 },
             };
         }

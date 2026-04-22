@@ -260,6 +260,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
                 club: {
                     city: {
                         equals: "Lancy",
+                        mode: "insensitive",
                     },
                 },
             }),
@@ -504,6 +505,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
                 club: {
                     city: {
                         equals: "Lancy",
+                        mode: "insensitive",
                     },
                 },
                 hasEquipmentBox: true,
