@@ -17,7 +17,9 @@ export const authenticateJwt = (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        res.status(401).json({ message: "missing or invalid authorization header" });
+        res.status(401).json({
+            message: "missing or invalid authorization header",
+        });
         return;
     }
 
@@ -43,6 +45,9 @@ export const authenticateJwt = (
 
         next();
     } catch (error) {
-        res.status(401).json({ message: "invalid token" });
+        res.status(401).json({
+            message: "invalid token",
+            error: error,
+        });
     }
 };

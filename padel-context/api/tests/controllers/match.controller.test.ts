@@ -11,11 +11,26 @@ import type { Request, Response } from "express";
 
 const findManyMock =
     jest.fn<(args: Record<string, unknown>) => Promise<unknown[]>>();
-const findUniqueMock = jest.fn<(...args: any[]) => Promise<any>>();
-const updateMock = jest.fn<(...args: any[]) => Promise<any>>();
-const participantFindUniqueMock = jest.fn<(...args: any[]) => Promise<any>>();
-const participantCreateMock = jest.fn<(...args: any[]) => Promise<any>>();
-const transactionMock = jest.fn<(...args: any[]) => Promise<any>>();
+const findUniqueMock =
+    jest.fn<(args: Record<string, unknown>) => Promise<unknown | null>>();
+const updateMock =
+    jest.fn<(args: Record<string, unknown>) => Promise<unknown>>();
+const participantFindUniqueMock =
+    jest.fn<(args: Record<string, unknown>) => Promise<unknown | null>>();
+const participantCreateMock =
+    jest.fn<(args: Record<string, unknown>) => Promise<unknown>>();
+const transactionMock = jest.fn<
+    (
+        callback: (tx: {
+            participant: {
+                create: typeof participantCreateMock;
+            };
+            match: {
+                update: typeof updateMock;
+            };
+        }) => Promise<unknown>,
+    ) => Promise<unknown>
+>();
 
 const prismaMock = {
     match: {
@@ -609,6 +624,7 @@ describe("[UNIT TEST] getMatches", () => {
         expect(response.status).toHaveBeenCalledWith(500);
         expect(response.json).toHaveBeenCalledWith({
             message: "Error while fetching matches",
+            error: expect.any(Error),
         });
     });
 });
@@ -950,6 +966,7 @@ describe("[UNIT TEST] joinMatch", () => {
         expect(response.status).toHaveBeenCalledWith(500);
         expect(response.json).toHaveBeenCalledWith({
             message: "Error while joining match",
+            error: expect.any(Error),
         });
     });
 
@@ -981,6 +998,7 @@ describe("[UNIT TEST] joinMatch", () => {
         expect(response.status).toHaveBeenCalledWith(500);
         expect(response.json).toHaveBeenCalledWith({
             message: "Error while joining match",
+            error: expect.any(Error),
         });
     });
 });

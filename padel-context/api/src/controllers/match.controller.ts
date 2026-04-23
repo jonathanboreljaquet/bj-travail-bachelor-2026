@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import prisma from "../db";
 import { parseBoolean, parseDate, parseNumber } from "../utils/helper";
+import { Prisma } from "../../generated/prisma/client";
 
-export const getMatches = async (req: Request, res: Response): Promise<any> => {
+export const getMatches = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
     try {
         const city =
             typeof req.query.city === "string"
@@ -37,7 +41,7 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
             parseNumber(req.query.participantAverageLevelTolerance) ?? 0.5;
         const now = new Date();
 
-        const where: any = {
+        const where: Prisma.MatchWhereInput = {
             status: "OPEN",
         };
 
@@ -49,23 +53,12 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
         };
 
         where.availableSpots = {
-            ...(where.availableSpots ?? {}),
             gt: 0,
+            ...(availableSpots !== undefined ? { equals: availableSpots } : {}),
+            ...(minAvailableSpots !== undefined
+                ? { gte: minAvailableSpots }
+                : {}),
         };
-
-        if (availableSpots !== undefined) {
-            where.availableSpots = {
-                ...(where.availableSpots ?? {}),
-                equals: availableSpots,
-            };
-        }
-
-        if (minAvailableSpots !== undefined) {
-            where.availableSpots = {
-                ...(where.availableSpots ?? {}),
-                gte: minAvailableSpots,
-            };
-        }
 
         if (endTimeFrom || endTimeTo) {
             where.endTime = {
@@ -84,54 +77,56 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
             minSlotDuration !== undefined ||
             maxSlotDuration !== undefined
         ) {
-            where.court = {};
-        }
+            const courtWhere = (where.court ??= {});
 
-        if (city) {
-            where.court.club = {
-                city: {
-                    equals: city,
-                    mode: "insensitive",
-                },
-            };
-        }
+            if (city) {
+                courtWhere.club = {
+                    city: {
+                        equals: city,
+                        mode: "insensitive",
+                    },
+                };
+            }
 
-        if (hasEquipmentBox !== undefined) {
-            where.court.hasEquipmentBox = hasEquipmentBox;
-        }
+            if (hasEquipmentBox !== undefined) {
+                courtWhere.hasEquipmentBox = hasEquipmentBox;
+            }
 
-        if (normalizedCourtType) {
-            where.court.type = normalizedCourtType;
-        }
+            if (normalizedCourtType) {
+                courtWhere.type = normalizedCourtType;
+            }
 
-        if (
-            minPricePerPerson !== undefined ||
-            maxPricePerPerson !== undefined
-        ) {
-            where.court.pricePerPerson = {
-                ...(minPricePerPerson !== undefined
-                    ? { gte: minPricePerPerson }
-                    : {}),
-                ...(maxPricePerPerson !== undefined
-                    ? { lte: maxPricePerPerson }
-                    : {}),
-            };
-        }
+            if (
+                minPricePerPerson !== undefined ||
+                maxPricePerPerson !== undefined
+            ) {
+                courtWhere.pricePerPerson = {
+                    ...(minPricePerPerson !== undefined
+                        ? { gte: minPricePerPerson }
+                        : {}),
+                    ...(maxPricePerPerson !== undefined
+                        ? { lte: maxPricePerPerson }
+                        : {}),
+                };
+            }
 
-        if (
-            slotDuration !== undefined ||
-            minSlotDuration !== undefined ||
-            maxSlotDuration !== undefined
-        ) {
-            where.court.slotDuration = {
-                ...(slotDuration !== undefined ? { equals: slotDuration } : {}),
-                ...(minSlotDuration !== undefined
-                    ? { gte: minSlotDuration }
-                    : {}),
-                ...(maxSlotDuration !== undefined
-                    ? { lte: maxSlotDuration }
-                    : {}),
-            };
+            if (
+                slotDuration !== undefined ||
+                minSlotDuration !== undefined ||
+                maxSlotDuration !== undefined
+            ) {
+                courtWhere.slotDuration = {
+                    ...(slotDuration !== undefined
+                        ? { equals: slotDuration }
+                        : {}),
+                    ...(minSlotDuration !== undefined
+                        ? { gte: minSlotDuration }
+                        : {}),
+                    ...(maxSlotDuration !== undefined
+                        ? { lte: maxSlotDuration }
+                        : {}),
+                };
+            }
         }
 
         const matches = await prisma.match.findMany({
@@ -198,7 +193,10 @@ export const getMatches = async (req: Request, res: Response): Promise<any> => {
 
         res.status(200).json(formattedMatches);
     } catch (error) {
-        res.status(500).json({ message: "Error while fetching matches" });
+        res.status(500).json({
+            message: "Error while fetching matches",
+            error: error,
+        });
     }
 };
 
@@ -338,6 +336,9 @@ export const joinMatch = async (req: Request, res: Response): Promise<void> => {
             match: result,
         });
     } catch (error) {
-        res.status(500).json({ message: "Error while joining match" });
+        res.status(500).json({
+            message: "Error while joining match",
+            error: error,
+        });
     }
 };

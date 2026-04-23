@@ -341,7 +341,9 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
         const response = await request(app)
             .get("/api/available-slots")
             .query({ city: secondaryCity, courtType: "indoor" });
-        const payload = response.body as Array<{ court: { id: number; type: string } }>;
+        const payload = response.body as Array<{
+            court: { id: number; type: string };
+        }>;
 
         expect(response.status).toBe(200);
         expect(payload).toHaveLength(1);
@@ -365,7 +367,9 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
         );
         const slotStarts = daySlots.map((slot) => slot.startTime);
 
-        expect(slotStarts).not.toContain(createUtcDate(matchDay, 11, 0).toISOString());
+        expect(slotStarts).not.toContain(
+            createUtcDate(matchDay, 11, 0).toISOString(),
+        );
         expect(slotStarts).toContain(canceledMatchStart.toISOString());
     });
 
@@ -385,20 +389,22 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
         );
         const slotStarts = daySlots.map((slot) => slot.startTime);
 
-        expect(slotStarts).not.toContain(createUtcDate(matchDay, 11, 0).toISOString());
-        expect(slotStarts).toContain(createUtcDate(matchDay, 10, 0).toISOString());
+        expect(slotStarts).not.toContain(
+            createUtcDate(matchDay, 11, 0).toISOString(),
+        );
+        expect(slotStarts).toContain(
+            createUtcDate(matchDay, 10, 0).toISOString(),
+        );
     });
 
     it("filters by timeFrom and timeTo", async () => {
         const timeFrom = createUtcDate(matchDay, 10, 0);
         const timeTo = createUtcDate(matchDay, 14, 0);
-        const response = await request(app)
-            .get("/api/available-slots")
-            .query({
-                city: mainCity,
-                timeFrom: timeFrom.toISOString(),
-                timeTo: timeTo.toISOString(),
-            });
+        const response = await request(app).get("/api/available-slots").query({
+            city: mainCity,
+            timeFrom: timeFrom.toISOString(),
+            timeTo: timeTo.toISOString(),
+        });
         const payload = response.body as Array<{
             court: { id: number };
             availableSlots: Array<{ startTime: string; endTime: string }>;
@@ -410,22 +416,26 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
         );
         const slotStarts = daySlots.map((slot) => slot.startTime);
 
-        expect(slotStarts).toContain(createUtcDate(matchDay, 10, 0).toISOString());
-        expect(slotStarts).not.toContain(createUtcDate(matchDay, 11, 0).toISOString());
-        expect(slotStarts).toContain(createUtcDate(matchDay, 13, 0).toISOString());
+        expect(slotStarts).toContain(
+            createUtcDate(matchDay, 10, 0).toISOString(),
+        );
+        expect(slotStarts).not.toContain(
+            createUtcDate(matchDay, 11, 0).toISOString(),
+        );
+        expect(slotStarts).toContain(
+            createUtcDate(matchDay, 13, 0).toISOString(),
+        );
     });
 
     it("returns 400 when timeTo is not greater than timeFrom", async () => {
         const timeFrom = createUtcDate(matchDay, 12, 0);
         const timeTo = createUtcDate(matchDay, 11, 0);
 
-        const response = await request(app)
-            .get("/api/available-slots")
-            .query({
-                city: mainCity,
-                timeFrom: timeFrom.toISOString(),
-                timeTo: timeTo.toISOString(),
-            });
+        const response = await request(app).get("/api/available-slots").query({
+            city: mainCity,
+            timeFrom: timeFrom.toISOString(),
+            timeTo: timeTo.toISOString(),
+        });
 
         expect(response.status).toBe(400);
         expect(response.body).toEqual({
@@ -433,7 +443,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
         });
     });
 
-        it("keeps CANCELED matches available", async () => {
+    it("keeps CANCELED matches available", async () => {
         const response = await request(app).get("/api/available-slots");
         const payload = response.body as Array<{
             court: { id: number };

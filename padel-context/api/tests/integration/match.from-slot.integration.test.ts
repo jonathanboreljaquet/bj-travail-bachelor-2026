@@ -174,11 +174,13 @@ describe("[INTEGRATION TEST] POST /api/matches/from-slot", () => {
         const endTime = new Date(startTime);
         endTime.setUTCHours(10, 0, 0, 0);
 
-        const response = await request(app).post("/api/matches/from-slot").send({
-            courtId: court.id,
-            startTime: startTime.toISOString(),
-            endTime: endTime.toISOString(),
-        });
+        const response = await request(app)
+            .post("/api/matches/from-slot")
+            .send({
+                courtId: court.id,
+                startTime: startTime.toISOString(),
+                endTime: endTime.toISOString(),
+            });
 
         expect(response.status).toBe(401);
         expect(response.body.message).toBe(

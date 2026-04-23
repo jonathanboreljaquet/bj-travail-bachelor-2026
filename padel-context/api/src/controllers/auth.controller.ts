@@ -86,6 +86,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     } catch (error) {
         res.status(500).json({
             message: "Error while logging in",
+            error: error,
         });
     }
 };

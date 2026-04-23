@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../db";
+import { Prisma } from "../../generated/prisma/client";
 import {
     parseBoolean,
     parseDate,
@@ -11,7 +12,7 @@ import {
 export const getAvailableSlots = async (
     req: Request,
     res: Response,
-): Promise<any> => {
+): Promise<void> => {
     try {
         const city =
             typeof req.query.city === "string"
@@ -53,7 +54,7 @@ export const getAvailableSlots = async (
             return;
         }
 
-        const courtWhere: any = {};
+        const courtWhere: Prisma.CourtWhereInput = {};
 
         if (city) {
             courtWhere.club = {
@@ -129,7 +130,7 @@ export const getAvailableSlots = async (
 
         const courtIds = courts.map((court) => court.id);
 
-        const matchWhere: any = {
+        const matchWhere: Prisma.MatchWhereInput = {
             court_id: {
                 in: courtIds,
             },
@@ -254,6 +255,7 @@ export const getAvailableSlots = async (
     } catch (error) {
         res.status(500).json({
             message: "Error while fetching available slots",
+            error: error,
         });
     }
 };
@@ -446,6 +448,7 @@ export const createMatchFromSlot = async (
     } catch (error) {
         res.status(500).json({
             message: "Error while creating match from slot",
+            error: error,
         });
     }
 };

@@ -4,13 +4,27 @@ import { describe, it, expect, afterAll, beforeAll } from "@jest/globals";
 import app from "../../src/app";
 import prisma from "../../src/db";
 
+type MatchResponseItem = {
+    id: number;
+    availableSpots: number;
+    court: {
+        type: "INDOOR" | "OUTDOOR" | "COVERED";
+        hasEquipmentBox: boolean;
+        pricePerPerson: number;
+        slotDuration: number;
+        club: {
+            city: string;
+        };
+    };
+};
+
 describe("[INTEGRATION TEST] GET /api/matches", () => {
     const uniquePrefix = `integration-test-${Date.now()}`;
 
-    let createdClubIds: number[] = [];
-    let createdCourtIds: number[] = [];
-    let createdMatchIds: number[] = [];
-    let createdUserIds: number[] = [];
+    const createdClubIds: number[] = [];
+    const createdCourtIds: number[] = [];
+    const createdMatchIds: number[] = [];
+    const createdUserIds: number[] = [];
     let matchOneStartTimeIso: string;
     let matchOneEndTimeIso: string;
     let matchOneId: number;
@@ -18,7 +32,6 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     let matchTwoId: number;
     let matchTwoCity: string;
     let matchTwoStartTimeIso: string;
-    let matchTwoEndTimeIso: string;
     let pastMatchId: number;
     let pastMatchCity: string;
 
@@ -249,7 +262,6 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
         matchOneStartTimeIso = matchOne.startTime.toISOString();
         matchOneEndTimeIso = matchOne.endTime.toISOString();
         matchTwoStartTimeIso = matchTwo.startTime.toISOString();
-        matchTwoEndTimeIso = matchTwo.endTime.toISOString();
         pastMatchId = pastMatch.matchId;
         pastMatchCity = pastMatch.city;
     });
@@ -306,7 +318,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
 
     it("returns both matches when no filter is provided", async () => {
         const response = await request(app).get("/api/matches");
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches.length).toBeGreaterThanOrEqual(2);
@@ -320,7 +332,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
         const response = await request(app).get("/api/matches").query({
             city: pastMatchCity,
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(0);
@@ -330,7 +342,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
         const response = await request(app).get("/api/matches").query({
             city: matchOneCity,
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -343,7 +355,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchOneCity,
             courtType: "INDOOR",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -356,7 +368,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchTwoCity,
             minPricePerPerson: "20",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -369,7 +381,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchOneCity,
             hasEquipmentBox: "true",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -382,7 +394,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchOneCity,
             minSlotDuration: "100",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -395,7 +407,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchTwoCity,
             maxSlotDuration: "100",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -408,7 +420,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchOneCity,
             maxPricePerPerson: "15",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -421,7 +433,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchOneCity,
             availableSpots: "2",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -434,7 +446,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchOneCity,
             slotDuration: "120",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -447,7 +459,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchTwoCity,
             startTimeFrom: matchTwoStartTimeIso,
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -459,7 +471,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchOneCity,
             startTimeTo: matchOneStartTimeIso,
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -471,7 +483,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchTwoCity,
             endTimeFrom: matchTwoStartTimeIso,
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -483,7 +495,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchOneCity,
             endTimeTo: matchOneEndTimeIso,
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -495,7 +507,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             city: matchOneCity,
             minAvailableSpots: "2",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -509,7 +521,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             participantAverageLevel: "3",
             participantAverageLevelTolerance: "0.1",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -522,7 +534,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             participantAverageLevel: "5.33",
             participantAverageLevelTolerance: "0.1",
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);
@@ -541,7 +553,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
             startTimeFrom: matchOneStartTimeIso,
             endTimeTo: matchOneEndTimeIso,
         });
-        const matches = response.body as any[];
+        const matches = response.body as MatchResponseItem[];
 
         expect(response.status).toBe(200);
         expect(matches).toHaveLength(1);

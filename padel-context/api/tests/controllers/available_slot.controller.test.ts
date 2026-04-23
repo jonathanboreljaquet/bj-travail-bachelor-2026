@@ -132,21 +132,6 @@ const createCourtOne = () => ({
     },
 });
 
-const createCourtTwo = () => ({
-    id: 22,
-    name: "Court Beta",
-    type: "OUTDOOR",
-    hasEquipmentBox: false,
-    pricePerPerson: 25,
-    slotDuration: 90,
-    club: {
-        name: "Lake Club",
-        city: "Geneva",
-        openingTime: "09:00",
-        closingTime: "22:00",
-    },
-});
-
 const expectedCourtSelect = {
     id: true,
     name: true,
@@ -622,9 +607,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
     });
 
     it("returns a 500 response when Prisma fails", async () => {
-        prismaMock.match.findMany.mockRejectedValueOnce(
-            new Error("database unavailable"),
-        );
+        findCourtsMock.mockRejectedValueOnce(new Error("database unavailable"));
 
         const request = createMockRequest();
         const response = createMockResponse();
@@ -632,9 +615,12 @@ describe("[UNIT TEST] getAvailableSlots", () => {
         await getAvailableSlots(request, response);
 
         expect(response.status).toHaveBeenCalledWith(500);
-        expect(response.json).toHaveBeenCalledWith({
-            message: "Error while fetching available slots",
-        });
+        expect(response.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: "Error while fetching available slots",
+                error: expect.any(Error),
+            }),
+        );
     });
 });
 
@@ -890,6 +876,7 @@ describe("[UNIT TEST] createMatchFromSlot", () => {
         expect(response.status).toHaveBeenCalledWith(500);
         expect(response.json).toHaveBeenCalledWith({
             message: "Error while creating match from slot",
+            error: new Error("transaction failed"),
         });
     });
 });

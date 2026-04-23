@@ -11,7 +11,6 @@ describe("[INTEGRATION TEST] POST /api/auth/login", () => {
 
     const validEmail = `${uniquePrefix}@test.dev`;
     const validPassword = "password123";
-    let accessToken = "";
 
     beforeAll(async () => {
         const hashedPassword = await bcrypt.hash(validPassword, 10);
@@ -51,8 +50,6 @@ describe("[INTEGRATION TEST] POST /api/auth/login", () => {
         expect(response.body.user).not.toHaveProperty("password");
         expect(typeof response.body.token).toBe("string");
         expect(response.body.token.length).toBeGreaterThan(20);
-
-        accessToken = response.body.token as string;
     });
 
     it("returns HTTP 400 when email or password is missing", async () => {

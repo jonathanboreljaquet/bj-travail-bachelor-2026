@@ -9,7 +9,7 @@ export const toDateAtMinutes = (baseDate: Date, minutes: number): Date => {
     return result;
 };
 
-export const parseStatus = (value: unknown): String => {
+export const parseStatus = (value: unknown): string => {
     if (typeof value !== "string") {
         return "OPEN";
     }
