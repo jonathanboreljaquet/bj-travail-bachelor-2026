@@ -1,14 +1,18 @@
 {
     "compilerOptions": {
-        "outDir": "./dist",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "target": "ES2023",
+
         "rootDir": ".",
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
-        "target": "ES2022",
+        "outDir": "./dist",
+
         "strict": true,
         "esModuleInterop": true,
+        "types": ["node"],
+        "ignoreDeprecations": "5.0",
+        "forceConsistentCasingInFileNames": true,
         "skipLibCheck": true
     },
-    "include": ["src/**/*", "prisma/seeds/**/*"],
-    "exclude": ["dist", "node_modules", "**/*.test.ts", "*.cjs"]
+    "exclude": ["node_modules"]
 }
