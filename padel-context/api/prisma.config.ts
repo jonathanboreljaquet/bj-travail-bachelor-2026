@@ -2,16 +2,16 @@ import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
 const databaseUrl =
-  process.env.DATABASE_URL ||
-  `postgresql://${process.env.POSTGRES_USER || "padel-context-db_user"}:${process.env.POSTGRES_PASSWORD || "padel-context-db_password"}@${process.env.POSTGRES_HOST || "localhost"}:${process.env.DB_PORT || "5433"}/${process.env.POSTGRES_DB || "padel-context-db"}?schema=public`;
+    process.env.DATABASE_URL ||
+    `postgresql://${process.env.DATABASE_USER || "padel-context-db_user"}:${process.env.DATABASE_PASSWORD || "padel-context-db_password"}@${process.env.POSTGRES_HOST || "localhost"}:${process.env.DATABASE_HOST_PORT || "5433"}/${process.env.DATABASE_NAME || "padel-context-db"}?schema=public`;
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
-  migrations: {
-    path: "prisma/migrations",
-    seed: "tsx prisma/seed.ts",
-  },
-  datasource: {
-    url: databaseUrl,
-  },
+    schema: "prisma/schema.prisma",
+    migrations: {
+        path: "prisma/migrations",
+        seed: "tsx prisma/seed.ts",
+    },
+    datasource: {
+        url: databaseUrl,
+    },
 });

@@ -18,23 +18,27 @@ API REST de l'application padel-context.
 
 ## Variables d'environnement (.env)
 
-- `APP_PORT` (défaut: `3000`)
-- `DB_PORT` (défaut: `5433`)
-- `POSTGRES_DB` (défaut: `padel-context-db`))
-- `POSTGRES_USER` (défaut: `padel-context-db_user`)
-- `POSTGRES_PASSWORD` (défaut: `padel-context-db_password`)
+- `API_HTTP_PORT` (défaut: `3000`)
+- `DATABASE_HOST_PORT` (défaut: `5433`)
+- `DATABASE_NAME` (défaut: `padel-context-db`)
+- `DATABASE_USER` (défaut: `padel-context-db_user`)
+- `DATABASE_PASSWORD` (défaut: `padel-context-db_password`)
+- `AUTH_JWT_SECRET` (défaut: `change-me`)
 
 ### Démarrer l'API
 
 1. Build les conteneurs Docker
+
 ```bash
 docker compose up --build
 ```
 
 2. Lancer les tests unitaires et les tests d'intégration
+
 ```bash
 docker compose exec api npm run test
 ```
 
 ### Documentation Swagger
-http://localhost:{APP_PORT}/api-docs/
+
+http://localhost:{API_HTTP_PORT}/api-docs/

@@ -10,13 +10,13 @@ import "dotenv/config";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.MCP_CLIENT_GEMINI_API_KEY;
 if (!apiKey) {
-  throw new Error("GEMINI_API_KEY manquante dans le fichier .env");
+  throw new Error("MCP_CLIENT_GEMINI_API_KEY manquante dans le fichier .env");
 }
 
-const modelName = process.env.GEMINI_MODEL ?? "models/gemma-4-26b-a4b-it";
-const mcpServerUrl = process.env.MCP_SERVER_URL ?? "http://localhost:3001/mcp";
+const modelName =
+  process.env.MCP_CLIENT_GEMINI_MODEL ?? "models/gemma-4-26b-a4b-it";
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: modelName });
 
@@ -119,7 +119,9 @@ async function resolveToolCalls(
 
 // Point d'entrée du programme: connexion MCP, chargement des tools et chat interactif.
 async function main() {
-  const transport = new StreamableHTTPClientTransport(new URL(mcpServerUrl));
+  const transport = new StreamableHTTPClientTransport(
+    new URL("http://mcp-server:3001/mcp"),
+  );
 
   // Identité du client côté serveur MCP.
   const mcpClient = new Client(
@@ -133,7 +135,7 @@ async function main() {
   );
 
   await mcpClient.connect(transport);
-  console.log(`Connecté au serveur MCP : ${mcpServerUrl}`);
+  console.log(`Connecté au serveur MCP : http://mcp-server:3001/mcp`);
 
   // Récupère la liste des outils exposés par le serveur MCP.
 

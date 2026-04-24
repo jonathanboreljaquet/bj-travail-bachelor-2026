@@ -9,6 +9,7 @@
         "test": "node --no-warnings --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.cjs --runInBand",
         "seed": "tsx prisma/seed.ts",
         "lint": "eslint .",
+        "start": "tsx src/app.ts",
         "build": "npx tsdown src/app.ts"
     },
     "prisma": {

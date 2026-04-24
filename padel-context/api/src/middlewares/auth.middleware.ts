@@ -7,7 +7,7 @@ type JwtPayload = {
 };
 
 export const getJwtSecret = (): string =>
-    process.env.JWT_SECRET || "dev-jwt-secret-change-me";
+    process.env.AUTH_JWT_SECRET || "default-jwt-secret";
 
 export const authenticateJwt = (
     req: Request,

@@ -1,0 +1,107 @@
+name: padel-context
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: padel-context-api
+    ports:
+      - "${API_HTTP_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "${DATABASE_NAME:-padel-context-db}"
+      POSTGRES_USER: "${DATABASE_USER:-padel-context-db_user}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD:-padel-context-db_password}"
+      AUTH_JWT_SECRET: "${AUTH_JWT_SECRET:-change-me}"
+      DATABASE_URL: "postgresql://${DATABASE_USER:-padel-context-db_user}:${DATABASE_PASSWORD:-padel-context-db_password}@db:5432/${DATABASE_NAME:-padel-context-db}?schema=public"
+    volumes:
+      - ./api/src:/app/src
+      - ./api/tests:/app/tests
+      - ./api/package.json:/app/package.json
+      - ./api/tsconfig.json:/app/tsconfig.json
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - padel-context-network
+
+  db:
+    image: postgres:18.3-alpine3.23
+    container_name: padel-context-db
+    environment:
+      POSTGRES_DB: "${DATABASE_NAME:-padel-context-db}"
+      POSTGRES_USER: "${DATABASE_USER:-padel-context-db_user}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD:-padel-context-db_password}"
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DATABASE_HOST_PORT:-5433}:5432"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DATABASE_USER:-padel-context-db_user} -d ${DATABASE_NAME:-padel-context-db}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - padel-context-network
+
+  mcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: padel-context-mcp-server
+    ports:
+      - "${MCP_SERVER_HTTP_PORT:-3001}:3001"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+    volumes:
+      - ./mcp-server/src:/app/src
+      - ./mcp-server/package.json:/app/package.json
+      - ./mcp-server/tsconfig.json:/app/tsconfig.json
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - padel-context-network
+
+  mcp-client:
+    build:
+      context: ./mcp-client
+      dockerfile: Dockerfile
+    container_name: padel-context-mcp-client
+    profiles:
+      - client
+    environment:
+      MCP_CLIENT_GEMINI_API_KEY: "${MCP_CLIENT_GEMINI_API_KEY:-}"
+      MCP_CLIENT_GEMINI_MODEL: "${MCP_CLIENT_GEMINI_MODEL:-models/gemma-4-26b-a4b-it}"
+      MCP_CLIENT_SERVER_URL: "${MCP_CLIENT_SERVER_URL:-http://mcp-server:3001/mcp}"
+    depends_on:
+      mcp-server:
+        condition: service_started
+    stdin_open: true
+    tty: true
+    networks:
+      - padel-context-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  padel-context-network:
+    name: padel-context-network
+    driver: bridge

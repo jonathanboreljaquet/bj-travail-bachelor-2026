@@ -10,8 +10,7 @@ import {
     JOIN_OPEN_MATCH_DESC,
 } from "./description";
 
-const APP_PORT = process.env.APP_PORT ?? 3001;
-const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:3000/api";
+const API_BASE_URL = "http://api:3000/api";
 
 const availableSlotSchema = z.object({
     court: z.object({
@@ -397,8 +396,10 @@ app.post("/mcp", async (req, res) => {
 
 await server.connect(transport);
 
-app.listen(APP_PORT, (error) => {
-    console.log(`MCP server is running on localhost:${APP_PORT}/mcp`);
+const PORT = 3001;
+
+app.listen(PORT, (error) => {
+    console.log(`MCP server is running on localhost:${PORT}/mcp`);
     if (error) {
         console.error("Failed to start MCP server:", error);
         process.exit(1);
