@@ -1,21 +1,14 @@
-# MCP client padel-context
+# MCP Client
 
-MCP client de l'application padel-context.
+Client Model Context Protocol utilisant Google Gemini pour l'application padel-context.
 
-## Variables d'environnement (.env)
+## Configuration et lancement avec Docker
 
-- `MCP_CLIENT_GEMINI_API_KEY` (requis)
-- `MCP_CLIENT_GEMINI_MODEL` (défaut: `models/gemma-4-26b-a4b-it`)
-- `MCP_CLIENT_SERVER_URL` (défaut: `http://mcp-server:3001/mcp` en Docker)
+Voir [README principal](../README.md)
 
-### Installer les dépendances
+## Développement local
 
 ```bash
 npm install
-```
-
-### Démarrer le client MCP
-
-```bash
 npm start
 ```

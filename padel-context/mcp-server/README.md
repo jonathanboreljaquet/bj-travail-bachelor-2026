@@ -1,26 +1,22 @@
-# MCP server padel-context
+# MCP Server
 
-MCP serveur de l'application padel-context.
+Serveur Model Context Protocol pour l'application padel-context.
 
-## Variables d'environnement (.env)
+## Configuration et lancement avec Docker
 
-- `MCP_SERVER_HTTP_PORT` (défaut: `3001`) pour le mapping du port hôte Docker
-- `MCP_SERVER_PORT` (défaut: `3001`) pour le port interne du serveur MCP
-- `MCP_SERVER_API_BASE_URL` (défaut: `http://api:3000/api` en Docker)
+Voir [README principal](../README.md)
 
-### Installer les dépendances
+## Développement local
 
 ```bash
 npm install
+npm run dev     # démarrage avec watcher
+npm start       # démarrage simple
 ```
 
-### Démarrer le serveur MCP
+## Inspection
 
-```bash
-npm start
-```
-
-### Démarrer l'inspecteur MCP
+# Lancer l'inspecteur MCP pour tester manuellement
 
 ```bash
 npx @modelcontextprotocol/inspector
