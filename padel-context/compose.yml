@@ -88,7 +88,6 @@ services:
     environment:
       MCP_CLIENT_GEMINI_API_KEY: "${MCP_CLIENT_GEMINI_API_KEY:-}"
       MCP_CLIENT_GEMINI_MODEL: "${MCP_CLIENT_GEMINI_MODEL:-models/gemma-4-26b-a4b-it}"
-      MCP_CLIENT_SERVER_URL: "${MCP_CLIENT_SERVER_URL:-http://mcp-server:3001/mcp}"
     depends_on:
       mcp-server:
         condition: service_started

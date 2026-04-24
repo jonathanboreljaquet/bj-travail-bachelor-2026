@@ -3,7 +3,7 @@
 Architecture multi-services avec Docker Compose :
 
 - **API** : serveur REST Express (port 3000)
-- **PostgreSQL** : base de données (port 5433)
+- **PostgreSQL** : base de données (port 5432)
 - **MCP Server** : serveur Model Context Protocol (port 3001)
 - **MCP Client** : client Gemini interagissant avec le serveur MCP
 
@@ -31,18 +31,17 @@ docker compose down
 
 Les variables d'environnement sont centralisées dans le fichier `.env` à la racine :
 
-| Variable                    | Défaut                     | Description                       |
-| --------------------------- | -------------------------- | --------------------------------- |
-| `API_HTTP_PORT`             | 3000                       | Port d'accès à l'API              |
-| `DATABASE_HOST_PORT`        | 5433                       | Port d'accès à PostgreSQL (hôte)  |
-| `DATABASE_NAME`             | padel-context-db           | Nom de la base de données         |
-| `DATABASE_USER`             | padel-context-db_user      | Utilisateur PostgreSQL            |
-| `DATABASE_PASSWORD`         | padel-context-db_password  | Mot de passe PostgreSQL           |
-| `AUTH_JWT_SECRET`           | change-me                  | Secret JWT                        |
-| `MCP_SERVER_HTTP_PORT`      | 3001                       | Port du serveur MCP               |
-| `MCP_CLIENT_GEMINI_API_KEY` | (vide)                     | Clé API Google Gemini             |
-| `MCP_CLIENT_GEMINI_MODEL`   | models/gemma-4-26b-a4b-it  | Modèle Gemini à utiliser          |
-| `MCP_CLIENT_SERVER_URL`     | http://mcp-server:3001/mcp | URL du serveur MCP pour le client |
+| Variable                    | Défaut                    | Description                      |
+| --------------------------- | ------------------------- | -------------------------------- |
+| `API_HTTP_PORT`             | 3000                      | Port d'accès à l'API             |
+| `DATABASE_HOST_PORT`        | 5433                      | Port d'accès à PostgreSQL (hôte) |
+| `DATABASE_NAME`             | padel-context-db          | Nom de la base de données        |
+| `DATABASE_USER`             | padel-context-db_user     | Utilisateur PostgreSQL           |
+| `DATABASE_PASSWORD`         | padel-context-db_password | Mot de passe PostgreSQL          |
+| `AUTH_JWT_SECRET`           | change-me                 | Secret JWT                       |
+| `MCP_SERVER_HTTP_PORT`      | 3001                      | Port du serveur MCP              |
+| `MCP_CLIENT_GEMINI_API_KEY` | (vide)                    | Clé API Google Gemini            |
+| `MCP_CLIENT_GEMINI_MODEL`   | models/gemma-4-26b-a4b-it | Modèle Gemini à utiliser         |
 
 ## Services
 
