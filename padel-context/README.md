@@ -62,10 +62,9 @@ Les variables d'environnement sont centralisées dans le fichier `.env` à la ra
 
 ### MCP Client Web
 
-- **Type** : Next.js (React)
+- **Image** : `node:24.14.0-alpine3.23`
 - **Chemin** : `./mcp-client-web/`
-- **Port Docker** : 3000 (interne) → 3002 (hôte)
-- **URL** : `http://localhost:3002` (en local)
+- **Port Docker** : 3002
 - **Spécifications** : [mcp-client-web/README.md](./mcp-client-web/README.md)
 
 ## Commandes Docker utiles
@@ -90,30 +89,3 @@ docker compose build mcp-client-web
 # Redémarrer un service
 docker compose restart mcp-client-web
 ```
-
-**Erreur "port already in use"**
-
-- Vérifier les ports occupés avec `netstat -tuln` (Linux/Mac) ou `netstat -ano` (Windows)
-- Modifier les ports dans `.env` ou arrêter les services en conflit
-
-**Connexion PostgreSQL échouée**
-
-- Vérifier les identifiants dans `.env`
-- Supprimer les volumes existants : `docker compose down -v` puis relancer
-- Consulter les logs : `docker compose logs postgres`
-
-**API ne peut pas se connecter à PostgreSQL**
-
-- S'assurer que le service `postgres` est en cours d'exécution
-- Vérifier `DATABASE_URL` ou les variables de connexion dans les logs API
-
-**Le client web ne peut pas se connecter au serveur MCP**
-
-- S'assurer que `GOOGLE_GENERATIVE_AI_API_KEY` est remplie dans `.env`
-- Vérifier que le serveur MCP est en cours d'exécution : `docker compose logs mcp-server`
-- Vérifier l'URL MCP dans les logs du client web
-
-**Fichiers modifiés non rechargés en développement**
-
-- Pour le développement local, utiliser `npm run dev` dans `mcp-client-web/` au lieu du conteneur Docker
-- Les bind mounts du conteneur Next.js ne supportent pas bien le hot-reload
