@@ -7,6 +7,7 @@ import {
     parseNumber,
     toDateAtMinutes,
     toMinutes,
+    normalizeString,
 } from "../utils/helper";
 
 export const getAvailableSlots = async (
@@ -55,15 +56,6 @@ export const getAvailableSlots = async (
         }
 
         const courtWhere: Prisma.CourtWhereInput = {};
-
-        if (city) {
-            courtWhere.club = {
-                city: {
-                    equals: city,
-                    mode: "insensitive",
-                },
-            };
-        }
 
         if (hasEquipmentBox !== undefined) {
             courtWhere.hasEquipmentBox = hasEquipmentBox;
@@ -123,12 +115,20 @@ export const getAvailableSlots = async (
             },
         });
 
-        if (courts.length === 0) {
+        const filteredCourts = city
+            ? courts.filter(
+                  (court) =>
+                      normalizeString(court.club.city) ===
+                      normalizeString(city),
+              )
+            : courts;
+
+        if (filteredCourts.length === 0) {
             res.status(200).json([]);
             return;
         }
 
-        const courtIds = courts.map((court) => court.id);
+        const courtIds = filteredCourts.map((court) => court.id);
 
         const matchWhere: Prisma.MatchWhereInput = {
             court_id: {
@@ -172,7 +172,7 @@ export const getAvailableSlots = async (
             byCourt.set(match.court_id, current);
         });
 
-        const availableSlots = courts.map((court) => {
+        const availableSlots = filteredCourts.map((court) => {
             const openingMinutes = toMinutes(court.club.openingTime);
             const closingMinutes = toMinutes(court.club.closingTime);
             const occupied = byCourt.get(court.id) ?? [];

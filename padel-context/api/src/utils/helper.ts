@@ -68,6 +68,13 @@ export const parseDate = (value: unknown): Date | undefined => {
     return dateValue;
 };
 
+export const normalizeString = (str: string): string => {
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+};
+
 export const parseDateOnly = (value: unknown): Date | undefined => {
     if (typeof value !== "string") {
         return undefined;

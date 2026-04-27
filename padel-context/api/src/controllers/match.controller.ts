@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import prisma from "../db";
-import { parseBoolean, parseDate, parseNumber } from "../utils/helper";
+import {
+    parseBoolean,
+    parseDate,
+    parseNumber,
+    normalizeString,
+} from "../utils/helper";
 import { Prisma } from "../../generated/prisma/client";
 
 export const getMatches = async (
@@ -78,15 +83,6 @@ export const getMatches = async (
             maxSlotDuration !== undefined
         ) {
             const courtWhere = (where.court ??= {});
-
-            if (city) {
-                courtWhere.club = {
-                    city: {
-                        equals: city,
-                        mode: "insensitive",
-                    },
-                };
-            }
 
             if (hasEquipmentBox !== undefined) {
                 courtWhere.hasEquipmentBox = hasEquipmentBox;
@@ -170,6 +166,13 @@ export const getMatches = async (
         });
 
         const formattedMatches = matches.filter((match) => {
+            if (
+                city &&
+                normalizeString(match.court.club.city) !== normalizeString(city)
+            ) {
+                return false;
+            }
+
             if (participantAverageLevel === undefined) {
                 return true;
             }
