@@ -79,15 +79,14 @@ When to not use:
 
 How to use:
 - Use the match id for join a match.
-- Use the JWT token for authentication.
+- Send the JWT in the HTTP Authorization header when calling the MCP server.
 
 Limitations:
-- Requires a valid JWT token.
+- Requires a valid Authorization header (Bearer <token>).
 - Will fail if the match is not open, has no available spots, or user already joined.
 
 Parameters:
-- matchId (integer, required): ID of the match to join.
-- jwtToken (string, required): Bearer JWT token. JWT token of the user.`;
+- matchId (integer, required): ID of the match to join.`;
 
 export const CREATE_MATCH_FROM_SLOT_DESC = `Purpose:
 Creates a new Padel match from an available time slot.
@@ -101,14 +100,13 @@ When to not use:
 How to use:
 - Pass the exact courtId, startTime, and endTime of that slot.
 - The user is located in the 'Europe/Zurich' timezone. You MUST dynamically account for Daylight Saving Time (CET/CEST) and convert all user time requests into UTC (ISO 8601 format ending with 'Z') BEFORE using the date parameters.
-- Use the JWT token for authentication.
+- Send the JWT in the HTTP Authorization header when calling the MCP server.
 
 Limitations:
-- Requires a valid JWT token.
+- Requires a valid Authorization header (Bearer <token>).
 - Will fail if the slot is already occupied or no longer available.
 
 Parameters:
 - courtId (integer, required): ID of the court for the slot.
 - startTime (iso datetime, required): UTC start of the slot.
-- endTime (iso datetime, required): UTC end of the slot.
-- jwtToken (string, required): Bearer JWT token. JWT token of the user.`;
+- endTime (iso datetime, required): UTC end of the slot.`;

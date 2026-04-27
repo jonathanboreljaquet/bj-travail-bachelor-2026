@@ -1,6 +1,7 @@
 import { createMcpExpressApp } from "@modelcontextprotocol/express";
 import { NodeStreamableHTTPServerTransport } from "@modelcontextprotocol/node";
 import { McpServer } from "@modelcontextprotocol/server";
+import { AsyncLocalStorage } from "node:async_hooks";
 import "dotenv/config";
 import * as z from "zod/v4";
 import {
@@ -11,6 +12,8 @@ import {
 } from "./description";
 
 const API_BASE_URL = "http://api:3000/api";
+
+const tokenContext = new AsyncLocalStorage<string | undefined>();
 
 const availableSlotSchema = z.object({
     court: z.object({
@@ -263,15 +266,28 @@ server.registerTool(
         description: JOIN_OPEN_MATCH_DESC,
         inputSchema: z.object({
             matchId: z.number().int().nonoptional(),
-            jwtToken: z.string().nonoptional(),
         }),
         outputSchema: z.object({
             message: z.string(),
             match: joinedMatchSchema,
         }),
     },
-    async ({ matchId, jwtToken }) => {
+    async ({ matchId }) => {
         try {
+            const jwtToken = tokenContext.getStore();
+
+            if (!jwtToken) {
+                return {
+                    isError: true,
+                    content: [
+                        {
+                            type: "text",
+                            text: "Unauthorized: Missing JWT token in HTTP headers.",
+                        },
+                    ],
+                };
+            }
+
             const res = await fetch(`${API_BASE_URL}/matches/${matchId}/join`, {
                 method: "POST",
                 headers: {
@@ -332,15 +348,28 @@ server.registerTool(
             courtId: z.number().int().min(1),
             startTime: z.iso.datetime(),
             endTime: z.iso.datetime(),
-            jwtToken: z.string().min(1),
         }),
         outputSchema: z.object({
             message: z.string(),
             match: joinedMatchSchema,
         }),
     },
-    async ({ courtId, startTime, endTime, jwtToken }) => {
+    async ({ courtId, startTime, endTime }) => {
         try {
+            const jwtToken = tokenContext.getStore();
+
+            if (!jwtToken) {
+                return {
+                    isError: true,
+                    content: [
+                        {
+                            type: "text",
+                            text: "Unauthorized: Missing JWT token in HTTP headers.",
+                        },
+                    ],
+                };
+            }
+
             const res = await fetch(`${API_BASE_URL}/matches/from-slot`, {
                 method: "POST",
                 headers: {
@@ -394,7 +423,14 @@ server.registerTool(
 );
 
 app.use("/mcp", async (req, res) => {
-    await transport.handleRequest(req, res, req.body);
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith("Bearer ")
+        ? authHeader.substring(7)
+        : undefined;
+
+    tokenContext.run(token, async () => {
+        await transport.handleRequest(req, res, req.body);
+    });
 });
 
 await server.connect(transport);
