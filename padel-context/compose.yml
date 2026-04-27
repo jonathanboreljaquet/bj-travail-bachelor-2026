@@ -69,8 +69,6 @@ services:
       CHOKIDAR_INTERVAL: "300"
     volumes:
       - ./mcp-server/src:/app/src
-      - ./mcp-server/package.json:/app/package.json
-      - ./mcp-server/tsconfig.json:/app/tsconfig.json
     depends_on:
       api:
         condition: service_started
@@ -78,21 +76,26 @@ services:
     networks:
       - padel-context-network
 
-  mcp-client:
+  mcp-client-web:
     build:
-      context: ./mcp-client
+      context: ./mcp-client-web
       dockerfile: Dockerfile
-    container_name: padel-context-mcp-client
-    profiles:
-      - client
+    container_name: padel-context-mcp-client-web
+    ports:
+      - "${MCP_CLIENT_WEB_PORT:-3002}:3002"
     environment:
-      MCP_CLIENT_GEMINI_API_KEY: "${MCP_CLIENT_GEMINI_API_KEY:-}"
-      MCP_CLIENT_GEMINI_MODEL: "${MCP_CLIENT_GEMINI_MODEL:-models/gemma-4-26b-a4b-it}"
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+      WATCHPACK_POLLING: "true"
+      GOOGLE_GENERATIVE_AI_API_KEY: "${GOOGLE_GENERATIVE_AI_API_KEY:-}"
+      GEMINI_MODEL: "${GEMINI_MODEL:-gemini-2.0-flash}"
+    volumes:
+      - ./mcp-client-web/src:/app/src
     depends_on:
       mcp-server:
         condition: service_started
-    stdin_open: true
-    tty: true
+    restart: unless-stopped
     networks:
       - padel-context-network
 

@@ -99,7 +99,10 @@ const server = new McpServer({
     name: "padel-context-mcp-server",
     version: "1.0.0",
 });
-const app = createMcpExpressApp();
+const app = createMcpExpressApp({
+    host: "0.0.0.0",
+    allowedHosts: ["mcp-server", "localhost", "127.0.0.1", "[::1]"],
+});
 
 const transport = new NodeStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
@@ -390,7 +393,7 @@ server.registerTool(
     },
 );
 
-app.post("/mcp", async (req, res) => {
+app.use("/mcp", async (req, res) => {
     await transport.handleRequest(req, res, req.body);
 });
 
@@ -398,8 +401,8 @@ await server.connect(transport);
 
 const PORT = 3001;
 
-app.listen(PORT, (error) => {
-    console.log(`MCP server is running on localhost:${PORT}/mcp`);
+app.listen(PORT, "0.0.0.0", (error) => {
+    console.log(`MCP server is running on 0.0.0.0:${PORT}/mcp`);
     if (error) {
         console.error("Failed to start MCP server:", error);
         process.exit(1);

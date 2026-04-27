@@ -2,23 +2,17 @@
 
 Architecture multi-services avec Docker Compose :
 
-- **API** : serveur REST Express (port 3000)
-- **PostgreSQL** : base de données (port 5432)
-- **MCP Server** : serveur Model Context Protocol (port 3001)
-- **MCP Client** : client Gemini interagissant avec le serveur MCP
+- **API** : Serveur Node.js/Express/Prisma (port 3000)
+- **PostgreSQL** : Base de données PostgreSQL (port 5432)
+- **MCP Server** : Serveur Node du serveur MCP (port 3001)
+- **MCP Client Web** : Serveur Web Next.js avec chatbot (port 3002)
 
 ## Démarrage rapide
 
-### Tous les services (API + DB + MCP Server)
+### Tous les services (API + DB + MCP Server + MCP Client Web)
 
 ```bash
 docker compose up --build
-```
-
-### Avec le client MCP inclus
-
-```bash
-docker compose --profile client up --build
 ```
 
 ### Arrêter tous les services
@@ -31,17 +25,18 @@ docker compose down
 
 Les variables d'environnement sont centralisées dans le fichier `.env` à la racine :
 
-| Variable                    | Défaut                    | Description                      |
-| --------------------------- | ------------------------- | -------------------------------- |
-| `API_HTTP_PORT`             | 3000                      | Port d'accès à l'API             |
-| `DATABASE_HOST_PORT`        | 5433                      | Port d'accès à PostgreSQL (hôte) |
-| `DATABASE_NAME`             | padel-context-db          | Nom de la base de données        |
-| `DATABASE_USER`             | padel-context-db_user     | Utilisateur PostgreSQL           |
-| `DATABASE_PASSWORD`         | padel-context-db_password | Mot de passe PostgreSQL          |
-| `AUTH_JWT_SECRET`           | change-me                 | Secret JWT                       |
-| `MCP_SERVER_HTTP_PORT`      | 3001                      | Port du serveur MCP              |
-| `MCP_CLIENT_GEMINI_API_KEY` | (vide)                    | Clé API Google Gemini            |
-| `MCP_CLIENT_GEMINI_MODEL`   | models/gemma-4-26b-a4b-it | Modèle Gemini à utiliser         |
+| Variable                       | Défaut                    | Description                         |
+| ------------------------------ | ------------------------- | ----------------------------------- |
+| `API_HTTP_PORT`                | 3000                      | Port d'accès à l'API                |
+| `DATABASE_HOST_PORT`           | 5433                      | Port d'accès à PostgreSQL (hôte)    |
+| `DATABASE_NAME`                | padel-context-db          | Nom de la base de données           |
+| `DATABASE_USER`                | padel-context-db_user     | Utilisateur PostgreSQL              |
+| `DATABASE_PASSWORD`            | padel-context-db_password | Mot de passe PostgreSQL             |
+| `AUTH_JWT_SECRET`              | change-me                 | Secret JWT                          |
+| `MCP_SERVER_HTTP_PORT`         | 3001                      | Port du serveur MCP (conteneur)     |
+| `MCP_CLIENT_WEB_PORT`          | 3002                      | Port d'accès au client web (hôte)   |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | (vide)                    | Clé API Google Gemini (obligatoire) |
+| `GEMINI_MODEL`                 | models/gemma-4-26b-a4b-it | Modèle Gemini à utiliser            |
 
 ## Services
 
@@ -65,12 +60,13 @@ Les variables d'environnement sont centralisées dans le fichier `.env` à la ra
 - **Port Docker** : 3001
 - **Spécifications** : [mcp-server/README.md](./mcp-server/README.md)
 
-### MCP Client
+### MCP Client Web
 
-- **Image** : `node:24.14.0-alpine3.23`
-- **Chemin** : `./mcp-client/`
-- **Profil** : optionnel (lancé uniquement avec `--profile client`)
-- **Spécifications** : [mcp-client/README.md](./mcp-client/README.md)
+- **Type** : Next.js (React)
+- **Chemin** : `./mcp-client-web/`
+- **Port Docker** : 3000 (interne) → 3002 (hôte)
+- **URL** : `http://localhost:3002` (en local)
+- **Spécifications** : [mcp-client-web/README.md](./mcp-client-web/README.md)
 
 ## Commandes Docker utiles
 
@@ -78,20 +74,21 @@ Les variables d'environnement sont centralisées dans le fichier `.env` à la ra
 # Afficher les logs d'un service
 docker compose logs api
 docker compose logs mcp-server
+docker compose logs mcp-client-web
 docker compose logs postgres
 
 # Suivre les logs en temps réel
-docker compose logs -f api
+docker compose logs -f mcp-client-web
 
 # Exécuter une commande dans un conteneur
 docker compose exec api npm run test
 docker compose exec api npx prisma migrate status
 
 # Reconstruire un service spécifique
-docker compose build api
+docker compose build mcp-client-web
 
 # Redémarrer un service
-docker compose restart api
+docker compose restart mcp-client-web
 ```
 
 **Erreur "port already in use"**
@@ -110,7 +107,13 @@ docker compose restart api
 - S'assurer que le service `postgres` est en cours d'exécution
 - Vérifier `DATABASE_URL` ou les variables de connexion dans les logs API
 
+**Le client web ne peut pas se connecter au serveur MCP**
+
+- S'assurer que `GOOGLE_GENERATIVE_AI_API_KEY` est remplie dans `.env`
+- Vérifier que le serveur MCP est en cours d'exécution : `docker compose logs mcp-server`
+- Vérifier l'URL MCP dans les logs du client web
+
 **Fichiers modifiés non rechargés en développement**
 
-- Vérifier que les bind mounts sont activés dans `docker compose up --build`
-- Sur Docker Desktop (Windows), laisser 1-2 secondes pour les changements
+- Pour le développement local, utiliser `npm run dev` dans `mcp-client-web/` au lieu du conteneur Docker
+- Les bind mounts du conteneur Next.js ne supportent pas bien le hot-reload

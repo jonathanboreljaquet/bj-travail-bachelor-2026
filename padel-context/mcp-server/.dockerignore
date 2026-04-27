@@ -1,5 +1,4 @@
 dist
-generated
 node_modules
 .dockerignore
 .gitignore

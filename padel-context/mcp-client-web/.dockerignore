@@ -1,8 +1,8 @@
-dist
-generated
+.next
 node_modules
 .dockerignore
 .gitignore
 .prettierrc
 Dockerfile
 README.md
+
