@@ -25,6 +25,7 @@
 *.pdf 
 !main.pdf
 !gantt_tb.pdf
+!pdf/*.pdf
 
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl

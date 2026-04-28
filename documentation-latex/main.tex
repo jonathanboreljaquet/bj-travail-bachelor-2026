@@ -36,6 +36,7 @@
 \usepackage{pgf}
 \usepackage{rotating}
 
+\usepackage{pdfpages}
 \usepackage{cellspace}
 \setlength\cellspacetoplimit{6pt}    
 \setlength\cellspacebottomlimit{6pt} 
@@ -362,6 +363,8 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
 Dans la continuté de la méthodologie MoSCoW, la réalisation d' une planification Gantt du projet m'a permis d'organiser et visualiser l'ensemble des tâches à réaliser, leur ordre chronologique et leur durée estimée. Elle a également permis d'identifier les dépendances entre les différentes tâches et à anticiper les éventuels retards ou obstacles qui auraient pu survenir au cours du projet.
 \newline\newline
 Les jalons, identifiés par un losange noir ($\blacklozenge$), représentent les points clés du projet, tels que la mise en place d'une base de données et d'une API opérationnelles, ou encore la capacité du serveur MCP à interroger les données internes de l'application et l'API MeteoSwiss. Ces jalons sont essentiels pour mesurer l'avancement du projet et s'assurer que les objectifs intermédiaires sont atteints avant de passer à la phase suivante.
+\newline\newline
+Le diagramme de Gantt est disponible dans l'annexe \ref{annexe:pdf_gantt}.
 \begin{table}[H]
     \centering
     \renewcommand{\arraystretch}{1.5}
@@ -498,9 +501,41 @@ Les scénarios d'utilisation principaux sont les suivants :
 Description complète de l'architecture logicielle de l'application, Backend, Frontend (Client MCP), Base de données, API externes, Serveur MCP, autres... 
 
 \subsection{Spécifications techniques de l'API REST}
-\subsubsection{Documentation des endpoints}
+\subsubsection{Documentation des points de terminaison}
+Afin de garantir une maintenance aisée et une compréhension rapide de l'API, l'ensemble des points de terminaison a été rigoureusement documenté en utilisant l'outil Swagger. 
+\newline\newline
+L'avantage de l'outil Swagger est qu'il permet de rédiger une documentation dynamique et accessible directement depuis le serveur de l'API. En effet, la documentation est générée automatiquement à partir de commentaires structurés directement intégrés au-dessus du code de chaque route de l'application. Cette méthode professionnelle garantit que le code et sa documentation restent constamment synchronisés.
+\newline\newline
+L'API PadelContext expose cinq points de terminaison permettant de gérer l'authentification, la consultation des matchs ouverts et des créneaux horaires disponibles et leur participation ou création. Le tableau \ref{tab:api_endpoints} présente une vue d'ensemble de ces routes.
 
-\subsubsection{Documentation des tests}
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+    \hline
+    \rowcolor[gray]{0.9} 
+    \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} \\ \hline
+    {\textbf{POST}} & \texttt{/api/auth/login} & Authentifie un utilisateur via ses identifiants et retourne un JSON Web Token (JWT) valide pour authentifier ses futures requêtes. \\ \hline
+    {\textbf{GET}} & \texttt{/api/matches} & Récupère la liste des matchs ouverts (en attente de joueurs) en appliquant divers filtres optionnels (ville, prix, durée, etc.). \\ \hline
+    {\textbf{GET}} & \texttt{/api/available-slots} & Retourne les créneaux horaires disponibles pour les 7 prochains jours, en appliquant divers filtres optionnels (ville, prix, durée, etc.). \\ \hline
+    {\textbf{POST}} & \texttt{/api/matches/\{matchId\}/join} & Permet à un utilisateur de s'inscrire à une partie existante possédant encore des places disponibles grâce à son JWT. \\ \hline
+    {\textbf{POST}} & \texttt{/api/matches/from-slot} & Permet à un utilisateur de convertir un créneau libre en un nouveau match ouvert et y inscrit automatiquement le créateur grâce à son JWT. \\ \hline
+    \end{tabularx}
+    \caption{Vue d'ensemble des points de terminaison de l'API PadelContext}
+    \label{tab:api_endpoints}
+\end{table}
+\vspace{0.2cm}
+
+La spécification technique complète et exhaustive de ces points de terminaison, incluant les paramètres de requête, le format des corps JSON attendus, ainsi que la gestion des différents codes de statut HTTP, est visualisable via l'interface graphique de Swagger. 
+\newline\newline
+Des captures d'écran détaillant l'utilisation et les réponses de chaque point de terminaison via cette interface sont disponibles dans l'annexe \ref{annexe:swagger}.
+\subsubsection{Documentation et stratégie de tests}
+
+Afin de garantir la fiabilité, la robustesse et la non-régression de l'API REST tout au long de son développement, une stratégie de test rigoureuse a été mise en place. En accord avec les choix technologiques définis précédemment, le framework Jest a été utilisé pour orchestrer ces vérifications. La stratégie adoptée repose sur deux niveaux de validation complémentaires : les tests unitaires et les tests d'intégration.
+\newline\newline
+Les tests unitaires ont pour objectif de valider le comportement d'un composant de code de manière totalement isolée du reste du système. Dans le cadre de l'API PadelContext, ces tests se concentrent exclusivement sur la logique métier des contrôleurs. Pour isoler efficacement chaque contrôleur, toutes les dépendances externes ont été simulées. Par exemple, les interactions avec la base de données via Prisma, le hachage des mots de passe avec la bibliothèque \texttt{bcryptjs} ou encore la génération de tokens avec la bibliothèque \texttt{jsonwebtoken} ont été remplacés par de fausses implémentations contrôlées par Jest. L'intérêt principal de cette approche est sa rapidité d'exécution et sa grande précision. En simulant des erreurs liées à la base de données, comme l'échec d'une transaction ou une perte de connexion, il a été possible de s'assurer que l'API gère correctement les exceptions et renvoie les bons codes HTTP sans avoir besoin d'altérer un environnement réel.
+\newline\newline
+Contrairement aux tests unitaires, les tests d'intégration visent à vérifier que l'ensemble des composants du système communiquent correctement entre eux. Ils valident le cheminement complet d'une requête HTTP : du routeur au middleware permettant  la vérification du JWT, en passant par le contrôleur, jusqu'à l'écriture ou la lecture dans une véritable base de données PostgreSQL. Ces tests ont été réalisés à l'aide de la bibliothèque \textbf{Supertest}, qui permet de simuler des requêtes HTTP réelles vers l'application Express. Lors de ces validations, des jeux de données réels sont créés en amont puis supprimés en aval afin de ne pas polluer l'environnement de développement. Bien qu'un contrôleur puisse parfaitement fonctionner de manière isolée, il peut échouer lorsqu'il est connecté à la base de données réelle en raison, par exemple, d'une contrainte de clé étrangère non respectée ou d'une erreur de format de date. Les tests d'intégration garantissent ainsi que des actions critiques, telles que la création d'un match depuis un créneau libre ou la participation à un match, fonctionnent de manière transactionnelle et fiable dans des conditions d'utilisation réelles.
 \subsection{Modélisation de la base de données}
 \subsubsection{Schéma relationnel}
 \begin{figure}[H]
@@ -748,16 +783,30 @@ Une fois la source dans le fichier \textbf{bibliography.bib} et citée, elle ser
 % * pour finir veiller à utiliser \parencite au lieu de \cite pour ajouter des parenthèses aux citations.
 \newpage
 \section{Annexes}
+\subsection{Diagramme gantt du projet PadelContext}
+\label{annexe:pdf_gantt}
 \begin{center}
     \rotatebox{90}{
-        \begin{minipage}{0.8\textheight} 
+        \begin{minipage}{0.85\textheight} 
             \centering
             % Il suffit de mettre l'extension .pdf
             \includegraphics[width=\linewidth, page=4]{gantt/gantt_tb_cropped.pdf}
             \vspace{10pt} 
-            \captionof{figure}{Diagramme Gantt du projet PadelContext}
             \label{fig:gantt_full}
         \end{minipage}
     }
 \end{center}
+\subsection{Documentation Swagger de l'API PadelContext}
+\label{annexe:swagger}
+\begin{center}
+    \includegraphics[page=1, width=0.95\textwidth]{pdf/api_documentation_swagger.pdf}
+\end{center}
+
+\includepdf[
+    pages=2-,
+    scale=0.65, 
+    pagecommand={},
+    offset=0 -1cm
+]{pdf/api_documentation_swagger.pdf}
+
 \end{document}
