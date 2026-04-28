@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createMCPClient } from "@ai-sdk/mcp";
 import {
@@ -33,12 +34,16 @@ export async function POST(request: Request) {
     );
   }
 
+  const cookieStore = await cookies();
+  const jwtToken = cookieStore.get("padel_context_jwt_token")?.value;
+
   const { messages }: { messages: UIMessage[] } = await request.json();
 
   const mcpClient = await createMCPClient({
     transport: {
       type: "http",
       url: mcpServerUrl,
+      headers: jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {},
     },
   });
 
