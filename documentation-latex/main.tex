@@ -485,7 +485,6 @@ Les acteurs principaux de l'application sont les suivants :
 \begin{itemize}
 \item \textbf{Le Joueur} : Il s'agit de l'utilisateur final de l'application. Son objectif est de trouver des partenaires, de consulter la disponibilité des terrains et de planifier des parties de padel tout en s'affranchissant de la charge mentale logistique (météo, équipement sur place, niveau des autres joueurs, etc.).
 \item \textbf{L'Assistant IA} : Utilisant un LLM et connecté au serveur MCP, il agit comme un assistant proactif. Il comprend les requêtes en langage naturel du joueur et utilise les outils mis à sa disposition pour interroger l'API REST de l'application ainsi que l'API externe MeteoSwiss.
-\item \textbf{API MeteoSwiss} : Système externe interrogé par l'Assistant IA pour valider les prévisions météorologiques avant la proposition d'un terrain en extérieur.
 \end{itemize}\
 \newline
 Les scénarios d'utilisation principaux sont les suivants :
@@ -643,8 +642,47 @@ Il est important de noter la présence de deux énumérations (\textit{Enums}) u
 \subsection{Maquettes}
 Maquettes de l'application, comment elle va être organisée, les différentes pages, etc..
 \subsection{Définitions des outils MCP}
-Quels sont les outils que mon serveur MCP va utiliser ? 
-\section{Implémentation et résultats}
+Le serveur Model Context Protocol (MCP) constitue le pont de communication essentiel entre l'Assistant IA et les sources de données du système. Son rôle est d'exposer de manière standardisée les points de terminaison de l'API REST de PadelContext, ainsi que l'API externe de MeteoSwiss, sous forme d'outils (tools) directement exécutables par l'intelligence artificielle.
+\newline\newline
+Afin de couvrir l'ensemble des cas d'usage définis lors de la modélisation fonctionnelle, le serveur MCP expose cinq outils distincts. Le tableau \ref{tab:mcp_tools} résume leurs objectifs respectifs.
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+    \hline
+        \rowcolor[gray]{0.9} 
+        \textbf{Nom de l'outil} & \textbf{Source interrogée} & \textbf{Description fonctionnelle} \\ \hline
+        \texttt{get-matches} & API PadelContext & Récupère la liste des matchs disponibles via le point de terminaison \textbf{<< GET /api/matches >>}. \\ \hline
+        \texttt{get-available-slots} & API PadelContext & Récupère la liste des créneaux horaires disponibles via le point de terminaison \textbf{<< GET /api/available-slots >>}. \\ \hline
+        \texttt{create-match-from-slot} & API PadelContext & Crée un match à partir d'un créneau horaire libre et y inscrit l'utilisateur authentifié via le point de terminaison \textbf{<< POST /api/matches/from-slot >>}. \\ \hline
+        \texttt{join-match} & API PadelContext & Inscrit l'utilisateur authentifié à un match existant via le point de terminaison \textbf{<< POST /api/matches/{matchId}/join >>}. \\ \hline
+        \texttt{get-meteo-swiss} & API MeteoSwiss & Fournit les prévisions climatiques locales pour valider la faisabilité d'une partie en extérieur. \\ \hline
+\end{tabularx}
+    \caption{Liste des outils exposés par le serveur MCP de PadelContext}
+    \label{tab:mcp_tools}
+\end{table}
+\vspace{0.4cm}
+
+
+Dans l'architecture du Model Context Protocol, la description sémantique d'une fonctionnalité est critique. Pour comprendre l'objectif et les spécificités d'un outil, les LLMs s'appuient exclusivement sur sa description en langage naturel. Une étude récente, ayant analysé 856 outils MCP, révèle que 97,1 \% d'entre eux contiennent des défauts de conception qualifiés de << Tool Smells >>, avec 56 \% des outils échouant même à définir clairement leur objectif principal (Hasan et al. 2026, p. 4). Les auteurs soulignent que si ces descriptions sont défectueuses, sous-spécifiées ou trompeuses, l'agent IA risque de sélectionner le mauvais outil ou de fournir des arguments invalides, réduisant considérablement la fiabilité du système.
+\newline\newline
+Bien que l'étude démontre que l'amélioration de ces descriptions permet d'augmenter le taux de succès des tâches, elle met également en garde sur le fait qu'une documentation trop volumineuse augmente le coût et le nombre d'étapes d'exécution. Il est donc nécessaire de trouver un juste équilibre (Hasan et al. 2026, p. 4).
+\newline\newline
+Pour PadelContext, les outils ont été rigoureusement structurés en s'appuyant sur la grille d'évaluation d'excellence (score de 5/5) proposée par l'étude mentionnée. Chaque description est structurée autour de six piliers sémantiques afin d'atteindre une qualité optimale (Hasan et al. 2026, p. 42) :
+\newline\newline
+\textbf{1. Purpose (Objectif)} : Explique clairement la fonction, le comportement et les données de retour de l'outil en utilisant un langage précis.
+\newline
+\textbf{2. Usage Guidelines (Directives d'utilisation)} : Énonce explicitement les cas d'utilisation appropriés et les cas où l'outil ne doit pas être utilisé, incluant une désambiguïsation si le nom de l'outil s'avère ambigu.
+\newline
+\textbf{3. Limitation (Contraintes et limites)} : Indique clairement ce que l'outil ne retourne pas, les limites de sa portée ainsi que ses contraintes importantes.
+\newline
+\textbf{4. Parameter Explanation (Explication des paramètres)} : Chaque paramètre est détaillé avec son type, sa signification, son effet sur le comportement de l'outil, et son statut (requis ou valeur par défaut).
+\newline
+\textbf{5. Examples vs. Description Balance (Équilibre Exemples/Description)} : La description textuelle se suffit à elle-même ; les exemples fournis servent uniquement à compléter l'explication et non à la remplacer.
+\newline
+\textbf{6. Length and Completeness (Exhaustivité)} : La description de l'outil est composée de quatre phrases ou plus, rédigées dans un style concis et bien structuré, couvrant tous les aspects de son utilisation.
+\newline\newline
+L'application stricte de cette grille garantit une réduction drastique des erreurs d'interprétation par l'agent IA, assurant ainsi une orchestration fiable des requêtes tout en optimisant la pertinence des résultats.
 \subsection{Cas d'usage}
 Exemple d'une réservation d'un terrain de padel en extérieur, avec un matchmaking automatique et une vérification de la météo en temps réel
 \subsection{Comparaison des résultats}
