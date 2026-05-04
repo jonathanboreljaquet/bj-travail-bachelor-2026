@@ -423,6 +423,7 @@ Le diagramme de Gantt est disponible dans l'annexe \ref{annexe:pdf_gantt}.
     \caption{Planification Gantt du projet (Partie 2)}
     \label{tab:gantt_part2}
 \end{table}
+
 \section{Analyse des besoins et choix technologiques}
 \subsection{Backend}
 \subsubsection{Choix de l'architecture de l'API}
@@ -460,6 +461,21 @@ Afin de gagner en efficacité et de réduire le temps de développement de l'API
 Au-delà du confort de développement, ce choix s'appuie sur des critères de performance concrets. Prisma offre les meilleures performances lorsqu'il est soumis à des charges parallèles par rapport à des alternatives comme Sequelize ou TypeORM (Zhadko-Bazilevych 2025) \cite{zhadko-bazilevych_analysis_2025}. Pour une plateforme de réservation comme PadelContext, où plusieurs utilisateurs peuvent solliciter l'API simultanément pour rechercher ou réserver un créneau via le serveur MCP, cette capacité à maintenir de hautes performances sous une charge parallèle est un atout technique décisif.
 \newline\newline
 Enfin, pour assurer la fiabilité de mon API REST, j'ai opté pour le framework de test Jest. Jest est un framework qui ne nécessite aucune configuration au préalable. De plus, il fournit un système de mocks intégré ainsi qu'une couverture de code complète (Donvir 2024) \cite{donvir_comparative_2024}. De manière similaire à Prisma, le choix de Jest est principalement justifié par sa rapidité d'intégration et son efficacité, dans l'objectif d'optimiser le temps alloué au développement de l'API REST.
+\subsection{Conteneurisation et gestion des environnements}
+
+Dans le cadre de ce projet, la conteneurisation de l'intégralité de l'écosystème applicatif s'est imposée comme une nécessité technique, motivée par des enjeux de reproductibilité et de facilité de déploiement. Pour répondre à ce besoin, j'ai choisis d'utilisé la bibliothèque et plateforme logicielle Docker. 
+\newline\newline
+Le fonctionnement de Docker repose sur l'utilisation d'images. Les images Docker sont des modèles permettant de créer un conteneur Docker, qui intègrent toutes les dépendances nécessaires au fonctionnement des applications. Les images Docker sont des conteneurs Docker qui exécutent des applications dans des environnements isolés, où le résultat doit être identique quelle que soit l'infrastructure sous-jacente (trad. de Naga Murali Krishna 2025, p.725) \cite{koneru_containerization_2025}.
+\newline\newline
+Cette isolation et cette reproductibilité générale garanties par Docker ont été les principaux arguments de son adoption pour PadelContext. La capacité de pouvoir développer, tester et déployer l'application sur différents appareils sans se soucier du système d'exploitation hôte ou de ses configurations spécifiques s'est avérée extrêmement pratique. 
+\newline\newline
+De plus, afin d'optimiser les ressources, chaque conteneur de l'écosystème repose sur une image de base minimaliste de type Alpine Linux. Ces images allégées ne mettent à disposition que le strict nécessaire au fonctionnement de l'application, ce qui réduit considérablement la surface d'attaque potentielle et accélère le temps de déploiement des conteneurs.
+\newline\newline
+Afin de prévenir l'obsolescence prématurée du projet et de minimiser les problèmes de compatibilité durant la phase de développement, un choix strict de sélection des versions a été appliquée pour chaque image Docker. Le choix s'est systématiquement porté sur des versions actives, stables et officiellement maintenues, garantissant ainsi l'accès à une documentation à jour en cas de difficulté de codage.
+\newline\newline
+Pour les images de l'API REST, du serveur MCP et du client MCP fonctionant tous avec un environnement d'exécution JavaScript avec Node.js, l'image Docker \texttt{node:24.14.0-alpine3.23} a été sélectionnée. Ce choix est justifié par les recommandations officielles de Node.js, qui spécifient que la version 24 est la version \textit{LTS (Long-Term Support)} durant la période de réalisation de ce travail de Bachelor. Ce statut LTS garantit la correction des failles de sécurité et des bogues critiques pendant une durée de 30 mois (Node.js, 2025) \cite{noauthor_nodejs_2025}.
+\newline\newline
+Enfin, pour la base de données PostgreSQL, l'image \texttt{postgres:18.3-alpine} a été retenue. Ce choix suit la même logique de pérennité en s'appuyant sur les recommandations officielles de PostgreSQL, qui identifient la version 18 comme la version majeure la plus récente et supportée à ce jour (PostgreSQL, 2025) \cite{noauthor_postgresql_nodate}. 
 \subsection{Frontend}
 \subsection{Identification des sources de données}
 API MeteoSwiss et base de données de l'application
@@ -496,9 +512,19 @@ Les scénarios d'utilisation principaux sont les suivants :
 \item \textbf{Afficher les terrains disponibles} : Le joueur formule le souhait de réserver un terrain pour une date et une heure précises, par exemple : << Je souhaite réserver un terrain extérieur pour samedi prochain à 14h00 >>. L'Assistant IA interroge le serveur MCP pour lister les terrains disponibles et filtre les résultats selon la tranche horaire et le type de terrain demandés. De plus, avant de finaliser sa proposition, l'Assistant IA consulte l'API MeteoSwiss pour s'assurer que les conditions climatiques seront favorables.
 \item \textbf{Réserver un terrain} : Une fois la proposition validée par le joueur, l'Assistant IA vérifie que l'utilisateur est connecté et procède à la réservation effective du terrain.
 \end{itemize}
-    \subsection{Architecture logicielle}
-Description complète de l'architecture logicielle de l'application, Backend, Frontend (Client MCP), Base de données, API externes, Serveur MCP, autres... 
+\subsection{Architecture logicielle et écosystème}
 
+L'architecture de PadelContext est conçue comme un système distribué où chaque fonctionnalité est isolée dans son propre environnement d'exécution. Grâce à son propose réseau virtuel privé, les différents conteneurs Docker qui composent l'écosystème de l'application peuvent communiquer entre eux de manière sécurisée et efficace.
+\newline\newline
+Les ports utilisés pour les communications entre les conteneurs sont fixés en dur dans le code de chaque service, tandis que les ports exposés sur la machine hôte sont configurables via des variables d'environnement. Cette approche permet de maintenir une structure interne rigide afin de faciliter l'intéraction entre les services pendant le développement de ce projet.
+\newline\newline
+Afin d'illustrer cette architecture, le diagramme de la figure \ref{fig:system_architecture.drawio.png} synthétise les différents services et leurs interactions.
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{img/system_architecture.drawio.png}
+\caption{Diagramme de l'architecture logicielle de l'écosystème PadelContext}
+\label{fig:system_architecture.drawio.png}
+\end{figure}
 \subsection{Spécifications techniques de l'API REST}
 \subsubsection{Documentation des points de terminaison}
 Afin de garantir une maintenance aisée et une compréhension rapide de l'API, l'ensemble des points de terminaison a été rigoureusement documenté en utilisant l'outil Swagger. 
@@ -534,7 +560,7 @@ Afin de garantir la fiabilité, la robustesse et la non-régression de l'API RES
 \newline\newline
 Les tests unitaires ont pour objectif de valider le comportement d'un composant de code de manière totalement isolée du reste du système. Dans le cadre de l'API PadelContext, ces tests se concentrent exclusivement sur la logique métier des contrôleurs. Pour isoler efficacement chaque contrôleur, toutes les dépendances externes ont été simulées. Par exemple, les interactions avec la base de données via Prisma, le hachage des mots de passe avec la bibliothèque \texttt{bcryptjs} ou encore la génération de tokens avec la bibliothèque \texttt{jsonwebtoken} ont été remplacés par de fausses implémentations contrôlées par Jest. L'intérêt principal de cette approche est sa rapidité d'exécution et sa grande précision. En simulant des erreurs liées à la base de données, comme l'échec d'une transaction ou une perte de connexion, il a été possible de s'assurer que l'API gère correctement les exceptions et renvoie les bons codes HTTP sans avoir besoin d'altérer un environnement réel.
 \newline\newline
-Contrairement aux tests unitaires, les tests d'intégration visent à vérifier que l'ensemble des composants du système communiquent correctement entre eux. Ils valident le cheminement complet d'une requête HTTP : du routeur au middleware permettant  la vérification du JWT, en passant par le contrôleur, jusqu'à l'écriture ou la lecture dans une véritable base de données PostgreSQL. Ces tests ont été réalisés à l'aide de la bibliothèque \textbf{Supertest}, qui permet de simuler des requêtes HTTP réelles vers l'application Express. Lors de ces validations, des jeux de données réels sont créés en amont puis supprimés en aval afin de ne pas polluer l'environnement de développement. Bien qu'un contrôleur puisse parfaitement fonctionner de manière isolée, il peut échouer lorsqu'il est connecté à la base de données réelle en raison, par exemple, d'une contrainte de clé étrangère non respectée ou d'une erreur de format de date. Les tests d'intégration garantissent ainsi que des actions critiques, telles que la création d'un match depuis un créneau libre ou la participation à un match, fonctionnent de manière transactionnelle et fiable dans des conditions d'utilisation réelles.
+Contrairement aux tests unitaires, les tests d'intégration visent à vérifier que l'ensemble des composants du système communiquent correctement entre eux. Ils valident le cheminement complet d'une requête HTTP : du routeur au middleware permettant  la vérification du JWT, en passant par le contrôleur, jusqu'à l'écriture ou la lecture dans une véritable base de données PostgreSQL. Ces tests ont été réalisés à l'aide de la bibliothèque Supertest, qui permet de simuler des requêtes HTTP réelles vers l'application Express. Lors de ces validations, des jeux de données réels sont créés en amont puis supprimés en aval afin de ne pas polluer l'environnement de développement. Bien qu'un contrôleur puisse parfaitement fonctionner de manière isolée, il peut échouer lorsqu'il est connecté à la base de données réelle en raison, par exemple, d'une contrainte de clé étrangère non respectée ou d'une erreur de format de date. Les tests d'intégration garantissent ainsi que des actions critiques, telles que la création d'un match depuis un créneau libre ou la participation à un match, fonctionnent de manière transactionnelle et fiable dans des conditions d'utilisation réelles.
 \subsection{Modélisation de la base de données}
 \subsubsection{Schéma relationnel}
 \begin{figure}[H]
@@ -641,7 +667,9 @@ Il est important de noter la présence de deux énumérations (\textit{Enums}) u
 \end{table}
 \subsection{Maquettes}
 Maquettes de l'application, comment elle va être organisée, les différentes pages, etc..
-\subsection{Définitions des outils MCP}
+\subsection{Serveur MCP}
+\subsubsection{Protocole de transport}
+\subsubsection{Définitions des outils MCP}
 Le serveur Model Context Protocol (MCP) constitue le pont de communication essentiel entre l'Assistant IA et les sources de données du système. Son rôle est d'exposer de manière standardisée les points de terminaison de l'API REST de PadelContext, ainsi que l'API externe de MeteoSwiss, sous forme d'outils (tools) directement exécutables par l'intelligence artificielle.
 \newline\newline
 Afin de couvrir l'ensemble des cas d'usage définis lors de la modélisation fonctionnelle, le serveur MCP expose cinq outils distincts. Le tableau \ref{tab:mcp_tools} résume leurs objectifs respectifs.
@@ -676,9 +704,9 @@ Pour PadelContext, les outils ont été rigoureusement structurés en s'appuyant
 \newline
 \textbf{3. Limitation} : Indique clairement ce que l'outil ne retourne pas, les limites de sa portée ainsi que ses contraintes importantes.
 \newline
-\textbf{4. Parameter Explanation} : Chaque paramètre est détaillé avec son type, sa signification, son effet sur le comportement de l'outil, et son statut (requis ou valeur par défaut).
+\textbf{4. Parameter Explanation} : Chaque paramètre est détaillé avec son type, sa signification, son effet sur le comportement de l'outil, et son statut.
 \newline
-\textbf{5. Examples vs. Description Balance} : La description textuelle se suffit à elle-même ; les exemples fournis servent uniquement à compléter l'explication et non à la remplacer.
+\textbf{5. Examples vs. Description Balance} : La description textuelle se suffit à elle-même, les exemples fournis servent uniquement à compléter l'explication et non à la remplacer.
 \newline
 \textbf{6. Length and Completeness} : La description de l'outil est composée de quatre phrases ou plus, rédigées dans un style concis et bien structuré, couvrant tous les aspects de son utilisation.
 \newline\newline
