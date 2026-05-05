@@ -479,8 +479,6 @@ Enfin, pour la base de données PostgreSQL, l'image \texttt{postgres:18.3-alpine
 \subsection{Frontend}
 \subsection{Identification des sources de données}
 API MeteoSwiss et base de données de l'application
-
-Pourquoi je veux utiliser javascript et autre outils pour le développement de l'application (Typescript ? Prisma ? React ? etc..)
 \subsection{Architecture du Mondel Context Protocol}
 Comment l'IA va interagir avec les différentes sources de données ?
 \section{Conception et architecture de l'application}
@@ -525,42 +523,6 @@ Afin d'illustrer cette architecture, le diagramme de la figure \ref{fig:system_a
 \caption{Diagramme de l'architecture logicielle de l'écosystème PadelContext}
 \label{fig:system_architecture.drawio.png}
 \end{figure}
-\subsection{Spécifications techniques de l'API REST}
-\subsubsection{Documentation des points de terminaison}
-Afin de garantir une maintenance aisée et une compréhension rapide de l'API, l'ensemble des points de terminaison a été rigoureusement documenté en utilisant l'outil Swagger. 
-\newline\newline
-L'avantage de l'outil Swagger est qu'il permet de rédiger une documentation dynamique et accessible directement depuis le serveur de l'API. En effet, la documentation est générée automatiquement à partir de commentaires structurés directement intégrés au-dessus du code de chaque route de l'application. Cette méthode professionnelle garantit que le code et sa documentation restent constamment synchronisés.
-\newline\newline
-L'API PadelContext expose cinq points de terminaison permettant de gérer l'authentification, la consultation des matchs ouverts et des créneaux horaires disponibles et leur participation ou création. Le tableau \ref{tab:api_endpoints} présente une vue d'ensemble de ces routes.
-
-\vspace{0.5cm}
-\begin{table}[H]
-    \centering
-    \begin{tabularx}{\textwidth}{|l|l|X|}
-    \hline
-    \rowcolor[gray]{0.9} 
-    \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} \\ \hline
-    {\textbf{POST}} & \texttt{/api/auth/login} & Authentifie un utilisateur via ses identifiants et retourne un JSON Web Token (JWT) valide pour authentifier ses futures requêtes. \\ \hline
-    {\textbf{GET}} & \texttt{/api/matches} & Récupère la liste des matchs ouverts (en attente de joueurs) en appliquant divers filtres optionnels (ville, prix, durée, etc.). \\ \hline
-    {\textbf{GET}} & \texttt{/api/available-slots} & Retourne les créneaux horaires disponibles pour les 7 prochains jours, en appliquant divers filtres optionnels (ville, prix, durée, etc.). \\ \hline
-    {\textbf{POST}} & \texttt{/api/matches/\{matchId\}/join} & Permet à un utilisateur de s'inscrire à une partie existante possédant encore des places disponibles grâce à son JWT. \\ \hline
-    {\textbf{POST}} & \texttt{/api/matches/from-slot} & Permet à un utilisateur de convertir un créneau libre en un nouveau match ouvert et y inscrit automatiquement le créateur grâce à son JWT. \\ \hline
-    \end{tabularx}
-    \caption{Vue d'ensemble des points de terminaison de l'API PadelContext}
-    \label{tab:api_endpoints}
-\end{table}
-\vspace{0.2cm}
-
-La spécification technique complète et exhaustive de ces points de terminaison, incluant les paramètres de requête, le format des corps JSON attendus, ainsi que la gestion des différents codes de statut HTTP, est visualisable via l'interface graphique de Swagger. 
-\newline\newline
-Des captures d'écran détaillant l'utilisation et les réponses de chaque point de terminaison via cette interface sont disponibles dans l'annexe \ref{annexe:swagger}.
-\subsubsection{Documentation et stratégie de tests}
-
-Afin de garantir la fiabilité, la robustesse et la non-régression de l'API REST tout au long de son développement, une stratégie de test rigoureuse a été mise en place. En accord avec les choix technologiques définis précédemment, le framework Jest a été utilisé pour orchestrer ces vérifications. La stratégie adoptée repose sur deux niveaux de validation complémentaires : les tests unitaires et les tests d'intégration.
-\newline\newline
-Les tests unitaires ont pour objectif de valider le comportement d'un composant de code de manière totalement isolée du reste du système. Dans le cadre de l'API PadelContext, ces tests se concentrent exclusivement sur la logique métier des contrôleurs. Pour isoler efficacement chaque contrôleur, toutes les dépendances externes ont été simulées. Par exemple, les interactions avec la base de données via Prisma, le hachage des mots de passe avec la bibliothèque \texttt{bcryptjs} ou encore la génération de tokens avec la bibliothèque \texttt{jsonwebtoken} ont été remplacés par de fausses implémentations contrôlées par Jest. L'intérêt principal de cette approche est sa rapidité d'exécution et sa grande précision. En simulant des erreurs liées à la base de données, comme l'échec d'une transaction ou une perte de connexion, il a été possible de s'assurer que l'API gère correctement les exceptions et renvoie les bons codes HTTP sans avoir besoin d'altérer un environnement réel.
-\newline\newline
-Contrairement aux tests unitaires, les tests d'intégration visent à vérifier que l'ensemble des composants du système communiquent correctement entre eux. Ils valident le cheminement complet d'une requête HTTP : du routeur au middleware permettant  la vérification du JWT, en passant par le contrôleur, jusqu'à l'écriture ou la lecture dans une véritable base de données PostgreSQL. Ces tests ont été réalisés à l'aide de la bibliothèque Supertest, qui permet de simuler des requêtes HTTP réelles vers l'application Express. Lors de ces validations, des jeux de données réels sont créés en amont puis supprimés en aval afin de ne pas polluer l'environnement de développement. Bien qu'un contrôleur puisse parfaitement fonctionner de manière isolée, il peut échouer lorsqu'il est connecté à la base de données réelle en raison, par exemple, d'une contrainte de clé étrangère non respectée ou d'une erreur de format de date. Les tests d'intégration garantissent ainsi que des actions critiques, telles que la création d'un match depuis un créneau libre ou la participation à un match, fonctionnent de manière transactionnelle et fiable dans des conditions d'utilisation réelles.
 \subsection{Modélisation de la base de données}
 \subsubsection{Schéma relationnel}
 \begin{figure}[H]
@@ -665,10 +627,65 @@ Il est important de noter la présence de deux énumérations (\textit{Enums}) u
     \caption{Dictionnaire de données - Table Participant}
     \label{tab:dict_participant}
 \end{table}
+
+\subsection{Spécifications techniques de l'API REST}
+\subsubsection{Documentation des points de terminaison}
+Afin de garantir une maintenance aisée et une compréhension rapide de l'API, l'ensemble des points de terminaison a été rigoureusement documenté en utilisant l'outil Swagger. 
+\newline\newline
+L'avantage de l'outil Swagger est qu'il permet de rédiger une documentation dynamique et accessible directement depuis le serveur de l'API. En effet, la documentation est générée automatiquement à partir de commentaires structurés directement intégrés au-dessus du code de chaque route de l'application. Cette méthode professionnelle garantit que le code et sa documentation restent constamment synchronisés.
+\newline\newline
+L'API PadelContext expose cinq points de terminaison permettant de gérer l'authentification, la consultation des matchs ouverts et des créneaux horaires disponibles et leur participation ou création. Le tableau \ref{tab:api_endpoints} présente une vue d'ensemble de ces routes.
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+    \hline
+    \rowcolor[gray]{0.9} 
+    \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} \\ \hline
+    {\textbf{POST}} & \texttt{/api/auth/login} & Authentifie un utilisateur via ses identifiants et retourne un JSON Web Token (JWT) valide pour authentifier ses futures requêtes. \\ \hline
+    {\textbf{GET}} & \texttt{/api/matches} & Récupère la liste des matchs ouverts (en attente de joueurs) en appliquant divers filtres optionnels (ville, prix, durée, etc.). \\ \hline
+    {\textbf{GET}} & \texttt{/api/available-slots} & Retourne les créneaux horaires disponibles pour les 7 prochains jours, en appliquant divers filtres optionnels (ville, prix, durée, etc.). \\ \hline
+    {\textbf{POST}} & \texttt{/api/matches/\{matchId\}/join} & Permet à un utilisateur de s'inscrire à une partie existante possédant encore des places disponibles grâce à son JWT. \\ \hline
+    {\textbf{POST}} & \texttt{/api/matches/from-slot} & Permet à un utilisateur de convertir un créneau libre en un nouveau match ouvert et y inscrit automatiquement le créateur grâce à son JWT. \\ \hline
+    \end{tabularx}
+    \caption{Vue d'ensemble des points de terminaison de l'API PadelContext}
+    \label{tab:api_endpoints}
+\end{table}
+\vspace{0.2cm}
+
+La spécification technique complète et exhaustive de ces points de terminaison, incluant les paramètres de requête, le format des corps JSON attendus, ainsi que la gestion des différents codes de statut HTTP, est visualisable via l'interface graphique de Swagger. 
+\newline\newline
+Des captures d'écran détaillant l'utilisation et les réponses de chaque point de terminaison via cette interface sont disponibles dans l'annexe \ref{annexe:swagger}.
+\subsubsection{Documentation et stratégie de tests}
+
+Afin de garantir la fiabilité, la robustesse et la non-régression de l'API REST tout au long de son développement, une stratégie de test rigoureuse a été mise en place. En accord avec les choix technologiques définis précédemment, le framework Jest a été utilisé pour orchestrer ces vérifications. La stratégie adoptée repose sur deux niveaux de validation complémentaires : les tests unitaires et les tests d'intégration.
+\newline\newline
+Les tests unitaires ont pour objectif de valider le comportement d'un composant de code de manière totalement isolée du reste du système. Dans le cadre de l'API PadelContext, ces tests se concentrent exclusivement sur la logique métier des contrôleurs. Pour isoler efficacement chaque contrôleur, toutes les dépendances externes ont été simulées. Par exemple, les interactions avec la base de données via Prisma, le hachage des mots de passe avec la bibliothèque \texttt{bcryptjs} ou encore la génération de tokens avec la bibliothèque \texttt{jsonwebtoken} ont été remplacés par de fausses implémentations contrôlées par Jest. L'intérêt principal de cette approche est sa rapidité d'exécution et sa grande précision. En simulant des erreurs liées à la base de données, comme l'échec d'une transaction ou une perte de connexion, il a été possible de s'assurer que l'API gère correctement les exceptions et renvoie les bons codes HTTP sans avoir besoin d'altérer un environnement réel.
+\newline\newline
+Contrairement aux tests unitaires, les tests d'intégration visent à vérifier que l'ensemble des composants du système communiquent correctement entre eux. Ils valident le cheminement complet d'une requête HTTP : du routeur au middleware permettant  la vérification du JWT, en passant par le contrôleur, jusqu'à l'écriture ou la lecture dans une véritable base de données PostgreSQL. Ces tests ont été réalisés à l'aide de la bibliothèque Supertest, qui permet de simuler des requêtes HTTP réelles vers l'application Express. Lors de ces validations, des jeux de données réels sont créés en amont puis supprimés en aval afin de ne pas polluer l'environnement de développement. Bien qu'un contrôleur puisse parfaitement fonctionner de manière isolée, il peut échouer lorsqu'il est connecté à la base de données réelle en raison, par exemple, d'une contrainte de clé étrangère non respectée ou d'une erreur de format de date. Les tests d'intégration garantissent ainsi que des actions critiques, telles que la création d'un match depuis un créneau libre ou la participation à un match, fonctionnent de manière transactionnelle et fiable dans des conditions d'utilisation réelles.
 \subsection{Maquettes}
 Maquettes de l'application, comment elle va être organisée, les différentes pages, etc..
 \subsection{Serveur MCP}
-\subsubsection{Protocole de transport}
+\subsubsection{Méchanisme de transport et communication}
+Le protocole MCP propose nativement deux mécanismes distincts pour acheminer les messages entre le client et le serveur. Le premier mécanisme, nommé Stdio, implique que le client MCP lance directement le serveur MCP en tant que sous-processus. Dans cette configuration, la communication s'effectue localement via les flux d'entrée standard (stdin) et de sortie standard (stdout) du système d'exploitation (Model Context protocol, 2025) \cite{noauthor_transports_2025}, comme illustré par le diagramme de la figure \ref{fig:transport_stdio}. 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{img/transport_mcp_stdio.drawio.png}
+\caption{Mécanisme de transport local via Stdio, adapté de (Dohnal, 2025) \cite{tom_dohnal_build_2025}}
+\label{fig:transport_stdio}
+\end{figure}
+À l'inverse, le mécanisme de transport Streamable HTTP permet au serveur MCP de fonctionner comme un processus réseau totalement indépendant. Ce mode de transport s'appuie sur les standards web traditionnels, utilisant des requêtes HTTP POST pour l'envoi de commandes et des requêtes HTTP GET pouvant servir à établir un flux continu (Model Context protocol, 2025) \cite{noauthor_transports_2025}, comme le montre le diagramme de la figure \ref{fig:transport_http}.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{img/transport_mcp_http_streamable.drawio.png}
+\caption{Mécanisme de transport réseau via Streamable HTTP, adapté de (Dohnal, 2025) \cite{tom_dohnal_build_2025}}
+\label{fig:transport_http}
+\end{figure}
+Pour le développement de l'écosystème PadelContext, le choix s'est délibérément porté sur le transport Streamable HTTP plutôt que sur le mécanisme Stdio. Cette décision architecturale repose sur la volonté de rendre le serveur MCP hautement disponible, évolutif et découplé de son client. Cette flexibilité garantit que le serveur pourra facilement être interrogé par d'autres interfaces, de nouveaux services ou de futurs agents d'intelligence artificielle, sans nécessiter de refonte de l'infrastructure logicielle.
+\newline\newline
+Indépendamment du mécanisme de transport physique choisi, le format des échanges entre le client et le serveur est strictement régi par la spécification JSON-RPC 2.0. Il s'agit d'un protocole d'appel de procédure à distance léger, sans état, qui utilise le format de données JSON pour structurer les messages. Selon la spécification officielle, chaque requête envoyée par le client au serveur contient la version du protocole, un identifiant unique, le nom de la méthode à invoquer ainsi que ses paramètres d'exécution. Le serveur traite ensuite cette requête et retourne une réponse standardisée contenant soit le résultat de l'opération, soit un objet d'erreur détaillé en cas d'échec (JSON-RPC, 2013) \cite{noauthor_json-rpc_2013}.
+
 \subsubsection{Définitions des outils MCP}
 Le serveur Model Context Protocol (MCP) constitue le pont de communication essentiel entre l'Assistant IA et les sources de données du système. Son rôle est d'exposer de manière standardisée les points de terminaison de l'API REST de PadelContext, ainsi que l'API externe de MeteoSwiss, sous forme d'outils (tools) directement exécutables par l'intelligence artificielle.
 \newline\newline
