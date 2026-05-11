@@ -478,7 +478,50 @@ Pour les images de l'API REST, du serveur MCP et du client MCP fonctionant tous 
 Enfin, pour la base de données PostgreSQL, l'image \texttt{postgres:18.3-alpine} a été retenue. Ce choix suit la même logique de pérennité en s'appuyant sur les recommandations officielles de PostgreSQL, qui identifient la version 18 comme la version majeure la plus récente et supportée à ce jour (PostgreSQL, 2025) \cite{noauthor_postgresql_nodate}. 
 \subsection{Frontend}
 \subsection{Identification des sources de données}
-API MeteoSwiss et base de données de l'application
+
+Afin d'utiliser des données météorologiques réelles et concrètes, une phase de recherche a permis d'identifier MeteoSwiss comme source de qualité. Depuis mai 2025, cet Office fédéral de météorologie et de climatologie met progressivement à disposition ses données sous forme d'Open Government Data (OGD). Les données publiques ouvertes permettent, par exemple, aux villes d’optimiser en temps réel leurs transports publics, aux startups de développer des applications qui facilitent notre quotidien, et aux citoyens de suivre plus facilement les actions de leurs responsables politiques (Office fédéral de la statistique, 2026) \cite{noauthor_quest-ce_2026}. 
+\newline\newline
+L'accès aux données de MeteoSwiss s'effectue via une API REST conforme à la norme internationale OGC STAC. La famille de spécifications STAC (SpatioTemporal Asset Catalog) vise à standardiser la structuration et l'interrogation des métadonnées des ressources géospatiales. Les spécifications STAC définissent des types d'objets JSON liés par des relations de type lien afin de prendre en charge une interface navigable et une API RESTful offrant des interfaces de navigation et de recherche supplémentaires (trad. de STAC Community, 2025) \cite{stac_community_spatiotemporal_nodate}.
+\newline\newline
+Parmi l'ensemble des collections disponibles, la collection des données de prévisions locales a été sélectionnée. Celle-ci fournit des prévisions par point pour environ 6 000 sites en Suisse pour les 216 prochaines heures, mis à jour tout les heures. Ces prévisions sont indispensable pour informer l'utilisateur des conditions météorologiques et donc de la faisabilité d'une partie de Padel sur un terrain extérieur (Outdoor). Parmis tout les types de données météorologiques disponibles, trois types spécifiques ont été retenus, comme détaillé dans le tableau \ref{tab:meteo_params}.
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+    \hline
+    \rowcolor[gray]{0.9} 
+    \textbf{Identifiant} & \textbf{Groupe} & \textbf{Description} \\ \hline
+    \texttt{tre200h0} & Température & Température de l'air à 2 m au-dessus du sol. \\ \hline
+    \texttt{rre150h0} & Précipitations & Cumul total des précipitations par heure. \\ \hline
+    \texttt{fu3010h0} & Vent & Valeur scalaire de la vitesse du vent ; moyenne horaire en km/h \\ \hline
+    \end{tabularx}
+    \caption{Paramètres météorologiques MeteoSwiss choisis pour le projet PadelContext (MeteoSwiss, 2026) \cite{meteoswiss_local_2026}}
+    \label{tab:meteo_params}
+\end{table}
+\vspace{0.2cm}
+
+La récupération des données suit un processus séquentiel. Ces fichiers CSV fonctionnent comme une bibliothèque historique. Chaque heure, un nouveau fichier est généré pour chaque paramètre, contenant les prévisions des 216 prochaines heures pour l'ensemble du territoire suisse. La structure d'un fichier de données, par exemple pour la température (\texttt{tre200h0}), est organisée selon les en-têtes présentés dans le tableau \ref{tab:csv_structure}.
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|X|}
+    \hline
+    \rowcolor[gray]{0.9} 
+    \textbf{Colonne CSV} & \textbf{Description} \\ \hline
+    \texttt{point\_id} & Identifiant unique de la station ou de la localité \\ \hline
+    \texttt{point\_type\_id} & Type de point (1 = Station, 2 = Code postal, 3 = Lieu d'intérêt). \\ \hline
+    \texttt{Date} & Horodatage du relevé au format : AAAAMMJJHHmm \\ \hline
+    \texttt{tre200h0} & Valeur de la température pour le créneau donné \\ \hline
+    \end{tabularx}
+    \caption{Structure type des fichiers CSV de données de prévision locales de MeteoSwiss}
+    \label{tab:csv_structure}
+\end{table}
+\vspace{0.2cm}
+
+Afin de lier une réservation de padel à une donnée météo précise, il est nécessaire de connaître le \texttt{point\_id} correspondant à la localité du club. Pour ce faire, un fichier de référence fourni par MeteoSwiss recensant l'intégralité des stations méthéologiques, des codes postaux et des lieux d'intérêt. Ce fichier permet d'effectuer une jointure logique, par exemple, le code postal 1226 (Thônex) est associé au \texttt{point\_id} 122600. 
+
 \subsection{Architecture du Mondel Context Protocol}
 Comment l'IA va interagir avec les différentes sources de données ?
 \section{Conception et architecture de l'application}
@@ -568,6 +611,7 @@ Il est important de noter la présence de deux énumérations (\textit{Enums}) u
     \texttt{id} & Int & PK, Auto-incrément & Identifiant unique du club. \\ \hline
     \texttt{name} & String & Requis & Nom du club. \\ \hline
     \texttt{city} & String & Requis & Ville où se situe le club. \\ \hline
+    \texttt{postalCode} & String & Requis & Code postal de l'emplacement du club. \\ \hline
     \texttt{openingTime} & String & Requis & Heure d'ouverture habituelle quotidienne. \\ \hline
     \texttt{closingTime} & String & Requis & Heure de fermeture habituelle quotidienne. \\ \hline
     \end{tabularx}
