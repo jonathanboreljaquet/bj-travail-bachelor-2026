@@ -40,6 +40,7 @@ const createCourtWithClub = async ({
         data: {
             name: `${uniquePrefix}-${clubName}`,
             city,
+            postalCode: "1200",
             openingTime: "08:00",
             closingTime: "23:00",
         },

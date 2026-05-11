@@ -30,6 +30,7 @@ const createUser = async (suffix: string) => {
 const createCourtWithClub = async ({
     clubName,
     city,
+    postalCode,
     courtName,
     openingTime,
     closingTime,
@@ -37,6 +38,7 @@ const createCourtWithClub = async ({
 }: {
     clubName: string;
     city: string;
+    postalCode: string;
     courtName: string;
     openingTime: string;
     closingTime: string;
@@ -46,6 +48,7 @@ const createCourtWithClub = async ({
         data: {
             name: `${uniquePrefix}-${clubName}`,
             city,
+            postalCode,
             openingTime,
             closingTime,
         },
@@ -123,6 +126,7 @@ describe("[INTEGRATION TEST] POST /api/matches/from-slot", () => {
         court = await createCourtWithClub({
             clubName: "main-club",
             city: `${uniquePrefix}-Geneva`,
+            postalCode: "1200",
             courtName: "main-court",
             openingTime: "08:00",
             closingTime: "22:00",

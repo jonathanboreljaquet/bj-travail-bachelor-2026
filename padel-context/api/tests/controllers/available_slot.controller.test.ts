@@ -143,6 +143,7 @@ const expectedCourtSelect = {
         select: {
             name: true,
             city: true,
+            postalCode: true,
             openingTime: true,
             closingTime: true,
         },
@@ -241,14 +242,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
                 city: "Lancy",
             },
             mockCourts: [court],
-            expectedCourtWhere: buildCourtWhere({
-                club: {
-                    city: {
-                        equals: "Lancy",
-                        mode: "insensitive",
-                    },
-                },
-            }),
+            expectedCourtWhere: buildCourtWhere(),
         });
     });
 
@@ -487,12 +481,6 @@ describe("[UNIT TEST] getAvailableSlots", () => {
             },
             mockCourts: [court],
             expectedCourtWhere: buildCourtWhere({
-                club: {
-                    city: {
-                        equals: "Lancy",
-                        mode: "insensitive",
-                    },
-                },
                 hasEquipmentBox: true,
                 pricePerPerson: {
                     gte: 10,

@@ -186,6 +186,7 @@ const expectedSelect = {
                 select: {
                     name: true,
                     city: true,
+                    postalCode: true,
                     openingTime: true,
                     closingTime: true,
                 },
@@ -265,14 +266,7 @@ describe("[UNIT TEST] getMatches", () => {
             },
             mockMatches: [matchOne],
             expectedWhere: buildOpenWhere({
-                court: {
-                    club: {
-                        city: {
-                            equals: "Lancy",
-                            mode: "insensitive",
-                        },
-                    },
-                },
+                court: {},
             }),
         });
     });
@@ -571,12 +565,6 @@ describe("[UNIT TEST] getMatches", () => {
                     lte: matchOne.endTime,
                 },
                 court: {
-                    club: {
-                        city: {
-                            equals: "Lancy",
-                            mode: "insensitive",
-                        },
-                    },
                     hasEquipmentBox: true,
                     pricePerPerson: {
                         gte: 10,
