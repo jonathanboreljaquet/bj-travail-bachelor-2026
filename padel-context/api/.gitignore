@@ -2,3 +2,4 @@
 .env
 /generated/prisma
 /dist
+/data/weather-forecasts/*.csv
