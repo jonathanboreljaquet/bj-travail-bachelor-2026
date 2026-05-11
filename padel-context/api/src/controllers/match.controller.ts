@@ -144,6 +144,7 @@ export const getMatches = async (
                             select: {
                                 name: true,
                                 city: true,
+                                postalCode: true,
                                 openingTime: true,
                                 closingTime: true,
                             },

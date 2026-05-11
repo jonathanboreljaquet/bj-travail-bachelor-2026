@@ -2,16 +2,16 @@ import { PrismaClient } from "../../generated/prisma/client";
 import { faker } from "@faker-js/faker";
 
 const GENEVA_CITIES = [
-    "Genève",
-    "Carouge",
-    "Lancy",
-    "Meyrin",
-    "Vernier",
-    "Onex",
-    "Thônex",
-    "Versoix",
-    "Chêne-Bougeries",
-    "Plan-les-Ouates",
+    { city: "Genève", postalCode: "1201" },
+    { city: "Carouge", postalCode: "1227" },
+    { city: "Grand-Lancy", postalCode: "1212" },
+    { city: "Meyrin", postalCode: "1217" },
+    { city: "Vernier", postalCode: "1214" },
+    { city: "Onex", postalCode: "1213" },
+    { city: "Thônex", postalCode: "1226" },
+    { city: "Versoix", postalCode: "1290" },
+    { city: "Chêne-Bougeries", postalCode: "1224" },
+    { city: "Plan-les-Ouates", postalCode: "1228" },
 ];
 
 export async function seedClub(
@@ -25,12 +25,13 @@ export async function seedClub(
     console.log("--- Start seeding clubs ---");
 
     let count = 0;
-    for (const city of GENEVA_CITIES) {
+    for (const { city, postalCode } of GENEVA_CITIES) {
         const schedule = valid_club_courts_slots[count];
         await prisma.club.create({
             data: {
                 name: `${faker.company.name()} Padel Club`,
                 city,
+                postalCode,
                 openingTime: schedule.openingTime,
                 closingTime: schedule.closingTime,
             },

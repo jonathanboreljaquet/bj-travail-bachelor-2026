@@ -108,6 +108,7 @@ export const getAvailableSlots = async (
                     select: {
                         name: true,
                         city: true,
+                        postalCode: true,
                         openingTime: true,
                         closingTime: true,
                     },

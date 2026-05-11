@@ -3,3 +3,4 @@
 /generated/prisma
 /dist
 /data/weather-forecasts/*.csv
+/data/weather-forecasts/*.json

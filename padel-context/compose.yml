@@ -24,6 +24,8 @@ services:
       - ./api/tests:/app/tests
       - ./api/package.json:/app/package.json
       - ./api/tsconfig.json:/app/tsconfig.json
+      - ./api/data/weather-forecasts:/app/data/weather-forecasts
+      - ./api/data/weather-metapoints:/app/data/weather-metapoints
     depends_on:
       db:
         condition: service_healthy

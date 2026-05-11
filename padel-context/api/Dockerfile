@@ -12,6 +12,9 @@ RUN npm install
 # Copie le reste du code source de l'application dans le conteneur
 COPY . .
 
+# Crée les répertoires pour les données météorologiques de l'API MeteoSwiss
+RUN mkdir -p /app/data/weather-forecasts /app/data/weather-metapoints
+
 # Port sur lequel l'application va tourner
 EXPOSE 3000
 
