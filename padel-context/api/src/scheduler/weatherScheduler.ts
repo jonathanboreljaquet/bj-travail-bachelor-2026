@@ -3,7 +3,7 @@ import weatherService from "../services/weatherService";
 
 export function initWeatherScheduler(): void {
     //https://www.nodecron.com/cron-syntax.html
-    cron.schedule("* */10 * * * *", async () => {
+    cron.schedule("*/10 * * * *", async () => {
         try {
             await weatherService.executeWeatherTask();
         } catch (error) {
