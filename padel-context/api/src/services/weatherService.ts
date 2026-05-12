@@ -1,238 +1,217 @@
 import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const STAC_API_URL =
-    "https://data.geo.admin.ch/api/stac/v1/collections/ch.meteoschweiz.ogd-local-forecasting/items";
-
-// https://opendatadocs.meteoswiss.ch/e-forecast-data/e4-local-forecast-data#data-structure
-const WEATHER_IDENTIFIERS = {
-    temperature: "tre200h0",
-    precipitation: "rre150h0",
-    wind: "fu3010h0",
-};
-
-const DATA_DIR = path.join(__dirname, "../../data/weather-forecasts");
-
-interface WeatherFile {
-    code: string;
-    url: string;
-    filename: string;
-    timestamp: string;
-}
+import crypto from "crypto";
 
 interface StacAsset {
     type: string;
     href: string;
-    created?: string;
-    updated?: string;
+    created: string;
+    updated: string;
     "file:checksum"?: string;
 }
 
-interface StacFeature {
+interface StacItem {
     id: string;
     assets: Record<string, StacAsset>;
 }
 
-interface StacResponse {
-    features: StacFeature[];
-}
-
 class WeatherService {
-    async fetchLatestWeatherFiles(): Promise<WeatherFile[]> {
-        console.log("[Weather] Fetching latest weather files from STAC API...");
+    private readonly baseUrl =
+        "https://data.geo.admin.ch/api/stac/v1/collections/ch.meteoschweiz.ogd-local-forecasting/items";
+    private readonly storageDirectory = path.join(
+        process.cwd(),
+        "data",
+        "weather-forecasts",
+    );
+
+    private itemEtag: string | null = null;
+    private assetEtags: Record<string, string | null> = {
+        temperature: null,
+        precipitation: null,
+        wind: null,
+    };
+
+    // https://opendatadocs.meteoswiss.ch/e-forecast-data/e4-local-forecast-data#data-structure
+    private readonly assetCodes = {
+        temperature: "tre200h0",
+        precipitation: "rre150h0",
+        wind: "fu3010h0",
+    };
+
+    constructor() {
+        this.initializeStorage();
+    }
+
+    private async initializeStorage(): Promise<void> {
+        try {
+            await fs.mkdir(this.storageDirectory, { recursive: true });
+        } catch (error) {
+            console.error(
+                "[WeatherService] Failed to create storage directory:",
+                error,
+            );
+        }
+    }
+
+    private getCurrentDateString(): string {
+        // MétéoSuisse rolls its daily folders based on the UTC timezone, not local Swiss time.
+        const now = new Date();
+
+        const year = now.getUTCFullYear();
+        const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+        const day = String(now.getUTCDate()).padStart(2, "0");
+
+        return `${year}${month}${day}`;
+    }
+
+    private findLatestAssetByCode(
+        assetsObj: Record<string, StacAsset>,
+        code: string,
+    ): StacAsset | null {
+        const entries = Object.entries(assetsObj);
+
+        const filteredEntries = entries.filter(([key]) => key.includes(code));
+
+        if (filteredEntries.length === 0) {
+            return null;
+        }
+
+        filteredEntries.sort(
+            (a, b) =>
+                new Date(b[1].created).getTime() -
+                new Date(a[1].created).getTime(),
+        );
+
+        return filteredEntries[0][1];
+    }
+
+    private validateChecksum(
+        buffer: Buffer,
+        expectedChecksum?: string,
+    ): boolean {
+        if (!expectedChecksum) {
+            return true;
+        }
+
+        const hash = crypto.createHash("sha256").update(buffer).digest("hex");
+
+        const expectedRawHash = expectedChecksum.startsWith("1220")
+            ? expectedChecksum.substring(4)
+            : expectedChecksum;
+
+        return hash === expectedRawHash;
+    }
+
+    private async downloadAndStoreAsset(
+        asset: StacAsset,
+        category: keyof typeof this.assetCodes,
+    ): Promise<void> {
+        const headers: HeadersInit = {};
+        const savedEtag = this.assetEtags[category];
+
+        if (savedEtag) {
+            headers["If-None-Match"] = savedEtag;
+        }
+
+        const response = await fetch(asset.href, { headers });
+
+        if (response.status === 304) {
+            console.log(
+                `[WeatherService] Asset [${category}] has not changed (304 Not Modified).`,
+            );
+            return;
+        }
+
+        if (response.status !== 200) {
+            throw new Error(
+                `Failed to fetch asset [${category}]. HTTP Status: ${response.status}`,
+            );
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        const isValid = this.validateChecksum(buffer, asset["file:checksum"]);
+
+        if (!isValid) {
+            throw new Error(
+                `[WeatherService] Checksum validation failed for asset [${category}]. Data might be corrupted.`,
+            );
+        }
+
+        const newEtag = response.headers.get("ETag");
+        if (newEtag) {
+            this.assetEtags[category] = newEtag;
+        }
+
+        const fileName = `${category}_latest.csv`;
+        const filePath = path.join(this.storageDirectory, fileName);
+        await fs.writeFile(filePath, buffer);
+
+        console.log(
+            `[WeatherService] Successfully downloaded and verified new asset: ${fileName}`,
+        );
+    }
+
+    public async executeWeatherTask(): Promise<void> {
+        const dateStr = this.getCurrentDateString();
+        const itemUrl = `${this.baseUrl}/${dateStr}-ch`;
+
+        const headers: HeadersInit = {};
+        if (this.itemEtag) {
+            headers["If-None-Match"] = this.itemEtag;
+        }
 
         try {
-            const response = await fetch(STAC_API_URL);
+            const response = await fetch(itemUrl, { headers });
 
-            if (!response.ok) {
-                throw new Error(`STAC API returned ${response.status}`);
-            }
-
-            const data: StacResponse = await response.json();
-
-            let latestFeature: StacFeature | null = null;
-
-            for (let i = data.features.length - 1; i >= 0; i--) {
-                const currentFeature = data.features[i];
-
-                if (currentFeature && currentFeature.assets) {
-                    const aDesFichiersMeteo = Object.keys(
-                        currentFeature.assets,
-                    ).some((filename) =>
-                        filename.includes(WEATHER_IDENTIFIERS.temperature),
-                    );
-
-                    if (aDesFichiersMeteo) {
-                        latestFeature = currentFeature;
-                        break;
-                    }
-                }
-            }
-
-            if (!latestFeature) {
-                throw new Error(
-                    "No valid features with weather assets found in STAC API response",
+            if (response.status === 304) {
+                console.log(
+                    "[WeatherService] STAC Item metadata has not changed (304 Not Modified).",
                 );
+                return;
             }
 
-            console.log(`[Weather] Processing feature: ${latestFeature.id}`);
-
-            const weatherFiles: WeatherFile[] = [];
-
-            for (const [code, codeValue] of Object.entries(
-                WEATHER_IDENTIFIERS,
-            )) {
-                const file = this.findLatestFileByCode(
-                    latestFeature.assets,
-                    codeValue,
+            if (response.status !== 200) {
+                console.error(
+                    `[WeatherService] Failed to fetch STAC item. HTTP Status: ${response.status}`,
                 );
-                if (file) {
-                    weatherFiles.push(file);
-                    console.log(
-                        `[Weather] Found ${code}: ${file.filename} (${file.timestamp})`,
+                return;
+            }
+
+            const newEtag = response.headers.get("ETag");
+            if (newEtag) {
+                this.itemEtag = newEtag;
+            }
+
+            const itemData = (await response.json()) as StacItem;
+
+            if (!itemData.assets) {
+                console.warn(
+                    "[WeatherService] No assets found in the STAC item.",
+                );
+                return;
+            }
+
+            for (const [category, code] of Object.entries(this.assetCodes)) {
+                const latestAsset = this.findLatestAssetByCode(
+                    itemData.assets,
+                    code,
+                );
+
+                if (latestAsset) {
+                    await this.downloadAndStoreAsset(
+                        latestAsset,
+                        category as keyof typeof this.assetCodes,
                     );
                 } else {
                     console.warn(
-                        `[Weather] No file found for code: ${codeValue}`,
+                        `[WeatherService] No asset found for category: ${category} (code: ${code})`,
                     );
                 }
             }
-
-            return weatherFiles;
         } catch (error) {
-            console.error("[Weather] Error fetching STAC API:", error);
-            throw error;
-        }
-    }
-
-    private findLatestFileByCode(
-        assets: Record<string, StacAsset>,
-        code: string,
-    ): WeatherFile | null {
-        let latestFile: WeatherFile | null = null;
-        let latestTimestamp = "";
-
-        for (const [filename, asset] of Object.entries(assets)) {
-            if (filename.includes(code)) {
-                const timestampMatch = filename.match(/(\d{12})/);
-                if (timestampMatch) {
-                    const timestamp = timestampMatch[1];
-                    if (timestamp > latestTimestamp) {
-                        latestTimestamp = timestamp;
-                        latestFile = {
-                            code,
-                            url: asset.href,
-                            filename,
-                            timestamp,
-                        };
-                    }
-                }
-            }
-        }
-
-        return latestFile;
-    }
-
-    async downloadAndSaveFiles(files: WeatherFile[]): Promise<void> {
-        await fs.mkdir(DATA_DIR, { recursive: true });
-
-        for (const file of files) {
-            const filePath = path.join(DATA_DIR, file.filename);
-
-            try {
-                await fs.access(filePath);
-                console.log(
-                    `[Weather] Already up to date : ${file.filename}. Download skipped.`,
-                );
-                continue;
-            } catch {
-                // The file does not exist. We will download it.
-            }
-
-            try {
-                console.log(`[Weather] Downloading ${file.filename}...`);
-                const response = await fetch(file.url);
-
-                if (!response.ok) {
-                    throw new Error(
-                        `Download failed with status ${response.status}`,
-                    );
-                }
-
-                const buffer = await response.arrayBuffer();
-                await fs.writeFile(filePath, Buffer.from(buffer));
-                console.log(`[Weather] Saved: ${filePath}`);
-            } catch (error) {
-                console.error(
-                    `[Weather] Error downloading ${file.filename}:`,
-                    error,
-                );
-                throw error;
-            }
-        }
-    }
-
-    private async cleanupOldFiles(currentFiles: WeatherFile[]): Promise<void> {
-        try {
-            const validFilenames = currentFiles.map((file) => file.filename);
-            validFilenames.push("latest_forecasts.json");
-
-            const existingFiles = await fs.readdir(DATA_DIR);
-
-            for (const file of existingFiles) {
-                if (!validFilenames.includes(file)) {
-                    const filePath = path.join(DATA_DIR, file);
-                    await fs.unlink(filePath);
-                    console.log(`[Weather] Cleaning : delete of ${file}`);
-                }
-            }
-        } catch (error) {
-            console.error("[Weather] Error during cleanup:", error);
-        }
-    }
-
-    private async saveStateFile(currentFiles: WeatherFile[]): Promise<void> {
-        const statePath = path.join(DATA_DIR, "latest_forecasts.json");
-
-        const state = {
-            updatedAt: new Date().toISOString(),
-            files: {
-                temperature: currentFiles.find(
-                    (f) => f.code === WEATHER_IDENTIFIERS.temperature,
-                )?.filename,
-                precipitation: currentFiles.find(
-                    (f) => f.code === WEATHER_IDENTIFIERS.precipitation,
-                )?.filename,
-                wind: currentFiles.find(
-                    (f) => f.code === WEATHER_IDENTIFIERS.wind,
-                )?.filename,
-            },
-        };
-
-        await fs.writeFile(statePath, JSON.stringify(state, null, 2));
-        console.log("[Weather] latest_forecasts.json file updated");
-    }
-
-    async executeWeatherTask(): Promise<void> {
-        try {
-            const files = await this.fetchLatestWeatherFiles();
-
-            if (files.length > 0) {
-                await this.downloadAndSaveFiles(files);
-                await this.cleanupOldFiles(files);
-                await this.saveStateFile(files);
-
-                console.log(
-                    `[Weather] Successfully processed ${files.length} weather files`,
-                );
-            } else {
-                console.warn("[Weather] No weather files found to process");
-            }
-        } catch (error) {
-            console.error("[Weather] Weather task failed:", error);
+            console.error("[WeatherService] Execution error:", error);
             throw error;
         }
     }
