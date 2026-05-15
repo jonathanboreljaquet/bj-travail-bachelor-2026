@@ -4,7 +4,8 @@ import availableSlotRoutes from "./routes/available_slot.route";
 import authRoutes from "./routes/auth.route";
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
-import { initWeatherScheduler } from "./scheduler/weatherScheduler";
+import { initWeatherScheduler } from "./scheduler/weather.scheduler";
+import weatherService from "./services/weather.service";
 
 const swaggerOptions = {
     definition: {
@@ -41,11 +42,12 @@ app.use("/api/available-slots", availableSlotRoutes);
 app.use("/api/auth", authRoutes);
 
 if (process.env.NODE_ENV !== "test") {
+    await weatherService.init();
+    initWeatherScheduler();
+
     app.listen(PORT, () => {
         console.log("Serveur démarré avec succès!");
     });
-
-    initWeatherScheduler();
 }
 
 export default app;

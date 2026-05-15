@@ -16,6 +16,9 @@ interface StacItem {
 }
 
 class WeatherService {
+    private postalCodeMap: Map<string, string> = new Map();
+    private isReady: boolean = false;
+
     private readonly baseUrl =
         "https://data.geo.admin.ch/api/stac/v1/collections/ch.meteoschweiz.ogd-local-forecasting/items";
     private readonly storageDirectory = path.join(
@@ -38,11 +41,12 @@ class WeatherService {
         wind: "fu3010h0",
     };
 
-    constructor() {
-        this.initializeStorage();
+    public async init(): Promise<void> {
+        await this.initializeStorage();
+        await this.initializePostalCodeMap();
     }
 
-    private async initializeStorage(): Promise<void> {
+    public async initializeStorage(): Promise<void> {
         try {
             await fs.mkdir(this.storageDirectory, { recursive: true });
         } catch (error) {
@@ -53,8 +57,43 @@ class WeatherService {
         }
     }
 
+    public async initializePostalCodeMap(): Promise<void> {
+        if (this.isReady) return;
+
+        const filePath = path.join(
+            process.cwd(),
+            "data/weather-metapoints/ogd-local-forecasting_meta_point.csv",
+        );
+
+        try {
+            const fileContent = await fs.readFile(filePath, "utf-8");
+            const lines = fileContent.split(/\r?\n/);
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const columns = line.split(";");
+                if (columns.length >= 4) {
+                    const pointId = columns[0].trim();
+                    const postalCode = columns[3].trim();
+                    this.postalCodeMap.set(postalCode, pointId);
+                }
+            }
+            this.isReady = true;
+            console.log(
+                "[WeatherService] CSV file loaded in memory successfully",
+            );
+        } catch (error) {
+            console.error(
+                "[WeatherService] Critical error while loading the weather CSV file :",
+                error,
+            );
+            throw error;
+        }
+    }
+
     private getCurrentDateString(): string {
-        // MétéoSuisse rolls its daily folders based on the UTC timezone, not local Swiss time.
         const now = new Date();
 
         const year = now.getUTCFullYear();
@@ -124,7 +163,7 @@ class WeatherService {
 
         if (response.status !== 200) {
             throw new Error(
-                `Failed to fetch asset [${category}]. HTTP Status: ${response.status}`,
+                `[WeatherService] Failed to fetch asset [${category}]. HTTP Status: ${response.status}`,
             );
         }
 
@@ -214,6 +253,14 @@ class WeatherService {
             console.error("[WeatherService] Execution error:", error);
             throw error;
         }
+    }
+
+    public getPointIdFromPostalCode(postalCode: string): string | undefined {
+        if (!this.isReady) {
+            console.warn("[WeatherService] postalCodeMap not ready in memory");
+            return undefined;
+        }
+        return this.postalCodeMap.get(postalCode);
     }
 }
 

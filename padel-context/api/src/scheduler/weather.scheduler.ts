@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import weatherService from "../services/weatherService";
+import weatherService from "../services/weather.service";
 
 export function initWeatherScheduler(): void {
     //https://www.nodecron.com/cron-syntax.html
