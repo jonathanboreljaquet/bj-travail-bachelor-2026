@@ -15,6 +15,12 @@ interface StacItem {
     assets: Record<string, StacAsset>;
 }
 
+interface WeatherData {
+    precipitation: number | null;
+    wind: number | null;
+    temperature: number | null;
+}
+
 class WeatherService {
     private postalCodeMap: Map<string, string> = new Map();
     private isReady: boolean = false;
@@ -261,6 +267,71 @@ class WeatherService {
             return undefined;
         }
         return this.postalCodeMap.get(postalCode);
+    }
+
+    private async findWeatherValueInCsv(
+        filePath: string,
+        pointId: string,
+        dateTime: string,
+    ): Promise<number | null> {
+        const fileContent = await fs.readFile(filePath, "utf-8");
+        const lines = fileContent.split(/\r?\n/);
+
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            const columns = line.split(";");
+            if (columns.length < 4) continue;
+
+            if (
+                columns[0].trim() === pointId &&
+                columns[2].trim() === dateTime
+            ) {
+                const value = Number(columns[3].trim());
+                return Number.isNaN(value) ? null : value;
+            }
+        }
+
+        return null;
+    }
+
+    public async getWeatherDataForPostalCode(
+        postalCode: string,
+        dateTime: string,
+    ): Promise<WeatherData> {
+        if (!/^\d{12}$/.test(dateTime)) {
+            throw new Error(
+                `[WeatherService] Invalid dateTime format: "${dateTime}". Expected format is YYYYMMDDHHmm.`,
+            );
+        }
+
+        const pointId = this.postalCodeMap.get(postalCode);
+        if (!pointId) {
+            throw new Error(
+                `[WeatherService] No point_id found for postal code: ${postalCode}`,
+            );
+        }
+
+        const [precipitation, wind, temperature] = await Promise.all([
+            this.findWeatherValueInCsv(
+                path.join(this.storageDirectory, "precipitation_latest.csv"),
+                pointId,
+                dateTime,
+            ),
+            this.findWeatherValueInCsv(
+                path.join(this.storageDirectory, "wind_latest.csv"),
+                pointId,
+                dateTime,
+            ),
+            this.findWeatherValueInCsv(
+                path.join(this.storageDirectory, "temperature_latest.csv"),
+                pointId,
+                dateTime,
+            ),
+        ]);
+
+        return { precipitation, wind, temperature };
     }
 }
 

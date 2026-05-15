@@ -29,10 +29,22 @@ afterEach(() => {
 });
 
 describe("[UNIT TEST] WeatherService", () => {
-    const mockCsvContent = `point_id;col2;col3;postal_code
-                            1;null;null;1200
-                            2;null;null;1202
-                            3;null;null;1203`;
+    const mockMetaPointCsvContent = `point_id;col2;col3;postal_code
+                                     1;null;null;1200
+                                     2;null;null;1202
+                                     3;null;null;1203`;
+
+    const mockWeatherCsvContent1 = `point_id;col2;date_time;value
+                                    1;null;202605142200;0.2
+                                    2;null;202605142200;0.4`;
+
+    const mockWeatherCsvContent2 = `point_id;col2;date_time;value
+                                    1;null;202605142200;8.1
+                                    2;null;202605142200;11.2`;
+
+    const mockWeatherCsvContent3 = `point_id;col2;date_time;value
+1;null;202605142200;18.5
+2;null;202605142200;19.7`;
 
     it("returns undefined if searching for a postal code before initialization", () => {
         const result = weatherService.getPointIdFromPostalCode("75001");
@@ -48,7 +60,7 @@ describe("[UNIT TEST] WeatherService", () => {
     });
 
     it("successfully initializes the service and caches the CSV data", async () => {
-        readFileMock.mockResolvedValueOnce(mockCsvContent);
+        readFileMock.mockResolvedValueOnce(mockMetaPointCsvContent);
 
         await weatherService.init();
 
@@ -72,5 +84,39 @@ describe("[UNIT TEST] WeatherService", () => {
         const result = weatherService.getPointIdFromPostalCode("99999");
 
         expect(result).toBeUndefined();
+    });
+
+    it("returns precipitation, wind and temperature for a postal code and datetime", async () => {
+        if (!weatherService.getPointIdFromPostalCode("1202")) {
+            readFileMock.mockResolvedValueOnce(mockMetaPointCsvContent);
+            await weatherService.init();
+        }
+
+        readFileMock.mockResolvedValueOnce(mockWeatherCsvContent1);
+        readFileMock.mockResolvedValueOnce(mockWeatherCsvContent2);
+        readFileMock.mockResolvedValueOnce(mockWeatherCsvContent3);
+
+        const result = await weatherService.getWeatherDataForPostalCode(
+            "1202",
+            "202605142200",
+        );
+
+        expect(result).toEqual({
+            precipitation: 0.4,
+            wind: 11.2,
+            temperature: 19.7,
+        });
+    });
+
+    it("throws if dateTime is not in YYYYMMDDHHmm format", async () => {
+        await expect(
+            weatherService.getWeatherDataForPostalCode("1202", "2026-05-14"),
+        ).rejects.toThrow("Invalid dateTime format");
+    });
+
+    it("throws when no point_id exists for the postal code", async () => {
+        await expect(
+            weatherService.getWeatherDataForPostalCode("99999", "202605142200"),
+        ).rejects.toThrow("No point_id found for postal code");
     });
 });
