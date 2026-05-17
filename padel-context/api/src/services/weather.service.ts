@@ -23,6 +23,11 @@ interface WeatherData {
 
 class WeatherService {
     private postalCodeMap: Map<string, string> = new Map();
+    private weatherDataMap = {
+        precipitation: new Map<string, number>(),
+        wind: new Map<string, number>(),
+        temperature: new Map<string, number>(),
+    };
     private isReady: boolean = false;
 
     private readonly baseUrl =
@@ -88,7 +93,49 @@ class WeatherService {
             }
             this.isReady = true;
             console.log(
-                "[WeatherService] CSV file loaded in memory successfully",
+                "[WeatherService] Meta points CSV file loaded in memory successfully",
+            );
+        } catch (error) {
+            console.error(
+                "[WeatherService] Critical error while loading the meta points CSV file :",
+                error,
+            );
+            throw error;
+        }
+    }
+
+    private async loadCsvIntoCache(
+        category: keyof typeof this.assetCodes,
+    ): Promise<void> {
+        const filePath = path.join(
+            this.storageDirectory,
+            `${category}_latest.csv`,
+        );
+
+        try {
+            const fileContent = await fs.readFile(filePath, "utf-8");
+            const lines = fileContent.split(/\r?\n/);
+            const targetCache = this.weatherDataMap[category];
+
+            targetCache.clear();
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const columns = line.split(";");
+                if (columns.length >= 4) {
+                    const pointId = columns[0].trim();
+                    const dateTime = columns[2].trim();
+                    const value = Number(columns[3].trim());
+
+                    if (!Number.isNaN(value)) {
+                        targetCache.set(`${pointId}_${dateTime}`, value);
+                    }
+                }
+            }
+            console.log(
+                `[WeatherService] Weather ${category} CSV file loaded in memory successfully (${targetCache.size} lines)`,
             );
         } catch (error) {
             console.error(
@@ -194,8 +241,9 @@ class WeatherService {
         await fs.writeFile(filePath, buffer);
 
         console.log(
-            `Successfully downloaded and verified new asset: ${fileName}`,
+            `[WeatherService] Successfully downloaded and verified new asset: ${fileName}`,
         );
+        await this.loadCsvIntoCache(category);
     }
 
     public async executeWeatherTask(): Promise<void> {
@@ -269,33 +317,6 @@ class WeatherService {
         return this.postalCodeMap.get(postalCode);
     }
 
-    private async findWeatherValueInCsv(
-        filePath: string,
-        pointId: string,
-        dateTime: string,
-    ): Promise<number | null> {
-        const fileContent = await fs.readFile(filePath, "utf-8");
-        const lines = fileContent.split(/\r?\n/);
-
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
-
-            const columns = line.split(";");
-            if (columns.length < 4) continue;
-
-            if (
-                columns[0].trim() === pointId &&
-                columns[2].trim() === dateTime
-            ) {
-                const value = Number(columns[3].trim());
-                return Number.isNaN(value) ? null : value;
-            }
-        }
-
-        return null;
-    }
-
     public async getWeatherDataForPostalCode(
         postalCode: string,
         dateTime: string,
@@ -311,23 +332,13 @@ class WeatherService {
             throw new Error(`No point_id found for postal code: ${postalCode}`);
         }
 
-        const [precipitation, wind, temperature] = await Promise.all([
-            this.findWeatherValueInCsv(
-                path.join(this.storageDirectory, "precipitation_latest.csv"),
-                pointId,
-                dateTime,
-            ),
-            this.findWeatherValueInCsv(
-                path.join(this.storageDirectory, "wind_latest.csv"),
-                pointId,
-                dateTime,
-            ),
-            this.findWeatherValueInCsv(
-                path.join(this.storageDirectory, "temperature_latest.csv"),
-                pointId,
-                dateTime,
-            ),
-        ]);
+        const cacheKey = `${pointId}_${dateTime}`;
+
+        const precipitation =
+            this.weatherDataMap.precipitation.get(cacheKey) ?? null;
+        const wind = this.weatherDataMap.wind.get(cacheKey) ?? null;
+        const temperature =
+            this.weatherDataMap.temperature.get(cacheKey) ?? null;
 
         return { precipitation, wind, temperature };
     }
