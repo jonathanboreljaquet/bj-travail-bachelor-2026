@@ -43,7 +43,7 @@ class WeatherService {
     // https://opendatadocs.meteoswiss.ch/e-forecast-data/e4-local-forecast-data#data-structure
     private readonly assetCodes = {
         temperature: "tre200h0",
-        precipitation: "rre150h0",
+        precipitation: "rp0003i0",
         wind: "fu3010h0",
     };
 
@@ -169,7 +169,7 @@ class WeatherService {
 
         if (response.status !== 200) {
             throw new Error(
-                `[WeatherService] Failed to fetch asset [${category}]. HTTP Status: ${response.status}`,
+                `Failed to fetch asset [${category}]. HTTP Status: ${response.status}`,
             );
         }
 
@@ -180,7 +180,7 @@ class WeatherService {
 
         if (!isValid) {
             throw new Error(
-                `[WeatherService] Checksum validation failed for asset [${category}]. Data might be corrupted.`,
+                `Checksum validation failed for asset [${category}]. Data might be corrupted.`,
             );
         }
 
@@ -194,7 +194,7 @@ class WeatherService {
         await fs.writeFile(filePath, buffer);
 
         console.log(
-            `[WeatherService] Successfully downloaded and verified new asset: ${fileName}`,
+            `Successfully downloaded and verified new asset: ${fileName}`,
         );
     }
 
@@ -302,15 +302,13 @@ class WeatherService {
     ): Promise<WeatherData> {
         if (!/^\d{12}$/.test(dateTime)) {
             throw new Error(
-                `[WeatherService] Invalid dateTime format: "${dateTime}". Expected format is YYYYMMDDHHmm.`,
+                `Invalid dateTime format: "${dateTime}". Expected format is YYYYMMDDHHmm.`,
             );
         }
 
         const pointId = this.postalCodeMap.get(postalCode);
         if (!pointId) {
-            throw new Error(
-                `[WeatherService] No point_id found for postal code: ${postalCode}`,
-            );
+            throw new Error(`No point_id found for postal code: ${postalCode}`);
         }
 
         const [precipitation, wind, temperature] = await Promise.all([

@@ -2,6 +2,7 @@ import express from "express";
 import matchRoutes from "./routes/match.route";
 import availableSlotRoutes from "./routes/available_slot.route";
 import authRoutes from "./routes/auth.route";
+import weatherRoutes from "./routes/weather.route";
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
 import { initWeatherScheduler } from "./scheduler/weather.scheduler";
@@ -40,6 +41,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api/matches", matchRoutes);
 app.use("/api/available-slots", availableSlotRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/weather", weatherRoutes);
 
 if (process.env.NODE_ENV !== "test") {
     await weatherService.init();

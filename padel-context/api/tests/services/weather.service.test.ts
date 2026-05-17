@@ -22,6 +22,8 @@ let weatherService: typeof import("../../src/services/weather.service").default;
 beforeAll(async () => {
     ({ default: weatherService } =
         await import("../../src/services/weather.service"));
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterEach(() => {
