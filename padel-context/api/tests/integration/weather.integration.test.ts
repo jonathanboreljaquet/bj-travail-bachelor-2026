@@ -4,9 +4,9 @@ import app from "../../src/app";
 import weatherService from "../../src/services/weather.service";
 
 describe("[INTEGRATION TEST] GET /api/weather", () => {
-    beforeAll(() => {
+    beforeAll(async () => {
         try {
-            weatherService.init();
+            await weatherService.init();
         } catch (error) {
             console.error(
                 "Failed to initialize WeatherService before integration tests:",
