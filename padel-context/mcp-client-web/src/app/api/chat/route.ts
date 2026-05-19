@@ -57,6 +57,10 @@ export async function POST(request: Request) {
       messages: await convertToModelMessages(messages),
       tools,
       stopWhen: stepCountIs(5),
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: "padel-context-mcp",
+      },
     });
 
     return result.toUIMessageStreamResponse({

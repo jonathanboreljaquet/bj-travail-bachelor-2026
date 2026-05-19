@@ -91,7 +91,10 @@ services:
       CHOKIDAR_INTERVAL: "300"
       WATCHPACK_POLLING: "true"
       GOOGLE_GENERATIVE_AI_API_KEY: "${GOOGLE_GENERATIVE_AI_API_KEY:-}"
-      GEMINI_MODEL: "${GEMINI_MODEL:-gemini-2.0-flash}"
+      GEMINI_MODEL: "${GEMINI_MODEL:-models/gemma-4-26b-a4b-it}"
+      LANGFUSE_SECRET_KEY: "${LANGFUSE_SECRET_KEY:-}"
+      LANGFUSE_PUBLIC_KEY: "${LANGFUSE_PUBLIC_KEY:-}"
+      LANGFUSE_BASE_URL: "${LANGFUSE_BASE_URL:-}"
     volumes:
       - ./mcp-client-web/src:/app/src
     depends_on:
