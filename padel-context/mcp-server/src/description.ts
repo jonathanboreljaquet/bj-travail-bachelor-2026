@@ -110,3 +110,28 @@ Parameters:
 - courtId (integer, required): ID of the court for the slot.
 - startTime (iso datetime, required): UTC start of the slot.
 - endTime (iso datetime, required): UTC end of the slot.`;
+
+export const GET_WEATHER_DESC = `Purpose:
+Searches and retrieves the weather forecast for a specific postal code and a given datetime.
+
+When to use:
+- You MUST use this tool PROACTIVELY and AUTOMATICALLY whenever you retrieve information about an OUTDOOR court, whether it is for an existing match OR for available booking slots.
+- Do not wait for the user to explicitly ask for the weather, and DO NOT wait for the user to select a specific time slot. If you retrieve available slots for an OUTDOOR court, immediately trigger this tool for the start times of those slots to help the user make their decision.
+
+When to not use:
+- Do not use this tool for INDOOR or COVERED courts.
+
+How to use:
+- Pass the club's postal code and the start time (startTime) of the match or available slot (converted to UTC) as the parameters.
+- If proposing multiple available slots for an OUTDOOR court, retrieve the weather for the slots you plan to present to the user.
+- ONCE YOU GET THE RESULTS from this tool, you MUST proactively inform the user about the weather conditions by explicitly presenting these exact three data points: "precipitation", "wind", and "temperature" alongside the corresponding slots.
+- The user is located in the 'Europe/Zurich' timezone. You MUST dynamically account for Daylight Saving Time (CET/CEST) and convert all user time requests into UTC (ISO 8601 format ending with 'Z') BEFORE using the date parameters.
+- Before presenting times to the user, you MUST convert every datetime to Europe/Zurich local time (CET/CEST).
+
+Limitations:
+- The datetime must be within the next 9 days.
+- The postal code must be valid and correspond to a location in Switzerland (4 digits).
+
+Parameters:
+- postalCode (string, required): The 4-digit postal code of the tennis/padel club's location in Switzerland.
+- datetime (iso datetime, required): The specific start date and time (startTime) of the match or available slot, in UTC (ISO 8601 format ending with 'Z').`;

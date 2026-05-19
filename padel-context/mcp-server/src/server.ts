@@ -8,6 +8,7 @@ import {
     CREATE_MATCH_FROM_SLOT_DESC,
     GET_AVAILABLE_SLOTS_DESC,
     GET_OPEN_MATCHES_DESC,
+    GET_WEATHER_DESC,
     JOIN_OPEN_MATCH_DESC,
 } from "./description";
 
@@ -26,6 +27,7 @@ const availableSlotSchema = z.object({
         club: z.object({
             name: z.string(),
             city: z.string(),
+            postalCode: z.string(),
             openingTime: z.string(),
             closingTime: z.string(),
         }),
@@ -53,6 +55,7 @@ const matchSchema = z.object({
         club: z.object({
             name: z.string(),
             city: z.string(),
+            postalCode: z.string(),
             openingTime: z.string(),
             closingTime: z.string(),
         }),
@@ -249,6 +252,66 @@ server.registerTool(
                 error instanceof Error
                     ? `Unable to retrieve open matches: ${error.message}`
                     : "Unable to retrieve open matches";
+
+            return {
+                isError: true,
+                content: [{ type: "text", text: message }],
+            };
+        }
+    },
+);
+
+//MCP TOOL WITH GET api/weather
+server.registerTool(
+    "get-weather",
+    {
+        title: "Get weather",
+        description: GET_WEATHER_DESC,
+        inputSchema: z.object({
+            postalCode: z.string(),
+            datetime: z.iso.datetime(),
+        }),
+        outputSchema: z.object({
+            precipitationProbabilityPct: z.number(),
+            windSpeedKmh: z.number(),
+            temperatureCelsius: z.number(),
+        }),
+    },
+    async ({ postalCode, datetime }) => {
+        try {
+            const res = await fetch(
+                `${API_BASE_URL}/weather?postalCode=${encodeURIComponent(
+                    postalCode,
+                )}&datetime=${encodeURIComponent(datetime)}`,
+            );
+
+            if (!res.ok) {
+                const message = `API request failed (${res.status} ${res.statusText})`;
+                return {
+                    isError: true,
+                    content: [{ type: "text", text: message }],
+                };
+            }
+
+            const weatherData: unknown = await res.json();
+
+            const output = z
+                .object({
+                    precipitationProbabilityPct: z.number(),
+                    windSpeedKmh: z.number(),
+                    temperatureCelsius: z.number(),
+                })
+                .parse(weatherData);
+
+            return {
+                content: [{ type: "text", text: JSON.stringify(output) }],
+                structuredContent: output,
+            };
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? `Unable to get weather: ${error.message}`
+                    : "Unable to get weather";
 
             return {
                 isError: true,

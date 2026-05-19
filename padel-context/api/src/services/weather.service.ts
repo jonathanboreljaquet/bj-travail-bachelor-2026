@@ -16,17 +16,17 @@ interface StacItem {
 }
 
 interface WeatherData {
-    precipitation: number | null;
-    wind: number | null;
-    temperature: number | null;
+    precipitationProbabilityPct: number | null;
+    windSpeedKmh: number | null;
+    temperatureCelsius: number | null;
 }
 
 class WeatherService {
     private postalCodeMap: Map<string, string> = new Map();
     private weatherDataMap = {
-        precipitation: new Map<string, number>(),
-        wind: new Map<string, number>(),
-        temperature: new Map<string, number>(),
+        precipitationProbabilityPct: new Map<string, number>(),
+        windSpeedKmh: new Map<string, number>(),
+        temperatureCelsius: new Map<string, number>(),
     };
     private isReady: boolean = false;
 
@@ -40,16 +40,16 @@ class WeatherService {
 
     private itemEtag: string | null = null;
     private assetEtags: Record<string, string | null> = {
-        temperature: null,
-        precipitation: null,
-        wind: null,
+        temperatureCelsius: null,
+        precipitationProbabilityPct: null,
+        windSpeedKmh: null,
     };
 
     // https://opendatadocs.meteoswiss.ch/e-forecast-data/e4-local-forecast-data#data-structure
     private readonly assetCodes = {
-        temperature: "tre200h0",
-        precipitation: "rp0003i0",
-        wind: "fu3010h0",
+        temperatureCelsius: "tre200h0",
+        precipitationProbabilityPct: "rp0003i0",
+        windSpeedKmh: "fu3010h0",
     };
 
     public async init(): Promise<void> {
@@ -334,13 +334,19 @@ class WeatherService {
 
         const cacheKey = `${pointId}_${dateTime}`;
 
-        const precipitation =
-            this.weatherDataMap.precipitation.get(cacheKey) ?? null;
-        const wind = this.weatherDataMap.wind.get(cacheKey) ?? null;
-        const temperature =
-            this.weatherDataMap.temperature.get(cacheKey) ?? null;
+        const precipitationProbabilityPct =
+            this.weatherDataMap.precipitationProbabilityPct.get(cacheKey) ??
+            null;
+        const windSpeedKmh =
+            this.weatherDataMap.windSpeedKmh.get(cacheKey) ?? null;
+        const temperatureCelsius =
+            this.weatherDataMap.temperatureCelsius.get(cacheKey) ?? null;
 
-        return { precipitation, wind, temperature };
+        return {
+            precipitationProbabilityPct,
+            windSpeedKmh,
+            temperatureCelsius,
+        };
     }
 }
 
