@@ -49,11 +49,31 @@ export async function POST(request: Request) {
 
   try {
     const tools = await mcpClient.tools();
+    const now = new Date();
+    const currentDate = now.toLocaleDateString("fr-CH", {
+      timeZone: "Europe/Zurich",
+    });
+    const currentTime = now.toLocaleTimeString("fr-CH", {
+      timeZone: "Europe/Zurich",
+    });
+    const dayOfWeek = now.toLocaleDateString("fr-CH", {
+      weekday: "long",
+      timeZone: "Europe/Zurich",
+    });
+
+    const systemPrompt = `
+    Tu es un assistant IA pour l'application Padel Context.
+    Ton rôle est d'aider les utilisateurs à trouver et réserver des terrains de padel.
+    Utilise les outils MCP fournis quand c'est pertinent. Réponds en français de manière concise.
+    INFORMATIONS DE CONTEXTE IMPORTANTES :
+    - Date actuelle : ${dayOfWeek} ${currentDate}
+    - Heure locale : ${currentTime} (Heure de Genève, CET/CEST)
+    - Si l'utilisateur demande "demain" ou "aujourd'hui", réfère-toi strictement à la date ci-dessus pour tes recherches.
+    `.trim();
 
     const result = streamText({
       model: google(modelId),
-      system:
-        "Tu es un assistant IA pour l'application Padel Context. Utilise les outils MCP quand c'est pertinent et réponds en français.",
+      system: systemPrompt,
       messages: await convertToModelMessages(messages),
       tools,
       stopWhen: stepCountIs(5),

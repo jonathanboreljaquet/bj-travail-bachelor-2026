@@ -9,8 +9,6 @@ When to not use:
 
 How to use:
 - To filter specific matches: use the filters described in "Parameters".
-- The user is located in the 'Europe/Zurich' timezone. You MUST dynamically account for Daylight Saving Time (CET/CEST) and convert all user time requests into UTC (ISO 8601 format ending with 'Z') BEFORE using the date parameters.
-- Before presenting times to the user, you MUST convert every datetime to Europe/Zurich local time (CET/CEST).
 
 Limitations:
 - You MUST provide at least two filters.
@@ -28,10 +26,10 @@ Parameters:
 - slotDuration (integer, optional): If requested, the tool filters matches to return only those on courts with a duration exactly equal to this value in minutes.
 - availableSpots (integer, optional): If requested, the tool filters matches to return only those with a number of available spots exactly equal to this value.
 - minAvailableSpots (integer, optional): If requested, the tool filters matches to return only those with a number of available spots equal to or greater than this value. Essential if the user wants to register a group. For example, if a user says "I want to play with a friend", you MUST use 'minAvailableSpots: 2'.
-- startTimeFrom (iso datetime, optional): If requested, the tool filters matches to return only those starting after this date/time.
-- startTimeTo (iso datetime, optional): If requested, the tool filters matches to return only those starting before this date/time.
-- endTimeFrom (iso datetime, optional): If requested, the tool filters matches to return only those ending after this date/time.
-- endTimeTo (iso datetime, optional): If requested, the tool filters matches to return only those ending before this date/time.
+- startTimeFrom (string, optional): If requested, the tool filters matches to return only those starting after this date/time in local time.
+- startTimeTo (string, optional): If requested, the tool filters matches to return only those starting before this date/time in local time.
+- endTimeFrom (string, optional): If requested, the tool filters matches to return only those ending after this date/time in local time.
+- endTimeTo (string, optional): If requested, the tool filters matches to return only those ending before this date/time in local time.
 - participantAverageLevel (number, optional): If requested, the tool filters matches to return only those where the average participant level equals this value.
 - participantAverageLevelTolerance (number, optional): If requested, the tool filters matches to return only those where the average participant level falls within this margin. For example, with a 'participantAverageLevel' of 5 and a 'participantAverageLevelTolerance' of 0.5, the tool will return matches from level 4.5 to 5.5.`;
 
@@ -46,8 +44,6 @@ When to not use:
 
 How to use:
 - To filter specific slots: use the filters described in "Parameters".
-- The user is located in the 'Europe/Zurich' timezone. You MUST dynamically account for Daylight Saving Time (CET/CEST) and convert all user time requests into UTC (ISO 8601 format ending with 'Z') BEFORE using the date parameters.
-- Before presenting times to the user, you MUST convert every datetime to Europe/Zurich local time (CET/CEST).
 
 Limitations:
 - You MUST provide at least two filters.
@@ -65,8 +61,8 @@ Parameters:
 - slotDuration (integer, optional): If requested, the tool filters courts with slotDuration exactly equal to this value in minutes.
 - minSlotDuration (integer, optional): If requested, the tool filters courts with slotDuration greater than or equal to this value in minutes.
 - maxSlotDuration (integer, optional): If requested, the tool filters courts with slotDuration lower than or equal to this value in minutes.
-- timeFrom (iso datetime, optional): Start of the requested availability window. The tool returns only slots that start/end within the requested window constraints.
-- timeTo (iso datetime, optional): End of the requested availability window. Must be strictly greater than timeFrom when both are provided.`;
+- timeFrom (string, optional): Start of the requested availability window in local time.
+- timeTo (string, optional): End of the requested availability window in local time.`;
 
 export const JOIN_OPEN_MATCH_DESC = `Purpose:
 Joins an existing open Padel match.
@@ -99,7 +95,6 @@ When to not use:
 
 How to use:
 - Pass the exact courtId, startTime, and endTime of that slot.
-- The user is located in the 'Europe/Zurich' timezone. You MUST dynamically account for Daylight Saving Time (CET/CEST) and convert all user time requests into UTC (ISO 8601 format ending with 'Z') BEFORE using the date parameters.
 - Send the JWT in the HTTP Authorization header when calling the MCP server.
 
 Limitations:
@@ -108,8 +103,8 @@ Limitations:
 
 Parameters:
 - courtId (integer, required): ID of the court for the slot.
-- startTime (iso datetime, required): UTC start of the slot.
-- endTime (iso datetime, required): UTC end of the slot.`;
+- startTime (string, required): Start time of the slot in local time.
+- endTime (string, required): End time of the slot in local time.`;
 
 export const GET_WEATHER_DESC = `Purpose:
 Searches and retrieves the weather forecast for a specific postal code and a given datetime.
@@ -122,11 +117,9 @@ When to not use:
 - Do not use this tool for INDOOR or COVERED courts.
 
 How to use:
-- Pass the club's postal code and the start time (startTime) of the match or available slot (converted to UTC) as the parameters.
+- Pass the club's postal code and the start datetime of the match or available slot as the parameters.
 - If proposing multiple available slots for an OUTDOOR court, retrieve the weather for the slots you plan to present to the user.
-- ONCE YOU GET THE RESULTS from this tool, you MUST proactively inform the user about the weather conditions by explicitly presenting these exact three data points: "precipitation", "wind", and "temperature" alongside the corresponding slots.
-- The user is located in the 'Europe/Zurich' timezone. You MUST dynamically account for Daylight Saving Time (CET/CEST) and convert all user time requests into UTC (ISO 8601 format ending with 'Z') BEFORE using the date parameters.
-- Before presenting times to the user, you MUST convert every datetime to Europe/Zurich local time (CET/CEST).
+- ONCE YOU GET THE RESULTS from this tool, you MUST proactively inform the user about the weather conditions by explicitly presenting these exact three data points: "Percentage of precipitation", "wind in km/h", and "temperature in °C" alongside the corresponding slots.
 
 Limitations:
 - The datetime must be within the next 9 days.
@@ -134,4 +127,4 @@ Limitations:
 
 Parameters:
 - postalCode (string, required): The 4-digit postal code of the tennis/padel club's location in Switzerland.
-- datetime (iso datetime, required): The specific start date and time (startTime) of the match or available slot, in UTC (ISO 8601 format ending with 'Z').`;
+- datetime (string, required): The specific start datetime of the match or available slot in local time.`;

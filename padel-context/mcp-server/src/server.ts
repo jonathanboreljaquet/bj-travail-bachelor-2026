@@ -4,6 +4,9 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { AsyncLocalStorage } from "node:async_hooks";
 import "dotenv/config";
 import * as z from "zod/v4";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
 import {
     CREATE_MATCH_FROM_SLOT_DESC,
     GET_AVAILABLE_SLOTS_DESC,
@@ -15,6 +18,22 @@ import {
 const API_BASE_URL = "http://api:3000/api";
 
 const tokenContext = new AsyncLocalStorage<string | undefined>();
+
+const LOCAL_TIMEZONE = "Europe/Zurich";
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const dateParameters = [
+    "timeFrom",
+    "timeTo",
+    "startTimeFrom",
+    "startTimeTo",
+    "endTimeFrom",
+    "endTimeTo",
+    "startTime",
+    "endTime",
+    "datetime",
+];
 
 const availableSlotSchema = z.object({
     court: z.object({
@@ -130,8 +149,18 @@ server.registerTool(
             slotDuration: z.number().int().optional(),
             minSlotDuration: z.number().int().optional(),
             maxSlotDuration: z.number().int().optional(),
-            timeFrom: z.iso.datetime().optional(),
-            timeTo: z.iso.datetime().optional(),
+            timeFrom: z
+                .string()
+                .describe(
+                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
+                )
+                .optional(),
+            timeTo: z
+                .string()
+                .describe(
+                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
+                )
+                .optional(),
         }),
         outputSchema: z.object({
             availableSlots: z.array(availableSlotSchema),
@@ -142,11 +171,17 @@ server.registerTool(
             const searchParams = new URLSearchParams();
 
             for (const [key, value] of Object.entries(input)) {
-                if (value === undefined || value === null) {
-                    continue;
-                }
+                if (value === undefined || value === null) continue;
 
-                searchParams.set(key, String(value));
+                if (dateParameters.includes(key) && typeof value === "string") {
+                    const utcDateString = dayjs
+                        .tz(value, LOCAL_TIMEZONE)
+                        .utc()
+                        .format();
+                    searchParams.set(key, utcDateString);
+                } else {
+                    searchParams.set(key, String(value));
+                }
             }
 
             const queryString = searchParams.toString();
@@ -165,7 +200,19 @@ server.registerTool(
             }
 
             const payload: unknown = await res.json();
+
             const availableSlots = z.array(availableSlotSchema).parse(payload);
+
+            availableSlots.forEach((club) => {
+                club.availableSlots.forEach((slot) => {
+                    slot.startTime = dayjs(slot.startTime)
+                        .tz(LOCAL_TIMEZONE)
+                        .format("YYYY-MM-DDTHH:mm:ss");
+                    slot.endTime = dayjs(slot.endTime)
+                        .tz(LOCAL_TIMEZONE)
+                        .format("YYYY-MM-DDTHH:mm:ss");
+                });
+            });
 
             return {
                 content: [
@@ -204,10 +251,30 @@ server.registerTool(
             maxSlotDuration: z.number().int().optional(),
             availableSpots: z.number().int().optional(),
             minAvailableSpots: z.number().int().optional(),
-            startTimeFrom: z.iso.datetime().optional(),
-            startTimeTo: z.iso.datetime().optional(),
-            endTimeFrom: z.iso.datetime().optional(),
-            endTimeTo: z.iso.datetime().optional(),
+            startTimeFrom: z
+                .string()
+                .describe(
+                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
+                )
+                .optional(),
+            startTimeTo: z
+                .string()
+                .describe(
+                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
+                )
+                .optional(),
+            endTimeFrom: z
+                .string()
+                .describe(
+                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
+                )
+                .optional(),
+            endTimeTo: z
+                .string()
+                .describe(
+                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
+                )
+                .optional(),
             participantAverageLevel: z.number().optional(),
             participantAverageLevelTolerance: z.number().optional(),
         }),
@@ -218,11 +285,17 @@ server.registerTool(
             const searchParams = new URLSearchParams();
 
             for (const [key, value] of Object.entries(input)) {
-                if (value === undefined || value === null) {
-                    continue;
-                }
+                if (value === undefined || value === null) continue;
 
-                searchParams.set(key, String(value));
+                if (dateParameters.includes(key) && typeof value === "string") {
+                    const utcDateString = dayjs
+                        .tz(value, LOCAL_TIMEZONE)
+                        .utc()
+                        .format();
+                    searchParams.set(key, utcDateString);
+                } else {
+                    searchParams.set(key, String(value));
+                }
             }
 
             const queryString = searchParams.toString();
@@ -241,7 +314,17 @@ server.registerTool(
             }
 
             const payload: unknown = await res.json();
+
             const matches = z.array(matchSchema).parse(payload);
+
+            matches.forEach((match) => {
+                match.startTime = dayjs(match.startTime)
+                    .tz(LOCAL_TIMEZONE)
+                    .format("YYYY-MM-DDTHH:mm:ss");
+                match.endTime = dayjs(match.endTime)
+                    .tz(LOCAL_TIMEZONE)
+                    .format("YYYY-MM-DDTHH:mm:ss");
+            });
 
             return {
                 content: [{ type: "text", text: JSON.stringify({ matches }) }],
@@ -269,7 +352,11 @@ server.registerTool(
         description: GET_WEATHER_DESC,
         inputSchema: z.object({
             postalCode: z.string(),
-            datetime: z.iso.datetime(),
+            datetime: z
+                .string()
+                .describe(
+                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
+                ),
         }),
         outputSchema: z.object({
             precipitationProbabilityPct: z.number(),
@@ -279,10 +366,15 @@ server.registerTool(
     },
     async ({ postalCode, datetime }) => {
         try {
+            const utcDatetime = dayjs
+                .tz(datetime, LOCAL_TIMEZONE)
+                .utc()
+                .format();
+
             const res = await fetch(
                 `${API_BASE_URL}/weather?postalCode=${encodeURIComponent(
                     postalCode,
-                )}&datetime=${encodeURIComponent(datetime)}`,
+                )}&datetime=${encodeURIComponent(utcDatetime)}`,
             );
 
             if (!res.ok) {
@@ -383,6 +475,29 @@ server.registerTool(
                 })
                 .parse(payload);
 
+            if (output.match) {
+                if (output.match.startTime) {
+                    output.match.startTime = dayjs(output.match.startTime)
+                        .tz(LOCAL_TIMEZONE)
+                        .format("YYYY-MM-DDTHH:mm:ss");
+                }
+                if (output.match.endTime) {
+                    output.match.endTime = dayjs(output.match.endTime)
+                        .tz(LOCAL_TIMEZONE)
+                        .format("YYYY-MM-DDTHH:mm:ss");
+                }
+
+                if (Array.isArray(output.match.participants)) {
+                    output.match.participants.forEach((p) => {
+                        if (p.joinedAt) {
+                            p.joinedAt = dayjs(p.joinedAt)
+                                .tz(LOCAL_TIMEZONE)
+                                .format("YYYY-MM-DDTHH:mm:ss");
+                        }
+                    });
+                }
+            }
+
             return {
                 content: [{ type: "text", text: JSON.stringify(output) }],
                 structuredContent: output,
@@ -409,8 +524,16 @@ server.registerTool(
         description: CREATE_MATCH_FROM_SLOT_DESC,
         inputSchema: z.object({
             courtId: z.number().int().min(1),
-            startTime: z.iso.datetime(),
-            endTime: z.iso.datetime(),
+            startTime: z
+                .string()
+                .describe(
+                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
+                ),
+            endTime: z
+                .string()
+                .describe(
+                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
+                ),
         }),
         outputSchema: z.object({
             message: z.string(),
@@ -433,13 +556,23 @@ server.registerTool(
                 };
             }
 
+            const utcStartTime = dayjs
+                .tz(startTime, LOCAL_TIMEZONE)
+                .utc()
+                .format();
+            const utcEndTime = dayjs.tz(endTime, LOCAL_TIMEZONE).utc().format();
+
             const res = await fetch(`${API_BASE_URL}/matches/from-slot`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${jwtToken}`,
                 },
-                body: JSON.stringify({ courtId, startTime, endTime }),
+                body: JSON.stringify({
+                    courtId,
+                    startTime: utcStartTime,
+                    endTime: utcEndTime,
+                }),
             });
 
             const payload: unknown = await res.json();
@@ -466,6 +599,29 @@ server.registerTool(
                     match: joinedMatchSchema,
                 })
                 .parse(payload);
+
+            if (output.match) {
+                if (output.match.startTime) {
+                    output.match.startTime = dayjs(output.match.startTime)
+                        .tz(LOCAL_TIMEZONE)
+                        .format("YYYY-MM-DDTHH:mm:ss");
+                }
+                if (output.match.endTime) {
+                    output.match.endTime = dayjs(output.match.endTime)
+                        .tz(LOCAL_TIMEZONE)
+                        .format("YYYY-MM-DDTHH:mm:ss");
+                }
+
+                if (Array.isArray(output.match.participants)) {
+                    output.match.participants.forEach((p) => {
+                        if (p.joinedAt) {
+                            p.joinedAt = dayjs(p.joinedAt)
+                                .tz(LOCAL_TIMEZONE)
+                                .format("YYYY-MM-DDTHH:mm:ss");
+                        }
+                    });
+                }
+            }
 
             return {
                 content: [{ type: "text", text: JSON.stringify(output) }],
