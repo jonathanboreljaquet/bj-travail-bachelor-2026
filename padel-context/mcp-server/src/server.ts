@@ -11,15 +11,13 @@ import {
     CREATE_MATCH_FROM_SLOT_DESC,
     GET_AVAILABLE_SLOTS_DESC,
     GET_OPEN_MATCHES_DESC,
-    GET_WEATHER_DESC,
     JOIN_OPEN_MATCH_DESC,
 } from "./description";
 
 const API_BASE_URL = "http://api:3000/api";
+const LOCAL_TIMEZONE = "Europe/Zurich";
 
 const tokenContext = new AsyncLocalStorage<string | undefined>();
-
-const LOCAL_TIMEZONE = "Europe/Zurich";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -34,6 +32,12 @@ const dateParameters = [
     "endTime",
     "datetime",
 ];
+
+const weatherSchema = z.object({
+    precipitationProbabilityPct: z.number().nullable(),
+    windSpeedKmh: z.number().nullable(),
+    temperatureCelsius: z.number().nullable(),
+});
 
 const availableSlotSchema = z.object({
     court: z.object({
@@ -55,6 +59,16 @@ const availableSlotSchema = z.object({
         z.object({
             startTime: z.string(),
             endTime: z.string(),
+        }),
+    ),
+});
+
+const availableSlotOutputSchema = availableSlotSchema.extend({
+    availableSlots: z.array(
+        z.object({
+            startTime: z.string(),
+            endTime: z.string(),
+            weather: weatherSchema.optional(),
         }),
     ),
 });
@@ -91,6 +105,10 @@ const matchSchema = z.object({
     ),
 });
 
+const matchOutputSchema = matchSchema.extend({
+    weather: weatherSchema.optional(),
+});
+
 const joinedMatchSchema = z.object({
     id: z.number(),
     status: z.string(),
@@ -119,6 +137,39 @@ const joinedMatchSchema = z.object({
         }),
     ),
 });
+
+async function fetchWeatherForOutdoor(postalCode: string, utcDatetime: string) {
+    try {
+        const res = await fetch(
+            `${API_BASE_URL}/weather?postalCode=${encodeURIComponent(
+                postalCode,
+            )}&datetime=${encodeURIComponent(utcDatetime)}`,
+        );
+
+        if (!res.ok) return undefined;
+
+        const payload: unknown = await res.json();
+
+        const data = weatherSchema.parse(payload);
+
+        if (
+            data.precipitationProbabilityPct === null ||
+            data.windSpeedKmh === null ||
+            data.temperatureCelsius === null
+        ) {
+            return undefined;
+        }
+
+        return {
+            precipitationProbabilityPct: data.precipitationProbabilityPct,
+            windSpeedKmh: data.windSpeedKmh,
+            temperatureCelsius: data.temperatureCelsius,
+        };
+    } catch (error) {
+        console.error("Silent weather fetch error:", error);
+        return undefined;
+    }
+}
 
 const server = new McpServer({
     name: "padel-context-mcp-server",
@@ -163,7 +214,7 @@ server.registerTool(
                 .optional(),
         }),
         outputSchema: z.object({
-            availableSlots: z.array(availableSlotSchema),
+            availableSlots: z.array(availableSlotOutputSchema),
         }),
     },
     async (input) => {
@@ -203,22 +254,54 @@ server.registerTool(
 
             const availableSlots = z.array(availableSlotSchema).parse(payload);
 
-            availableSlots.forEach((club) => {
-                club.availableSlots.forEach((slot) => {
-                    slot.startTime = dayjs(slot.startTime)
-                        .tz(LOCAL_TIMEZONE)
-                        .format("YYYY-MM-DDTHH:mm:ss");
-                    slot.endTime = dayjs(slot.endTime)
-                        .tz(LOCAL_TIMEZONE)
-                        .format("YYYY-MM-DDTHH:mm:ss");
-                });
-            });
+            const enrichedAvailableSlots = await Promise.all(
+                availableSlots.map(async (clubData) => {
+                    const isOutdoor = clubData.court.type === "OUTDOOR";
+                    const postalCode = clubData.court.club.postalCode;
+
+                    const enrichedSlots = await Promise.all(
+                        clubData.availableSlots.map(async (slot) => {
+                            let weather = undefined;
+
+                            if (isOutdoor) {
+                                const utcDatetime = dayjs(slot.startTime)
+                                    .utc()
+                                    .format();
+                                weather = await fetchWeatherForOutdoor(
+                                    postalCode,
+                                    utcDatetime,
+                                );
+                            }
+
+                            return {
+                                startTime: dayjs(slot.startTime)
+                                    .tz(LOCAL_TIMEZONE)
+                                    .format("YYYY-MM-DDTHH:mm:ss"),
+                                endTime: dayjs(slot.endTime)
+                                    .tz(LOCAL_TIMEZONE)
+                                    .format("YYYY-MM-DDTHH:mm:ss"),
+                                weather: weather,
+                            };
+                        }),
+                    );
+
+                    return {
+                        ...clubData,
+                        availableSlots: enrichedSlots,
+                    };
+                }),
+            );
 
             return {
                 content: [
-                    { type: "text", text: JSON.stringify({ availableSlots }) },
+                    {
+                        type: "text",
+                        text: JSON.stringify({
+                            availableSlots: enrichedAvailableSlots,
+                        }),
+                    },
                 ],
-                structuredContent: { availableSlots },
+                structuredContent: { availableSlots: enrichedAvailableSlots },
             };
         } catch (error) {
             const message =
@@ -278,7 +361,7 @@ server.registerTool(
             participantAverageLevel: z.number().optional(),
             participantAverageLevelTolerance: z.number().optional(),
         }),
-        outputSchema: z.object({ matches: z.array(matchSchema) }),
+        outputSchema: z.object({ matches: z.array(matchOutputSchema) }),
     },
     async (input) => {
         try {
@@ -317,93 +400,47 @@ server.registerTool(
 
             const matches = z.array(matchSchema).parse(payload);
 
-            matches.forEach((match) => {
-                match.startTime = dayjs(match.startTime)
-                    .tz(LOCAL_TIMEZONE)
-                    .format("YYYY-MM-DDTHH:mm:ss");
-                match.endTime = dayjs(match.endTime)
-                    .tz(LOCAL_TIMEZONE)
-                    .format("YYYY-MM-DDTHH:mm:ss");
-            });
+            const enrichedMatches = await Promise.all(
+                matches.map(async (match) => {
+                    let weather = undefined;
+
+                    if (match.court.type === "OUTDOOR") {
+                        const utcDatetime = dayjs(match.startTime)
+                            .utc()
+                            .format();
+                        weather = await fetchWeatherForOutdoor(
+                            match.court.club.postalCode,
+                            utcDatetime,
+                        );
+                    }
+
+                    return {
+                        ...match,
+                        startTime: dayjs(match.startTime)
+                            .tz(LOCAL_TIMEZONE)
+                            .format("YYYY-MM-DDTHH:mm:ss"),
+                        endTime: dayjs(match.endTime)
+                            .tz(LOCAL_TIMEZONE)
+                            .format("YYYY-MM-DDTHH:mm:ss"),
+                        weather: weather,
+                    };
+                }),
+            );
 
             return {
-                content: [{ type: "text", text: JSON.stringify({ matches }) }],
-                structuredContent: { matches },
+                content: [
+                    {
+                        type: "text",
+                        text: JSON.stringify({ matches: enrichedMatches }),
+                    },
+                ],
+                structuredContent: { matches: enrichedMatches },
             };
         } catch (error) {
             const message =
                 error instanceof Error
                     ? `Unable to retrieve open matches: ${error.message}`
                     : "Unable to retrieve open matches";
-
-            return {
-                isError: true,
-                content: [{ type: "text", text: message }],
-            };
-        }
-    },
-);
-
-//MCP TOOL WITH GET api/weather
-server.registerTool(
-    "get-weather",
-    {
-        title: "Get weather",
-        description: GET_WEATHER_DESC,
-        inputSchema: z.object({
-            postalCode: z.string(),
-            datetime: z
-                .string()
-                .describe(
-                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
-                ),
-        }),
-        outputSchema: z.object({
-            precipitationProbabilityPct: z.number(),
-            windSpeedKmh: z.number(),
-            temperatureCelsius: z.number(),
-        }),
-    },
-    async ({ postalCode, datetime }) => {
-        try {
-            const utcDatetime = dayjs
-                .tz(datetime, LOCAL_TIMEZONE)
-                .utc()
-                .format();
-
-            const res = await fetch(
-                `${API_BASE_URL}/weather?postalCode=${encodeURIComponent(
-                    postalCode,
-                )}&datetime=${encodeURIComponent(utcDatetime)}`,
-            );
-
-            if (!res.ok) {
-                const message = `API request failed (${res.status} ${res.statusText})`;
-                return {
-                    isError: true,
-                    content: [{ type: "text", text: message }],
-                };
-            }
-
-            const weatherData: unknown = await res.json();
-
-            const output = z
-                .object({
-                    precipitationProbabilityPct: z.number(),
-                    windSpeedKmh: z.number(),
-                    temperatureCelsius: z.number(),
-                })
-                .parse(weatherData);
-
-            return {
-                content: [{ type: "text", text: JSON.stringify(output) }],
-                structuredContent: output,
-            };
-        } catch (error) {
-            const message =
-                error instanceof Error
-                    ? `Unable to get weather: ${error.message}`
-                    : "Unable to get weather";
 
             return {
                 isError: true,

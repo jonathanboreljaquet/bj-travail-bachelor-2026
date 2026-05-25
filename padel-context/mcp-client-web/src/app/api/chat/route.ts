@@ -69,6 +69,7 @@ export async function POST(request: Request) {
     - Date actuelle : ${dayOfWeek} ${currentDate}
     - Heure locale : ${currentTime} (Heure de Genève, CET/CEST)
     - Si l'utilisateur demande "demain" ou "aujourd'hui", réfère-toi strictement à la date ci-dessus pour tes recherches.
+    - Si les résultats d'un terrain OUTDOOR contiennent des données météorologiques (weather), tu DOIS OBLIGATOIREMENT les afficher à l'utilisateur dans ta liste.
     `.trim();
 
     const result = streamText({
