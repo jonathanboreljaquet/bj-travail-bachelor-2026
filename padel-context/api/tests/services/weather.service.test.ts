@@ -85,9 +85,9 @@ describe("[UNIT TEST] WeatherService", () => {
 
         expect(result).toBeDefined();
 
-        expect(result).toHaveProperty("precipitation");
-        expect(result).toHaveProperty("wind");
-        expect(result).toHaveProperty("temperature");
+        expect(result).toHaveProperty("precipitationProbabilityPct");
+        expect(result).toHaveProperty("windSpeedKmh");
+        expect(result).toHaveProperty("temperatureCelsius");
     });
 
     it("throws if dateTime is not in YYYYMMDDHHmm format", async () => {

@@ -57,9 +57,9 @@ describe("[INTEGRATION TEST] GET /api/weather", () => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("postalCode", "1262");
         expect(response.body).toHaveProperty("datetime", "202605121700");
-        expect(response.body).toHaveProperty("precipitation");
-        expect(response.body).toHaveProperty("wind");
-        expect(response.body).toHaveProperty("temperature");
+        expect(response.body).toHaveProperty("precipitationProbabilityPct");
+        expect(response.body).toHaveProperty("windSpeedKmh");
+        expect(response.body).toHaveProperty("temperatureCelsius");
     });
 
     it("returns 200 and rounds datetime to full hour when minutes are present", async () => {
