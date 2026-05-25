@@ -3,7 +3,6 @@ import { NodeStreamableHTTPServerTransport } from "@modelcontextprotocol/node";
 import { McpServer } from "@modelcontextprotocol/server";
 import { AsyncLocalStorage } from "node:async_hooks";
 import "dotenv/config";
-import * as z from "zod/v4";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
@@ -13,6 +12,21 @@ import {
     GET_OPEN_MATCHES_DESC,
     JOIN_OPEN_MATCH_DESC,
 } from "./description";
+import {
+    availableSlotListVerificationSchema,
+    createMatchFromSlotInputSchema,
+    createMatchFromSlotOutputSchema,
+    createMatchFromSlotVerificationSchema,
+    getAvailableSlotsInputSchema,
+    getAvailableSlotsOutputSchema,
+    getOpenMatchesInputSchema,
+    getOpenMatchesOutputSchema,
+    joinOpenMatchInputSchema,
+    joinOpenMatchOutputSchema,
+    joinOpenMatchVerificationSchema,
+    matchListVerificationSchema,
+    weatherVerificationSchema,
+} from "./schemas";
 
 const API_BASE_URL = "http://api:3000/api";
 const LOCAL_TIMEZONE = "Europe/Zurich";
@@ -33,111 +47,6 @@ const dateParameters = [
     "datetime",
 ];
 
-const weatherSchema = z.object({
-    precipitationProbabilityPct: z.number().nullable(),
-    windSpeedKmh: z.number().nullable(),
-    temperatureCelsius: z.number().nullable(),
-});
-
-const availableSlotSchema = z.object({
-    court: z.object({
-        id: z.number(),
-        name: z.string(),
-        type: z.string(),
-        hasEquipmentBox: z.boolean(),
-        pricePerPerson: z.number(),
-        slotDuration: z.number(),
-        club: z.object({
-            name: z.string(),
-            city: z.string(),
-            postalCode: z.string(),
-            openingTime: z.string(),
-            closingTime: z.string(),
-        }),
-    }),
-    availableSlots: z.array(
-        z.object({
-            startTime: z.string(),
-            endTime: z.string(),
-        }),
-    ),
-});
-
-const availableSlotOutputSchema = availableSlotSchema.extend({
-    availableSlots: z.array(
-        z.object({
-            startTime: z.string(),
-            endTime: z.string(),
-            weather: weatherSchema.optional(),
-        }),
-    ),
-});
-
-const matchSchema = z.object({
-    id: z.number(),
-    startTime: z.string(),
-    endTime: z.string(),
-    status: z.string(),
-    availableSpots: z.number(),
-    court: z.object({
-        name: z.string(),
-        type: z.string(),
-        hasEquipmentBox: z.boolean(),
-        pricePerPerson: z.number(),
-        slotDuration: z.number(),
-        club: z.object({
-            name: z.string(),
-            city: z.string(),
-            postalCode: z.string(),
-            openingTime: z.string(),
-            closingTime: z.string(),
-        }),
-    }),
-    participants: z.array(
-        z.object({
-            user: z.object({
-                firstname: z.string(),
-                lastname: z.string(),
-                email: z.string(),
-                level: z.number(),
-            }),
-        }),
-    ),
-});
-
-const matchOutputSchema = matchSchema.extend({
-    weather: weatherSchema.optional(),
-});
-
-const joinedMatchSchema = z.object({
-    id: z.number(),
-    status: z.string(),
-    availableSpots: z.number(),
-    startTime: z.string(),
-    endTime: z.string(),
-    creator_id: z.number(),
-    court: z.object({
-        name: z.string(),
-        type: z.string(),
-        club: z.object({
-            name: z.string(),
-            city: z.string(),
-        }),
-    }),
-    participants: z.array(
-        z.object({
-            user: z.object({
-                id: z.number(),
-                firstname: z.string(),
-                lastname: z.string(),
-                email: z.email(),
-                level: z.number(),
-            }),
-            joinedAt: z.string(),
-        }),
-    ),
-});
-
 async function fetchWeatherForOutdoor(postalCode: string, utcDatetime: string) {
     try {
         const res = await fetch(
@@ -150,7 +59,7 @@ async function fetchWeatherForOutdoor(postalCode: string, utcDatetime: string) {
 
         const payload: unknown = await res.json();
 
-        const data = weatherSchema.parse(payload);
+        const data = weatherVerificationSchema.parse(payload);
 
         if (
             data.precipitationProbabilityPct === null ||
@@ -191,31 +100,8 @@ server.registerTool(
     {
         title: "Available slots",
         description: GET_AVAILABLE_SLOTS_DESC,
-        inputSchema: z.object({
-            city: z.string().optional(),
-            courtType: z.enum(["INDOOR", "OUTDOOR", "COVERED"]).optional(),
-            hasEquipmentBox: z.boolean().optional(),
-            minPricePerPerson: z.number().optional(),
-            maxPricePerPerson: z.number().optional(),
-            slotDuration: z.number().int().optional(),
-            minSlotDuration: z.number().int().optional(),
-            maxSlotDuration: z.number().int().optional(),
-            timeFrom: z
-                .string()
-                .describe(
-                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
-                )
-                .optional(),
-            timeTo: z
-                .string()
-                .describe(
-                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
-                )
-                .optional(),
-        }),
-        outputSchema: z.object({
-            availableSlots: z.array(availableSlotOutputSchema),
-        }),
+        inputSchema: getAvailableSlotsInputSchema,
+        outputSchema: getAvailableSlotsOutputSchema,
     },
     async (input) => {
         try {
@@ -252,7 +138,8 @@ server.registerTool(
 
             const payload: unknown = await res.json();
 
-            const availableSlots = z.array(availableSlotSchema).parse(payload);
+            const availableSlots =
+                availableSlotListVerificationSchema.parse(payload);
 
             const enrichedAvailableSlots = await Promise.all(
                 availableSlots.map(async (clubData) => {
@@ -323,45 +210,8 @@ server.registerTool(
     {
         title: "Open matches",
         description: GET_OPEN_MATCHES_DESC,
-        inputSchema: z.object({
-            city: z.string().optional(),
-            courtType: z.enum(["INDOOR", "OUTDOOR", "COVERED"]).optional(),
-            hasEquipmentBox: z.boolean().optional(),
-            minPricePerPerson: z.number().optional(),
-            maxPricePerPerson: z.number().optional(),
-            slotDuration: z.number().int().optional(),
-            minSlotDuration: z.number().int().optional(),
-            maxSlotDuration: z.number().int().optional(),
-            availableSpots: z.number().int().optional(),
-            minAvailableSpots: z.number().int().optional(),
-            startTimeFrom: z
-                .string()
-                .describe(
-                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
-                )
-                .optional(),
-            startTimeTo: z
-                .string()
-                .describe(
-                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
-                )
-                .optional(),
-            endTimeFrom: z
-                .string()
-                .describe(
-                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
-                )
-                .optional(),
-            endTimeTo: z
-                .string()
-                .describe(
-                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
-                )
-                .optional(),
-            participantAverageLevel: z.number().optional(),
-            participantAverageLevelTolerance: z.number().optional(),
-        }),
-        outputSchema: z.object({ matches: z.array(matchOutputSchema) }),
+        inputSchema: getOpenMatchesInputSchema,
+        outputSchema: getOpenMatchesOutputSchema,
     },
     async (input) => {
         try {
@@ -398,7 +248,7 @@ server.registerTool(
 
             const payload: unknown = await res.json();
 
-            const matches = z.array(matchSchema).parse(payload);
+            const matches = matchListVerificationSchema.parse(payload);
 
             const enrichedMatches = await Promise.all(
                 matches.map(async (match) => {
@@ -456,13 +306,8 @@ server.registerTool(
     {
         title: "Join open match",
         description: JOIN_OPEN_MATCH_DESC,
-        inputSchema: z.object({
-            matchId: z.number().int().nonoptional(),
-        }),
-        outputSchema: z.object({
-            message: z.string(),
-            match: joinedMatchSchema,
-        }),
+        inputSchema: joinOpenMatchInputSchema,
+        outputSchema: joinOpenMatchOutputSchema,
     },
     async ({ matchId }) => {
         try {
@@ -505,12 +350,7 @@ server.registerTool(
                 };
             }
 
-            const output = z
-                .object({
-                    message: z.string(),
-                    match: joinedMatchSchema,
-                })
-                .parse(payload);
+            const output = joinOpenMatchVerificationSchema.parse(payload);
 
             if (output.match) {
                 if (output.match.startTime) {
@@ -559,23 +399,8 @@ server.registerTool(
     {
         title: "Create match from slot",
         description: CREATE_MATCH_FROM_SLOT_DESC,
-        inputSchema: z.object({
-            courtId: z.number().int().min(1),
-            startTime: z
-                .string()
-                .describe(
-                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
-                ),
-            endTime: z
-                .string()
-                .describe(
-                    "Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.",
-                ),
-        }),
-        outputSchema: z.object({
-            message: z.string(),
-            match: joinedMatchSchema,
-        }),
+        inputSchema: createMatchFromSlotInputSchema,
+        outputSchema: createMatchFromSlotOutputSchema,
     },
     async ({ courtId, startTime, endTime }) => {
         try {
@@ -630,12 +455,7 @@ server.registerTool(
                 };
             }
 
-            const output = z
-                .object({
-                    message: z.string(),
-                    match: joinedMatchSchema,
-                })
-                .parse(payload);
+            const output = createMatchFromSlotVerificationSchema.parse(payload);
 
             if (output.match) {
                 if (output.match.startTime) {
