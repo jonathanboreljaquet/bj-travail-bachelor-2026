@@ -173,7 +173,17 @@ server.registerTool(
                     );
 
                     return {
-                        ...clubData,
+                        court: {
+                            name: clubData.court.name,
+                            type: clubData.court.type,
+                            hasEquipmentBox: clubData.court.hasEquipmentBox,
+                            pricePerPerson: clubData.court.pricePerPerson,
+                            club: {
+                                name: clubData.court.club.name,
+                                city: clubData.court.club.city,
+                                postalCode: clubData.court.club.postalCode,
+                            },
+                        },
                         availableSlots: enrichedSlots,
                     };
                 }),
@@ -265,13 +275,31 @@ server.registerTool(
                     }
 
                     return {
-                        ...match,
                         startTime: dayjs(match.startTime)
                             .tz(LOCAL_TIMEZONE)
                             .format("YYYY-MM-DDTHH:mm:ss"),
                         endTime: dayjs(match.endTime)
                             .tz(LOCAL_TIMEZONE)
                             .format("YYYY-MM-DDTHH:mm:ss"),
+                        status: match.status,
+                        availableSpots: match.availableSpots,
+                        court: {
+                            name: match.court.name,
+                            type: match.court.type,
+                            hasEquipmentBox: match.court.hasEquipmentBox,
+                            pricePerPerson: match.court.pricePerPerson,
+                            club: {
+                                name: match.court.club.name,
+                                city: match.court.club.city,
+                                postalCode: match.court.club.postalCode,
+                            },
+                        },
+                        participants: match.participants.map((participant) => ({
+                            user: {
+                                firstname: participant.user.firstname,
+                                level: participant.user.level,
+                            },
+                        })),
                         weather: weather,
                     };
                 }),

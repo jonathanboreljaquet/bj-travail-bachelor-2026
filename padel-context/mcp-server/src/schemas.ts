@@ -150,25 +150,61 @@ export const joinOpenMatchVerificationSchema = z.object({
 export const createMatchFromSlotVerificationSchema =
     joinOpenMatchVerificationSchema;
 
-export const weatherOutputSchema = weatherVerificationSchema;
+export const weatherOutputSchema = z.object({
+    precipitationProbabilityPct: z.number(),
+    windSpeedKmh: z.number(),
+    temperatureCelsius: z.number(),
+});
 
-export const availableSlotOutputSchema = availableSlotVerificationSchema.extend(
-    {
-        availableSlots: z.array(
-            z.object({
-                startTime: z.string(),
-                endTime: z.string(),
-                weather: weatherOutputSchema.optional(),
-            }),
-        ),
-    },
-);
+export const availableSlotOutputSchema = z.object({
+    court: z.object({
+        name: z.string(),
+        type: z.string(),
+        hasEquipmentBox: z.boolean(),
+        pricePerPerson: z.number(),
+        club: z.object({
+            name: z.string(),
+            city: z.string(),
+            postalCode: z.string(),
+        }),
+    }),
+    availableSlots: z.array(
+        z.object({
+            startTime: z.string(),
+            endTime: z.string(),
+            weather: weatherOutputSchema.optional(),
+        }),
+    ),
+});
 
 export const getAvailableSlotsOutputSchema = z.object({
     availableSlots: z.array(availableSlotOutputSchema),
 });
 
-export const matchOutputSchema = matchVerificationSchema.extend({
+export const matchOutputSchema = z.object({
+    startTime: z.string(),
+    endTime: z.string(),
+    status: z.string(),
+    availableSpots: z.number(),
+    court: z.object({
+        name: z.string(),
+        type: z.string(),
+        hasEquipmentBox: z.boolean(),
+        pricePerPerson: z.number(),
+        club: z.object({
+            name: z.string(),
+            city: z.string(),
+            postalCode: z.string(),
+        }),
+    }),
+    participants: z.array(
+        z.object({
+            user: z.object({
+                firstname: z.string(),
+                level: z.number(),
+            }),
+        }),
+    ),
     weather: weatherOutputSchema.optional(),
 });
 
