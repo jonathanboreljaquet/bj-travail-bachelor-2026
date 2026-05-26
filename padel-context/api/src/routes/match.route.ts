@@ -140,6 +140,14 @@ const router = Router();
  *           default: 0.5
  *         description: Tolérance absolue autour de `participantAverageLevel`.
  *         example: 0.1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Nombre maximum de matchs retournés.
+ *         example: 10
  *     responses:
  *       200:
  *         description: Liste des matchs correspondant aux filtres.

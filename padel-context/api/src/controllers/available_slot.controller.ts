@@ -27,6 +27,7 @@ export const getAvailableSlots = async (
         const maxSlotDuration = parseNumber(req.query.maxSlotDuration);
         const timeFrom = parseDate(req.query.timeFrom);
         const timeTo = parseDate(req.query.timeTo);
+        const limit = parseNumber(req.query.limit) ?? 20;
         const courtType =
             typeof req.query.courtType === "string"
                 ? req.query.courtType.trim().toUpperCase()
@@ -182,7 +183,14 @@ export const getAvailableSlots = async (
             const rangeDayStart = new Date(windowStart);
             rangeDayStart.setUTCHours(0, 0, 0, 0);
 
-            for (
+            if (limit <= 0) {
+                return {
+                    court,
+                    availableSlots: slots,
+                };
+            }
+
+            slotSearch: for (
                 let dayReference = new Date(rangeDayStart);
                 dayReference < windowEnd;
                 dayReference.setUTCDate(dayReference.getUTCDate() + 1)
@@ -218,6 +226,9 @@ export const getAvailableSlots = async (
                     startMinutes + court.slotDuration <= closingMinutes;
                     startMinutes += court.slotDuration
                 ) {
+                    if (slots.length >= limit) {
+                        break slotSearch;
+                    }
                     const slotStart = toDateAtMinutes(
                         currentDayStart,
                         startMinutes,
@@ -242,6 +253,9 @@ export const getAvailableSlots = async (
                             startTime: slotStart.toISOString(),
                             endTime: slotEnd.toISOString(),
                         });
+                        if (slots.length >= limit) {
+                            break slotSearch;
+                        }
                     }
                 }
             }

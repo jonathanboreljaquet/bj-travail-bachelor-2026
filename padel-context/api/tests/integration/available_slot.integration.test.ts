@@ -258,6 +258,21 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
         );
     });
 
+    it("limits available slots per court", async () => {
+        const response = await request(app)
+            .get("/api/available-slots")
+            .query({ limit: "1" });
+        const payload = response.body as Array<{
+            availableSlots: Array<{ startTime: string; endTime: string }>;
+        }>;
+
+        expect(response.status).toBe(200);
+        expect(payload.length).toBeGreaterThan(0);
+        payload.forEach((entry) => {
+            expect(entry.availableSlots.length).toBeLessThanOrEqual(1);
+        });
+    });
+
     it("filters by city", async () => {
         const response = await request(app)
             .get("/api/available-slots")

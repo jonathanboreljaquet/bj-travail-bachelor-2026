@@ -10,7 +10,7 @@ const router = Router();
  *     summary: Récupérer les créneaux disponibles à l'aide de filtres
  *     description: |
  *       Retourne les créneaux disponibles pour chaque terrain correspondant aux filtres.
- *       
+ *
  *       Sans l'utilisation de `timeFrom` et `timeTo`, retourne les créneaux pour les 7 prochains jours.
  *
  *       Les créneaux déjà occupés par des matchs ouverts et complétés sont exclus.
@@ -95,6 +95,14 @@ const router = Router();
  *           format: date-time
  *         description: Fin de la fenêtre de disponibilité à retourner.
  *         example: 2026-04-15T20:00:00.000Z
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Nombre maximum de créneaux renvoyés par terrain.
+ *         example: 20
  *     responses:
  *       400:
  *         description: Fenêtre invalide (`timeTo <= timeFrom`).

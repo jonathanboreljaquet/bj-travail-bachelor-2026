@@ -442,7 +442,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
             },
         ]);
 
-        const request = createMockRequest();
+        const request = createMockRequest({ limit: "50" });
         const response = createMockResponse();
 
         await getAvailableSlots(request, response);
@@ -509,7 +509,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
         findCourtsMock.mockResolvedValueOnce([court]);
         findMatchesMock.mockResolvedValueOnce([]);
 
-        const request = createMockRequest();
+        const request = createMockRequest({ limit: "50" });
         const response = createMockResponse();
 
         await getAvailableSlots(request, response);
@@ -570,7 +570,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
             },
         ]);
 
-        const request = createMockRequest();
+        const request = createMockRequest({ limit: "50" });
         const response = createMockResponse();
 
         await getAvailableSlots(request, response);
