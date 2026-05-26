@@ -92,3 +92,11 @@ export const parseDateOnly = (value: unknown): Date | undefined => {
 
     return date;
 };
+
+export const parseTokenValue = (value: unknown): number | undefined => {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        return undefined;
+    }
+
+    return Math.max(0, Math.trunc(value));
+};

@@ -6,6 +6,11 @@ import { getJwtSecret } from "../middlewares/auth.middleware";
 
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
+        if (!req.body || typeof req.body !== "object") {
+            res.status(400).json({ message: "invalid request body" });
+            return;
+        }
+
         const { email, password } = req.body as {
             email?: unknown;
             password?: unknown;

@@ -3,6 +3,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createMCPClient } from "@ai-sdk/mcp";
 import {
   convertToModelMessages,
+  isTextUIPart,
   stepCountIs,
   streamText,
   type UIMessage,
@@ -12,8 +13,23 @@ import { getRateLimitIdentifier } from "@/lib/request-identifier";
 
 export const runtime = "nodejs";
 
-const modelId = process.env.GEMINI_MODEL ?? "models/gemma-4-26b-a4b-it";
+const modelId = process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite";
 const mcpServerUrl = "http://mcp-server:3001/mcp";
+const apiUrl = "http://api:3000";
+
+export function getLatestUserPrompt(messages: UIMessage[]): string {
+  const message = messages.at(-1);
+
+  if (!message || message.role !== "user") {
+    return "";
+  }
+
+  return message.parts
+    .filter(isTextUIPart)
+    .map((part) => part.text)
+    .join("\n")
+    .trim();
+}
 
 const google = createGoogleGenerativeAI({
   apiKey:
@@ -22,15 +38,12 @@ const google = createGoogleGenerativeAI({
 });
 
 export async function POST(request: Request) {
-  const apiKey =
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ??
-    process.env.MCP_CLIENT_GEMINI_API_KEY;
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
   if (!apiKey) {
     return Response.json(
       {
-        error:
-          "Missing API key. Set GOOGLE_GENERATIVE_AI_API_KEY (or MCP_CLIENT_GEMINI_API_KEY).",
+        error: "Missing model API key.",
       },
       { status: 500 },
     );
@@ -38,6 +51,13 @@ export async function POST(request: Request) {
 
   const cookieStore = await cookies();
   const jwtToken = cookieStore.get("padel_context_jwt_token")?.value;
+
+  if (!jwtToken) {
+    return Response.json(
+      { error: "Utilisateur non authentifié." },
+      { status: 401 },
+    );
+  }
 
   const identifier = getRateLimitIdentifier(request, jwtToken);
   const rateLimitResult = await getChatRatelimit().limit(identifier);
@@ -55,6 +75,43 @@ export async function POST(request: Request) {
   }
 
   const { messages }: { messages: UIMessage[] } = await request.json();
+  const prompt = getLatestUserPrompt(messages) ?? "Prompt non disponible.";
+
+  const usageResponse = await fetch(`${apiUrl}/api/llm-usage/me`, {
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+  });
+
+  const usagePayload = (await usageResponse.json().catch(() => null)) as {
+    currentMonthTokens?: number;
+    monthlyTokenLimit?: number;
+    message?: string;
+  } | null;
+
+  if (!usageResponse.ok) {
+    return Response.json(
+      { error: usagePayload?.message ?? "Impossible de vérifier le quota." },
+      { status: usageResponse.status },
+    );
+  }
+
+  const currentMonthTokens = usagePayload?.currentMonthTokens;
+  const monthlyTokenLimit = usagePayload?.monthlyTokenLimit;
+
+  if (
+    typeof currentMonthTokens !== "number" ||
+    typeof monthlyTokenLimit !== "number"
+  ) {
+    return Response.json(
+      { error: "Impossible de lire le quota utilisateur." },
+      { status: 500 },
+    );
+  }
+
+  if (currentMonthTokens >= monthlyTokenLimit) {
+    return Response.json({ error: "Quota mensuel atteint" }, { status: 403 });
+  }
 
   const mcpClient = await createMCPClient({
     transport: {
@@ -103,7 +160,48 @@ export async function POST(request: Request) {
 
     return result.toUIMessageStreamResponse({
       onFinish: async () => {
-        await mcpClient.close();
+        try {
+          const usage = await result.usage;
+
+          if (
+            !usage ||
+            typeof usage.inputTokens !== "number" ||
+            typeof usage.outputTokens !== "number"
+          ) {
+            console.error("Usage LLM indisponible après streaming");
+            return;
+          }
+
+          const totalTokens = usage.inputTokens + usage.outputTokens;
+
+          const response = await fetch(`${apiUrl}/api/llm-usage/log`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              prompt,
+              inputTokens: usage.inputTokens,
+              outputTokens: usage.outputTokens,
+              totalTokens: totalTokens,
+              model: modelId,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(
+              "Erreur lors de la journalisation LLM:",
+              response.status,
+              errorText,
+            );
+          }
+        } catch (error) {
+          console.error("Erreur inattendue lors du logging LLM:", error);
+        } finally {
+          await mcpClient.close();
+        }
       },
     });
   } catch (error) {

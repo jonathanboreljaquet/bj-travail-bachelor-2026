@@ -32,9 +32,12 @@ model User {
   password  String
   level     Int      @default(1)
   createdAt DateTime @default(now())
+  monthlyTokenLimit Int @default(500000)
+  currentMonthTokens Int @default(0)
 
   createdMatches Match[]       @relation("MatchCreator")
   participations Participant[]
+  llmUsageLogs LlmUsageLog[]
 }
 
 model Club {
@@ -84,4 +87,17 @@ model Participant {
   match Match @relation(fields: [match_id], references: [id])
 
   @@id([user_id, match_id])
+}
+
+model LlmUsageLog {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  createdAt    DateTime @default(now())
+  prompt       String
+  inputTokens  Int
+  outputTokens Int
+  totalTokens  Int
+  model        String
+
+  user User @relation(fields: [user_id], references: [id])
 }
