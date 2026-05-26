@@ -103,8 +103,6 @@ export const matchVerificationSchema = z.object({
         z.object({
             user: z.object({
                 firstname: z.string(),
-                lastname: z.string(),
-                email: z.string(),
                 level: z.number(),
             }),
         }),
@@ -182,6 +180,7 @@ export const getAvailableSlotsOutputSchema = z.object({
 });
 
 export const matchOutputSchema = z.object({
+    id: z.number(),
     startTime: z.string(),
     endTime: z.string(),
     status: z.string(),

@@ -27,6 +27,7 @@ export const getMatches = async (
             courtType === "COVERED"
                 ? courtType
                 : undefined;
+
         const hasEquipmentBox = parseBoolean(req.query.hasEquipmentBox);
         const minPricePerPerson = parseNumber(req.query.minPricePerPerson);
         const maxPricePerPerson = parseNumber(req.query.maxPricePerPerson);
@@ -39,11 +40,14 @@ export const getMatches = async (
         const startTimeTo = parseDate(req.query.startTimeTo);
         const endTimeFrom = parseDate(req.query.endTimeFrom);
         const endTimeTo = parseDate(req.query.endTimeTo);
+        const limit = parseNumber(req.query.limit) ?? 10;
+
         const participantAverageLevel = parseNumber(
             req.query.participantAverageLevel,
         );
         const participantAverageLevelTolerance =
             parseNumber(req.query.participantAverageLevelTolerance) ?? 0.5;
+
         const now = new Date();
 
         const where: Prisma.MatchWhereInput = {
@@ -84,13 +88,9 @@ export const getMatches = async (
         ) {
             const courtWhere = (where.court ??= {});
 
-            if (hasEquipmentBox !== undefined) {
+            if (hasEquipmentBox !== undefined)
                 courtWhere.hasEquipmentBox = hasEquipmentBox;
-            }
-
-            if (normalizedCourtType) {
-                courtWhere.type = normalizedCourtType;
-            }
+            if (normalizedCourtType) courtWhere.type = normalizedCourtType;
 
             if (
                 minPricePerPerson !== undefined ||
@@ -123,10 +123,21 @@ export const getMatches = async (
                         : {}),
                 };
             }
+
+            if (city) {
+                courtWhere.club = {
+                    city: {
+                        equals: normalizeString(city),
+                        mode: "insensitive",
+                    },
+                };
+            }
         }
 
         const matches = await prisma.match.findMany({
             where,
+            take: limit * 3,
+            orderBy: { startTime: "asc" },
             select: {
                 id: true,
                 startTime: true,
@@ -156,8 +167,6 @@ export const getMatches = async (
                         user: {
                             select: {
                                 firstname: true,
-                                lastname: true,
-                                email: true,
                                 level: true,
                             },
                         },
@@ -167,27 +176,12 @@ export const getMatches = async (
         });
 
         const formattedMatches = matches.filter((match) => {
-            if (
-                city &&
-                normalizeString(match.court.club.city) !== normalizeString(city)
-            ) {
-                return false;
-            }
-
-            if (participantAverageLevel === undefined) {
-                return true;
-            }
-
-            if (match.participants.length === 0) {
-                return false;
-            }
+            if (participantAverageLevel === undefined) return true;
+            if (match.participants.length === 0) return false;
 
             const averageLevel =
-                match.participants.reduce(
-                    (accumulator, participant) =>
-                        accumulator + participant.user.level,
-                    0,
-                ) / match.participants.length;
+                match.participants.reduce((acc, p) => acc + p.user.level, 0) /
+                match.participants.length;
 
             return (
                 Math.abs(averageLevel - participantAverageLevel) <=
@@ -195,7 +189,9 @@ export const getMatches = async (
             );
         });
 
-        res.status(200).json(formattedMatches);
+        const finalMatches = formattedMatches.slice(0, limit);
+
+        res.status(200).json(finalMatches);
     } catch (error) {
         res.status(500).json({
             message: "Error while fetching matches",

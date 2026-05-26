@@ -198,8 +198,6 @@ const expectedSelect = {
             user: {
                 select: {
                     firstname: true,
-                    lastname: true,
-                    email: true,
                     level: true,
                 },
             },
@@ -239,6 +237,8 @@ const runGetMatchesCase = async ({
     expect(prismaMock.match.findMany).toHaveBeenCalledWith({
         where: expectedWhere,
         select: expectedSelect,
+        take: 30,
+        orderBy: { startTime: "asc" },
     });
     expect(response.status).toHaveBeenCalledWith(200);
     expect(response.json).toHaveBeenCalledWith(expectedResponse);
@@ -266,7 +266,14 @@ describe("[UNIT TEST] getMatches", () => {
             },
             mockMatches: [matchOne],
             expectedWhere: buildOpenWhere({
-                court: {},
+                court: {
+                    club: {
+                        city: {
+                            equals: "lancy",
+                            mode: "insensitive",
+                        },
+                    },
+                },
             }),
         });
     });
@@ -565,6 +572,12 @@ describe("[UNIT TEST] getMatches", () => {
                     lte: matchOne.endTime,
                 },
                 court: {
+                    club: {
+                        city: {
+                            equals: "lancy",
+                            mode: "insensitive",
+                        },
+                    },
                     hasEquipmentBox: true,
                     pricePerPerson: {
                         gte: 10,

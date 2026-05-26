@@ -318,14 +318,16 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns both matches when no filter is provided", async () => {
-        const response = await request(app).get("/api/matches");
+        const response = await request(app)
+            .get("/api/matches")
+            .query({ limit: 1000 });
         const matches = response.body as MatchResponseItem[];
+        const matchIds = matches.map((match) => match.id);
 
         expect(response.status).toBe(200);
         expect(matches.length).toBeGreaterThanOrEqual(2);
-        expect(matches.map((match) => match.id)).toEqual(
-            expect.arrayContaining([matchOneId, matchTwoId]),
-        );
+        expect(matchIds).toContain(matchOneId);
+        expect(matchIds).toContain(matchTwoId);
         expect(matches.map((match) => match.id)).not.toContain(pastMatchId);
     });
 

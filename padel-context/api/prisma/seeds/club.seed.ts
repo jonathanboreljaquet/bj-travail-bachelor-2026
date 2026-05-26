@@ -2,15 +2,15 @@ import { PrismaClient } from "../../generated/prisma/client";
 import { faker } from "@faker-js/faker";
 
 const GENEVA_CITIES = [
-    { city: "Genève", postalCode: "1201" },
+    { city: "Geneve", postalCode: "1201" },
     { city: "Carouge", postalCode: "1227" },
     { city: "Grand-Lancy", postalCode: "1212" },
     { city: "Meyrin", postalCode: "1217" },
     { city: "Vernier", postalCode: "1214" },
     { city: "Onex", postalCode: "1213" },
-    { city: "Thônex", postalCode: "1226" },
+    { city: "Thonex", postalCode: "1226" },
     { city: "Versoix", postalCode: "1290" },
-    { city: "Chêne-Bougeries", postalCode: "1224" },
+    { city: "Chene-Bougeries", postalCode: "1224" },
     { city: "Plan-les-Ouates", postalCode: "1228" },
 ];
 

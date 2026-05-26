@@ -275,6 +275,7 @@ server.registerTool(
                     }
 
                     return {
+                        id: match.id,
                         startTime: dayjs(match.startTime)
                             .tz(LOCAL_TIMEZONE)
                             .format("YYYY-MM-DDTHH:mm:ss"),
