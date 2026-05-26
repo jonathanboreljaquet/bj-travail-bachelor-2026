@@ -104,7 +104,14 @@ export default function Home() {
 
       {error ? (
         <p className="mt-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-          Erreur: {error.message}
+          {(() => {
+            try {
+              const parsed = JSON.parse(error.message);
+              return parsed.error || error.message;
+            } catch {
+              return error.message;
+            }
+          })()}
         </p>
       ) : null}
     </div>

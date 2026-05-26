@@ -7,6 +7,8 @@ import {
   streamText,
   type UIMessage,
 } from "ai";
+import { getChatRatelimit } from "@/lib/ratelimit";
+import { getRateLimitIdentifier } from "@/lib/request-identifier";
 
 export const runtime = "nodejs";
 
@@ -36,6 +38,21 @@ export async function POST(request: Request) {
 
   const cookieStore = await cookies();
   const jwtToken = cookieStore.get("padel_context_jwt_token")?.value;
+
+  const identifier = getRateLimitIdentifier(request, jwtToken);
+  const rateLimitResult = await getChatRatelimit().limit(identifier);
+
+  if (!rateLimitResult.success) {
+    return Response.json(
+      {
+        error:
+          "Vous avez le droit à 5 questions par minute, veuillez patienter.",
+      },
+      {
+        status: 429,
+      },
+    );
+  }
 
   const { messages }: { messages: UIMessage[] } = await request.json();
 

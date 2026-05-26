@@ -95,6 +95,8 @@ services:
       LANGFUSE_SECRET_KEY: "${LANGFUSE_SECRET_KEY:-}"
       LANGFUSE_PUBLIC_KEY: "${LANGFUSE_PUBLIC_KEY:-}"
       LANGFUSE_BASE_URL: "${LANGFUSE_BASE_URL:-}"
+      UPSTASH_REDIS_REST_URL: "${UPSTASH_REDIS_REST_URL:-}"
+      UPSTASH_REDIS_REST_TOKEN: "${UPSTASH_REDIS_REST_TOKEN:-}"
     volumes:
       - ./mcp-client-web/src:/app/src
     depends_on:

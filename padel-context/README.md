@@ -25,18 +25,23 @@ docker compose down
 
 Les variables d'environnement sont centralisées dans le fichier `.env` à la racine :
 
-| Variable                       | Défaut                    | Description                         |
-| ------------------------------ | ------------------------- | ----------------------------------- |
-| `API_HTTP_PORT`                | 3000                      | Port d'accès à l'API                |
-| `DATABASE_HOST_PORT`           | 5433                      | Port d'accès à PostgreSQL (hôte)    |
-| `DATABASE_NAME`                | padel-context-db          | Nom de la base de données           |
-| `DATABASE_USER`                | padel-context-db_user     | Utilisateur PostgreSQL              |
-| `DATABASE_PASSWORD`            | padel-context-db_password | Mot de passe PostgreSQL             |
-| `AUTH_JWT_SECRET`              | change-me                 | Secret JWT                          |
-| `MCP_SERVER_HTTP_PORT`         | 3001                      | Port du serveur MCP (conteneur)     |
-| `MCP_CLIENT_WEB_PORT`          | 3002                      | Port d'accès au client web (hôte)   |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | (vide)                    | Clé API Google Gemini (obligatoire) |
-| `GEMINI_MODEL`                 | models/gemma-4-26b-a4b-it | Modèle Gemini à utiliser            |
+| Variable                       | Défaut                    | Description                                            |
+| ------------------------------ | ------------------------- | ------------------------------------------------------ |
+| `API_HTTP_PORT`                | 3000                      | Port d'accès à l'API                                   |
+| `DATABASE_HOST_PORT`           | 5433                      | Port d'accès à PostgreSQL (hôte)                       |
+| `DATABASE_NAME`                | padel-context-db          | Nom de la base de données                              |
+| `DATABASE_USER`                | padel-context-db_user     | Utilisateur PostgreSQL                                 |
+| `DATABASE_PASSWORD`            | padel-context-db_password | Mot de passe PostgreSQL                                |
+| `AUTH_JWT_SECRET`              | change-me                 | Secret JWT                                             |
+| `MCP_SERVER_HTTP_PORT`         | 3001                      | Port du serveur MCP (conteneur)                        |
+| `MCP_CLIENT_WEB_PORT`          | 3002                      | Port d'accès au client web (hôte)                      |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | (vide)                    | Clé API Google Gemini (obligatoire)                    |
+| `GEMINI_MODEL`                 | models/gemma-4-26b-a4b-it | Modèle Gemini à utiliser                               |
+| `LANGFUSE_SECRET_KEY`          | (vide)                    | Clé secrète Langfuse (optionnel)                       |
+| `LANGFUSE_PUBLIC_KEY`          | (vide)                    | Clé publique Langfuse (optionnel)                      |
+| `LANGFUSE_BASE_URL`            | (vide)                    | URL Langfuse (optionnel)                               |
+| `UPSTASH_REDIS_REST_URL`       | (vide)                    | URL REST Upstash Redis (obligatoire pour rate limit)   |
+| `UPSTASH_REDIS_REST_TOKEN`     | (vide)                    | Token REST Upstash Redis (obligatoire pour rate limit) |
 
 ## Services
 
