@@ -126,7 +126,25 @@ server.registerTool(
                 queryString ? `?${queryString}` : ""
             }`;
 
-            const res = await fetch(url);
+            const jwtToken = tokenContext.getStore();
+
+            if (!jwtToken) {
+                return {
+                    isError: true,
+                    content: [
+                        {
+                            type: "text",
+                            text: "Unauthorized: Missing JWT token in HTTP headers.",
+                        },
+                    ],
+                };
+            }
+
+            const res = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${jwtToken}`,
+                },
+            });
 
             if (!res.ok) {
                 const message = `API request failed (${res.status} ${res.statusText})`;
@@ -246,7 +264,25 @@ server.registerTool(
                 queryString ? `?${queryString}` : ""
             }`;
 
-            const res = await fetch(url);
+            const jwtToken = tokenContext.getStore();
+
+            if (!jwtToken) {
+                return {
+                    isError: true,
+                    content: [
+                        {
+                            type: "text",
+                            text: "Unauthorized: Missing JWT token in HTTP headers.",
+                        },
+                    ],
+                };
+            }
+
+            const res = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${jwtToken}`,
+                },
+            });
 
             if (!res.ok) {
                 const message = `API request failed (${res.status} ${res.statusText})`;

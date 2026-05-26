@@ -16,6 +16,8 @@ const router = Router();
  *       Les filtres query sont optionnels et combinables.
  *     tags:
  *       - Matches
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: city
@@ -229,6 +231,16 @@ const router = Router();
  *                             level:
  *                               type: integer
  *                               example: 2
+ *       401:
+ *         description: Authentification échouée (token manquant ou invalide).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: missing or invalid authorization header
  *       500:
  *         description: Erreur interne lors de la récupération des matchs.
  *         content:
@@ -240,7 +252,7 @@ const router = Router();
  *                   type: string
  *                   example: Error while fetching matches
  */
-router.get("/", getMatches);
+router.get("/", authenticateJwt, getMatches);
 /**
  * @swagger
  * /api/matches/from-slot:

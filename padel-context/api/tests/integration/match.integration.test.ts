@@ -1,5 +1,6 @@
 import request from "supertest";
 import { describe, it, expect, afterAll, beforeAll } from "@jest/globals";
+import bcrypt from "bcryptjs";
 
 import app from "../../src/app";
 import prisma from "../../src/db";
@@ -25,6 +26,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     const createdCourtIds: number[] = [];
     const createdMatchIds: number[] = [];
     const createdUserIds: number[] = [];
+    let authToken: string;
     let matchOneStartTimeIso: string;
     let matchOneEndTimeIso: string;
     let matchOneId: number;
@@ -150,6 +152,29 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     };
 
     beforeAll(async () => {
+        const authEmail = `${uniquePrefix}-auth@test.dev`;
+        const authPassword = "password123";
+        const hashedPassword = await bcrypt.hash(authPassword, 10);
+
+        const authUser = await prisma.user.create({
+            data: {
+                firstname: "Auth",
+                lastname: "User",
+                email: authEmail,
+                password: hashedPassword,
+                level: 3,
+            },
+        });
+
+        createdUserIds.push(authUser.id);
+
+        const loginResponse = await request(app).post("/api/auth/login").send({
+            email: authEmail,
+            password: authPassword,
+        });
+
+        authToken = loginResponse.body.token as string;
+
         const creator = await createUser({
             suffix: "creator",
             firstname: "Scenario",
@@ -312,14 +337,14 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns HTTP code 200", async () => {
-        const response = await request(app).get("/api/matches");
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`);
 
         expect(response.status).toBe(200);
     });
 
     it("returns both matches when no filter is provided", async () => {
         const response = await request(app)
-            .get("/api/matches")
+            .get("/api/matches").set("Authorization", `Bearer ${authToken}`)
             .query({ limit: 1000 });
         const matches = response.body as MatchResponseItem[];
         const matchIds = matches.map((match) => match.id);
@@ -332,7 +357,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("does not return a past OPEN match even when filtering by its city", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: pastMatchCity,
         });
         const matches = response.body as MatchResponseItem[];
@@ -342,7 +367,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when city matches it", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
         });
         const matches = response.body as MatchResponseItem[];
@@ -354,7 +379,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when courtType is INDOOR", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             courtType: "INDOOR",
         });
@@ -367,7 +392,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the second match when minPricePerPerson is 20", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchTwoCity,
             minPricePerPerson: "20",
         });
@@ -380,7 +405,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when hasEquipmentBox is true", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             hasEquipmentBox: "true",
         });
@@ -393,7 +418,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when minSlotDuration is 100", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             minSlotDuration: "100",
         });
@@ -406,7 +431,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the second match when maxSlotDuration is 100", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchTwoCity,
             maxSlotDuration: "100",
         });
@@ -419,7 +444,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when maxPricePerPerson is 15", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             maxPricePerPerson: "15",
         });
@@ -432,7 +457,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when availableSpots is 2", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             availableSpots: "2",
         });
@@ -445,7 +470,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when slotDuration is 120", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             slotDuration: "120",
         });
@@ -458,7 +483,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the second match when startTimeFrom matches it", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchTwoCity,
             startTimeFrom: matchTwoStartTimeIso,
         });
@@ -470,7 +495,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when startTimeTo matches it", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             startTimeTo: matchOneStartTimeIso,
         });
@@ -482,7 +507,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the second match when endTimeFrom matches it", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchTwoCity,
             endTimeFrom: matchTwoStartTimeIso,
         });
@@ -494,7 +519,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when endTimeTo matches it", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             endTimeTo: matchOneEndTimeIso,
         });
@@ -506,7 +531,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match with minAvailableSpots 2", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             minAvailableSpots: "2",
         });
@@ -519,7 +544,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match with participant average level 3 and tolerance 0.1", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             participantAverageLevel: "3",
             participantAverageLevelTolerance: "0.1",
@@ -532,7 +557,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the second match with participant average level 5.33 and tolerance 0.1", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchTwoCity,
             participantAverageLevel: "5.33",
             participantAverageLevelTolerance: "0.1",
@@ -545,7 +570,7 @@ describe("[INTEGRATION TEST] GET /api/matches", () => {
     });
 
     it("returns only the first match when the full query matches it", async () => {
-        const response = await request(app).get("/api/matches").query({
+        const response = await request(app).get("/api/matches").set("Authorization", `Bearer ${authToken}`).query({
             city: matchOneCity,
             hasEquipmentBox: "true",
             maxPricePerPerson: "15",

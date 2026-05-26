@@ -7,6 +7,7 @@ When to not use:
 How to use:
 - To filter specific matches: use the filters described in "Parameters".
 Limitations:
+- Requires a valid Authorization header (Bearer <token>) when calling the MCP server.
 - You MUST provide at least two filters.
 - At least one filter MUST be temporal (startTimeTo + startTimeFrom or endTimeTo + endTimeFrom).
 - At least one filter MUST be contextual (city, courtType, hasEquipmentBox, price range, slot duration, available spots, or participant level).
@@ -37,6 +38,7 @@ When to not use:
 How to use:
 - To filter specific slots: use the filters described in "Parameters".
 Limitations:
+- Requires a valid Authorization header (Bearer <token>) when calling the MCP server.
 - You MUST provide at least two filters.
 - At least one filter MUST be temporal (timeTo + timeFrom).
 - At least one filter MUST be contextual (city, courtType, hasEquipmentBox, price range, or slot duration).

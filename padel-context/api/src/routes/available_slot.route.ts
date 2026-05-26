@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getAvailableSlots } from "../controllers/available_slot.controller";
+import { authenticateJwt } from "../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -19,6 +20,8 @@ const router = Router();
  *       Les filtres query sont optionnels et combinables.
  *     tags:
  *       - Available Slots
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: city
@@ -114,6 +117,16 @@ const router = Router();
  *                 message:
  *                   type: string
  *                   example: timeTo must be greater than timeFrom
+ *       401:
+ *         description: Authentification échouée (token manquant ou invalide).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: missing or invalid authorization header
  *       200:
  *         description: Liste des terrains avec leurs créneaux disponibles.
  *         content:
@@ -206,5 +219,5 @@ const router = Router();
  *                   type: string
  *                   example: Error while fetching available slots
  */
-router.get("/", getAvailableSlots);
+router.get("/", authenticateJwt, getAvailableSlots);
 export default router;

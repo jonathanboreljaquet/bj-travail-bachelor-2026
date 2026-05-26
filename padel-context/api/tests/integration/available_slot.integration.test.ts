@@ -1,5 +1,6 @@
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
+import bcrypt from "bcryptjs";
 
 import app from "../../src/app";
 import prisma from "../../src/db";
@@ -130,6 +131,7 @@ const createMatch = async ({
 };
 
 describe("[INTEGRATION TEST] GET /api/available-slots", () => {
+    let authToken: string;
     let mainCourtId: number;
     let secondaryCourtId: number;
     let mainCity: string;
@@ -140,6 +142,29 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
     let canceledMatchStart: Date;
 
     beforeAll(async () => {
+        const authEmail = `${uniquePrefix}-auth@test.dev`;
+        const authPassword = "password123";
+        const hashedPassword = await bcrypt.hash(authPassword, 10);
+
+        const authUser = await prisma.user.create({
+            data: {
+                firstname: "Auth",
+                lastname: "User",
+                email: authEmail,
+                password: hashedPassword,
+                level: 3,
+            },
+        });
+
+        createdUserIds.push(authUser.id);
+
+        const loginResponse = await request(app).post("/api/auth/login").send({
+            email: authEmail,
+            password: authPassword,
+        });
+
+        authToken = loginResponse.body.token as string;
+
         const creator = await createUser("creator");
 
         const mainCourt = await createCourtWithClub({
@@ -242,12 +267,12 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
     });
 
     it("returns HTTP 200", async () => {
-        const response = await request(app).get("/api/available-slots");
+        const response = await request(app).get("/api/available-slots").set("Authorization", `Bearer ${authToken}`);
         expect(response.status).toBe(200);
     });
 
     it("returns both courts when no filter is provided", async () => {
-        const response = await request(app).get("/api/available-slots");
+        const response = await request(app).get("/api/available-slots").set("Authorization", `Bearer ${authToken}`);
         const payload = response.body as Array<{
             court: { id: number };
         }>;
@@ -260,7 +285,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
 
     it("limits available slots per court", async () => {
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ limit: "1" });
         const payload = response.body as Array<{
             availableSlots: Array<{ startTime: string; endTime: string }>;
@@ -275,7 +300,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
 
     it("filters by city", async () => {
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: mainCity });
         const payload = response.body as Array<{
             court: { id: number; club: { city: string } };
@@ -289,7 +314,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
 
     it("filters by hasEquipmentBox", async () => {
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: mainCity, hasEquipmentBox: "true" });
         const payload = response.body as Array<{ court: { id: number } }>;
 
@@ -300,7 +325,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
 
     it("filters by minPricePerPerson", async () => {
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: secondaryCity, minPricePerPerson: "20" });
         const payload = response.body as Array<{ court: { id: number } }>;
 
@@ -311,7 +336,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
 
     it("filters by maxPricePerPerson", async () => {
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: mainCity, maxPricePerPerson: "20" });
         const payload = response.body as Array<{ court: { id: number } }>;
 
@@ -322,7 +347,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
 
     it("filters by slotDuration", async () => {
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: mainCity, slotDuration: "60" });
         const payload = response.body as Array<{ court: { id: number } }>;
 
@@ -333,7 +358,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
 
     it("filters by minSlotDuration", async () => {
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: secondaryCity, minSlotDuration: "80" });
         const payload = response.body as Array<{ court: { id: number } }>;
 
@@ -344,7 +369,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
 
     it("filters by maxSlotDuration", async () => {
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: mainCity, maxSlotDuration: "80" });
         const payload = response.body as Array<{ court: { id: number } }>;
 
@@ -355,7 +380,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
 
     it("filters by courtType", async () => {
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: secondaryCity, courtType: "indoor" });
         const payload = response.body as Array<{
             court: { id: number; type: string };
@@ -370,7 +395,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
     it("filters by timeFrom", async () => {
         const timeFrom = createUtcDate(matchDay, 12, 0);
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: mainCity, timeFrom: timeFrom.toISOString() });
         const payload = response.body as Array<{
             court: { id: number };
@@ -392,7 +417,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
     it("filters by timeTo", async () => {
         const timeTo = createUtcDate(matchDay, 11, 0);
         const response = await request(app)
-            .get("/api/available-slots")
+            .get("/api/available-slots").set("Authorization", `Bearer ${authToken}`)
             .query({ city: mainCity, timeTo: timeTo.toISOString() });
         const payload = response.body as Array<{
             court: { id: number };
@@ -416,7 +441,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
     it("filters by timeFrom and timeTo", async () => {
         const timeFrom = createUtcDate(matchDay, 10, 0);
         const timeTo = createUtcDate(matchDay, 14, 0);
-        const response = await request(app).get("/api/available-slots").query({
+        const response = await request(app).get("/api/available-slots").set("Authorization", `Bearer ${authToken}`).query({
             city: mainCity,
             timeFrom: timeFrom.toISOString(),
             timeTo: timeTo.toISOString(),
@@ -447,7 +472,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
         const timeFrom = createUtcDate(matchDay, 12, 0);
         const timeTo = createUtcDate(matchDay, 11, 0);
 
-        const response = await request(app).get("/api/available-slots").query({
+        const response = await request(app).get("/api/available-slots").set("Authorization", `Bearer ${authToken}`).query({
             city: mainCity,
             timeFrom: timeFrom.toISOString(),
             timeTo: timeTo.toISOString(),
@@ -460,7 +485,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
     });
 
     it("keeps CANCELED matches available", async () => {
-        const response = await request(app).get("/api/available-slots");
+        const response = await request(app).get("/api/available-slots").set("Authorization", `Bearer ${authToken}`);
         const payload = response.body as Array<{
             court: { id: number };
             availableSlots: Array<{ startTime: string; endTime: string }>;
@@ -478,7 +503,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
     });
 
     it("blocks OPEN matches", async () => {
-        const response = await request(app).get("/api/available-slots");
+        const response = await request(app).get("/api/available-slots").set("Authorization", `Bearer ${authToken}`);
         const payload = response.body as Array<{
             court: { id: number };
             availableSlots: Array<{ startTime: string; endTime: string }>;
@@ -494,7 +519,7 @@ describe("[INTEGRATION TEST] GET /api/available-slots", () => {
     });
 
     it("blocks COMPLETED matches", async () => {
-        const response = await request(app).get("/api/available-slots");
+        const response = await request(app).get("/api/available-slots").set("Authorization", `Bearer ${authToken}`);
         const payload = response.body as Array<{
             court: { id: number };
             availableSlots: Array<{ startTime: string; endTime: string }>;
