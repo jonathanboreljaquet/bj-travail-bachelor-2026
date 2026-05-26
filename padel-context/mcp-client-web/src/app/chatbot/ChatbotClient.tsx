@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, isTextUIPart } from "ai";
 import { logoutAction } from "@/app/actions/auth";
+import MarkdownMessage from "./MarkdownMessage";
 
 type TokenUsage = {
   currentMonthTokens: number;
@@ -28,9 +29,15 @@ export default function ChatbotClient({
   );
   const [isLoadingUsage, setIsLoadingUsage] = useState(false);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   });
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const refreshUsage = useCallback(async () => {
     setIsLoadingUsage(true);
@@ -90,8 +97,8 @@ export default function ChatbotClient({
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-4 py-6 sm:px-6">
-      <header className="mb-4 flex items-center justify-between border-b border-black/10 pb-4">
+    <div className="mx-auto flex h-screen w-full max-w-4xl flex-col px-4 py-6 sm:px-6">
+      <header className="mb-4 flex items-center justify-between border-b border-black/10 pb-4 flex-shrink-0">
         <div>
           <h1 className="text-2xl font-semibold">
             Padel Context - MVP MCP Client
@@ -122,42 +129,47 @@ export default function ChatbotClient({
         </div>
       </header>
 
-      <main className="flex-1 space-y-3 overflow-y-auto rounded-md border border-black/10 bg-white p-4">
-        {messages.length === 0 ? (
-          <p className="text-sm text-black/60">
-            Exemple: &quot;Je souhaite rejoindre un match le 28 avril 2026 sur
-            un terrain couvert à Lancy&quot;.
-          </p>
-        ) : null}
+      <main className="flex-1 flex flex-col overflow-hidden rounded-md border border-black/10 bg-white">
+        <div className="flex-1 space-y-3 overflow-y-auto p-4">
+          {messages.length === 0 ? (
+            <p className="text-sm text-black/60">
+              Exemple: &quot;Je souhaite rejoindre un match le 28 avril 2026 sur
+              un terrain couvert à Lancy&quot;.
+            </p>
+          ) : null}
 
-        {messages.map((message) => {
-          const text = message.parts
-            .filter(isTextUIPart)
-            .map((part) => part.text)
-            .join("\n")
-            .trim();
+          {messages.map((message) => {
+            const text = message.parts
+              .filter(isTextUIPart)
+              .map((part) => part.text)
+              .join("\n")
+              .trim();
 
-          return (
-            <div
-              key={message.id}
-              className={`w-fit max-w-[90%] rounded-lg px-3 py-2 text-sm ${
-                message.role === "user"
-                  ? "ml-auto bg-black text-white"
-                  : "bg-zinc-100 text-zinc-900"
-              }`}
-            >
-              <p className="mb-1 text-[11px] uppercase tracking-wide opacity-70">
-                {message.role === "user" ? "Toi" : "Assistant"}
-              </p>
-              <p className="whitespace-pre-wrap">
-                {text || (message.role === "assistant" ? "..." : "")}
-              </p>
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={message.id}
+                className={`w-fit max-w-[90%] rounded-lg px-3 py-2 text-sm ${
+                  message.role === "user"
+                    ? "ml-auto bg-black text-white"
+                    : "bg-zinc-100 text-zinc-900"
+                }`}
+              >
+                <p className="mb-1 text-[11px] uppercase tracking-wide opacity-70">
+                  {message.role === "user" ? "Toi" : "Assistant"}
+                </p>
+                {message.role !== "user" ? (
+                  <MarkdownMessage content={text || "..."} />
+                ) : (
+                  <p className="whitespace-pre-wrap">{text || ""}</p>
+                )}
+              </div>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
       </main>
 
-      <form onSubmit={onSubmit} className="mt-4 flex gap-2">
+      <form onSubmit={onSubmit} className="mt-4 flex gap-2 flex-shrink-0">
         <input
           value={input}
           onChange={(event) => setInput(event.target.value)}
