@@ -19,5 +19,9 @@ export function initWeatherScheduler(): void {
             error,
         );
     });
+
+    console.log(
+        "[Weather Scheduler] Initialized - will execute weather task every 10 minutes",
+    );
     return;
 }

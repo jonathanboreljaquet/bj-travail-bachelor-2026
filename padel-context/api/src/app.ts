@@ -7,6 +7,7 @@ import llmUsageRoutes from "./routes/llm_usage.route";
 import swaggerUi from "swagger-ui-express";
 import swaggerJSDoc from "swagger-jsdoc";
 import { initWeatherScheduler } from "./scheduler/weather.scheduler";
+import { initLlmUsageScheduler } from "./scheduler/llm_usage.scheduler";
 import weatherService from "./services/weather.service";
 
 const swaggerOptions = {
@@ -48,6 +49,7 @@ app.use("/api/llm-usage", llmUsageRoutes);
 if (process.env.NODE_ENV !== "test") {
     await weatherService.init();
     initWeatherScheduler();
+    initLlmUsageScheduler();
 
     app.listen(PORT, () => {
         console.log("Serveur démarré avec succès!");
