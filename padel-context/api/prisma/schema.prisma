@@ -31,7 +31,7 @@ model User {
   email     String   @unique
   password  String
   level     Int      @default(1)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz()
   monthlyTokenLimit Int @default(500000)
   currentMonthTokens Int @default(0)
 
@@ -92,7 +92,7 @@ model Participant {
 model LlmUsageLog {
   id           Int      @id @default(autoincrement())
   user_id      Int
-  createdAt    DateTime @default(now())
+  createdAt    DateTime @default(now()) @db.Timestamptz()
   prompt       String
   inputTokens  Int
   outputTokens Int
