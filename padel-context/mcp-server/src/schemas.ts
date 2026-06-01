@@ -154,25 +154,21 @@ export const weatherOutputSchema = z.object({
     temperatureCelsius: z.number(),
 });
 
+export const slotTimeOutputSchema = z.object({
+    startTime: z.string(),
+    endTime: z.string(),
+    weather: weatherOutputSchema.optional(),
+});
+
 export const availableSlotOutputSchema = z.object({
-    court: z.object({
-        name: z.string(),
-        type: z.string(),
-        hasEquipmentBox: z.boolean(),
-        pricePerPerson: z.number(),
-        club: z.object({
-            name: z.string(),
-            city: z.string(),
-            postalCode: z.string(),
-        }),
-    }),
-    availableSlots: z.array(
-        z.object({
-            startTime: z.string(),
-            endTime: z.string(),
-            weather: weatherOutputSchema.optional(),
-        }),
-    ),
+    courtId: z.number(),
+    courtName: z.string(),
+    type: z.string(),
+    hasEquipmentBox: z.boolean(),
+    price: z.number(),
+    clubName: z.string(),
+    city: z.string(),
+    availableSlots: z.array(slotTimeOutputSchema),
 });
 
 export const getAvailableSlotsOutputSchema = z.object({
@@ -185,25 +181,15 @@ export const matchOutputSchema = z.object({
     endTime: z.string(),
     status: z.string(),
     availableSpots: z.number(),
-    court: z.object({
-        name: z.string(),
-        type: z.string(),
-        hasEquipmentBox: z.boolean(),
-        pricePerPerson: z.number(),
-        club: z.object({
-            name: z.string(),
-            city: z.string(),
-            postalCode: z.string(),
-        }),
-    }),
-    participants: z.array(
-        z.object({
-            user: z.object({
-                firstname: z.string(),
-                level: z.number(),
-            }),
-        }),
-    ),
+    courtName: z.string(),
+    type: z.string(),
+    hasEquipmentBox: z.boolean(),
+    price: z.number(),
+    duration: z.number(),
+    clubName: z.string(),
+    city: z.string(),
+    playersCount: z.number(),
+    averageLevel: z.number().nullable(),
     weather: weatherOutputSchema.optional(),
 });
 
@@ -211,7 +197,10 @@ export const getOpenMatchesOutputSchema = z.object({
     matches: z.array(matchOutputSchema),
 });
 
-export const joinedMatchOutputSchema = joinedMatchVerificationSchema;
+export const joinedMatchOutputSchema = z.object({
+    id: z.number(),
+    availableSpots: z.number(),
+});
 
 export const joinOpenMatchOutputSchema = z.object({
     message: z.string(),

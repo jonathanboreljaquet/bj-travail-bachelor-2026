@@ -80,6 +80,12 @@ async function fetchWeatherForOutdoor(postalCode: string, utcDatetime: string) {
     }
 }
 
+const courtTypeTranslations: Record<string, string> = {
+    INDOOR: "Intérieur",
+    OUTDOOR: "Extérieur",
+    COVERED: "Couvert",
+};
+
 const server = new McpServer({
     name: "padel-context-mcp-server",
     version: "1.0.0",
@@ -159,15 +165,16 @@ server.registerTool(
             const availableSlots =
                 availableSlotListVerificationSchema.parse(payload);
 
-            const enrichedAvailableSlots = await Promise.all(
+            const courtsWithSlots: unknown[] = [];
+
+            await Promise.all(
                 availableSlots.map(async (clubData) => {
                     const isOutdoor = clubData.court.type === "OUTDOOR";
                     const postalCode = clubData.court.club.postalCode;
 
-                    const enrichedSlots = await Promise.all(
+                    const processedSlots = await Promise.all(
                         clubData.availableSlots.map(async (slot) => {
                             let weather = undefined;
-
                             if (isOutdoor) {
                                 const utcDatetime = dayjs(slot.startTime)
                                     .utc()
@@ -177,7 +184,6 @@ server.registerTool(
                                     utcDatetime,
                                 );
                             }
-
                             return {
                                 startTime: dayjs(slot.startTime)
                                     .tz(LOCAL_TIMEZONE)
@@ -190,33 +196,33 @@ server.registerTool(
                         }),
                     );
 
-                    return {
-                        court: {
-                            name: clubData.court.name,
-                            type: clubData.court.type,
-                            hasEquipmentBox: clubData.court.hasEquipmentBox,
-                            pricePerPerson: clubData.court.pricePerPerson,
-                            club: {
-                                name: clubData.court.club.name,
-                                city: clubData.court.club.city,
-                                postalCode: clubData.court.club.postalCode,
-                            },
-                        },
-                        availableSlots: enrichedSlots,
-                    };
+                    if (processedSlots.length === 0) return;
+
+                    courtsWithSlots.push({
+                        courtId: clubData.court.id,
+                        courtName: clubData.court.name,
+                        type: courtTypeTranslations[clubData.court.type],
+                        hasEquipmentBox: clubData.court.hasEquipmentBox,
+                        price: clubData.court.pricePerPerson,
+                        clubName: clubData.court.club.name,
+                        city: clubData.court.club.city,
+                        availableSlots: processedSlots,
+                    });
                 }),
             );
+
+            const safeOutput = getAvailableSlotsOutputSchema.parse({
+                availableSlots: courtsWithSlots,
+            });
 
             return {
                 content: [
                     {
                         type: "text",
-                        text: JSON.stringify({
-                            availableSlots: enrichedAvailableSlots,
-                        }),
+                        text: JSON.stringify(safeOutput),
                     },
                 ],
-                structuredContent: { availableSlots: enrichedAvailableSlots },
+                structuredContent: safeOutput,
             };
         } catch (error) {
             const message =
@@ -296,7 +302,7 @@ server.registerTool(
 
             const matches = matchListVerificationSchema.parse(payload);
 
-            const enrichedMatches = await Promise.all(
+            const flattenedMatches = await Promise.all(
                 matches.map(async (match) => {
                     let weather = undefined;
 
@@ -310,6 +316,15 @@ server.registerTool(
                         );
                     }
 
+                    const playersCount = match.participants.length;
+                    const averageLevel =
+                        playersCount > 0
+                            ? match.participants.reduce(
+                                  (acc, p) => acc + p.user.level,
+                                  0,
+                              ) / playersCount
+                            : null;
+
                     return {
                         id: match.id,
                         startTime: dayjs(match.startTime)
@@ -320,36 +335,32 @@ server.registerTool(
                             .format("YYYY-MM-DDTHH:mm:ss"),
                         status: match.status,
                         availableSpots: match.availableSpots,
-                        court: {
-                            name: match.court.name,
-                            type: match.court.type,
-                            hasEquipmentBox: match.court.hasEquipmentBox,
-                            pricePerPerson: match.court.pricePerPerson,
-                            club: {
-                                name: match.court.club.name,
-                                city: match.court.club.city,
-                                postalCode: match.court.club.postalCode,
-                            },
-                        },
-                        participants: match.participants.map((participant) => ({
-                            user: {
-                                firstname: participant.user.firstname,
-                                level: participant.user.level,
-                            },
-                        })),
-                        weather: weather,
+                        courtName: match.court.name,
+                        type: courtTypeTranslations[match.court.type],
+                        hasEquipmentBox: match.court.hasEquipmentBox,
+                        price: match.court.pricePerPerson,
+                        duration: match.court.slotDuration,
+                        clubName: match.court.club.name,
+                        city: match.court.club.city,
+                        playersCount,
+                        averageLevel,
+                        weather,
                     };
                 }),
             );
+
+            const safeOutput = getOpenMatchesOutputSchema.parse({
+                matches: flattenedMatches,
+            });
 
             return {
                 content: [
                     {
                         type: "text",
-                        text: JSON.stringify({ matches: enrichedMatches }),
+                        text: JSON.stringify(safeOutput),
                     },
                 ],
-                structuredContent: { matches: enrichedMatches },
+                structuredContent: safeOutput,
             };
         } catch (error) {
             const message =
@@ -415,34 +426,25 @@ server.registerTool(
                 };
             }
 
-            const output = joinOpenMatchVerificationSchema.parse(payload);
+            const verificationOutput =
+                joinOpenMatchVerificationSchema.parse(payload);
 
-            if (output.match) {
-                if (output.match.startTime) {
-                    output.match.startTime = dayjs(output.match.startTime)
-                        .tz(LOCAL_TIMEZONE)
-                        .format("YYYY-MM-DDTHH:mm:ss");
-                }
-                if (output.match.endTime) {
-                    output.match.endTime = dayjs(output.match.endTime)
-                        .tz(LOCAL_TIMEZONE)
-                        .format("YYYY-MM-DDTHH:mm:ss");
-                }
-
-                if (Array.isArray(output.match.participants)) {
-                    output.match.participants.forEach((p) => {
-                        if (p.joinedAt) {
-                            p.joinedAt = dayjs(p.joinedAt)
-                                .tz(LOCAL_TIMEZONE)
-                                .format("YYYY-MM-DDTHH:mm:ss");
-                        }
-                    });
-                }
+            let safeMatch: unknown = undefined;
+            if (verificationOutput.match) {
+                safeMatch = {
+                    id: verificationOutput.match.id,
+                    availableSpots: verificationOutput.match.availableSpots,
+                };
             }
 
+            const safeOutput = joinOpenMatchOutputSchema.parse({
+                message: verificationOutput.message,
+                match: safeMatch,
+            });
+
             return {
-                content: [{ type: "text", text: JSON.stringify(output) }],
-                structuredContent: output,
+                content: [{ type: "text", text: JSON.stringify(safeOutput) }],
+                structuredContent: safeOutput,
             };
         } catch (error) {
             const message =
@@ -520,34 +522,25 @@ server.registerTool(
                 };
             }
 
-            const output = createMatchFromSlotVerificationSchema.parse(payload);
+            const verificationOutput =
+                createMatchFromSlotVerificationSchema.parse(payload);
 
-            if (output.match) {
-                if (output.match.startTime) {
-                    output.match.startTime = dayjs(output.match.startTime)
-                        .tz(LOCAL_TIMEZONE)
-                        .format("YYYY-MM-DDTHH:mm:ss");
-                }
-                if (output.match.endTime) {
-                    output.match.endTime = dayjs(output.match.endTime)
-                        .tz(LOCAL_TIMEZONE)
-                        .format("YYYY-MM-DDTHH:mm:ss");
-                }
-
-                if (Array.isArray(output.match.participants)) {
-                    output.match.participants.forEach((p) => {
-                        if (p.joinedAt) {
-                            p.joinedAt = dayjs(p.joinedAt)
-                                .tz(LOCAL_TIMEZONE)
-                                .format("YYYY-MM-DDTHH:mm:ss");
-                        }
-                    });
-                }
+            let safeMatch: unknown = undefined;
+            if (verificationOutput.match) {
+                safeMatch = {
+                    id: verificationOutput.match.id,
+                    availableSpots: verificationOutput.match.availableSpots,
+                };
             }
 
+            const safeOutput = createMatchFromSlotOutputSchema.parse({
+                message: verificationOutput.message,
+                match: safeMatch,
+            });
+
             return {
-                content: [{ type: "text", text: JSON.stringify(output) }],
-                structuredContent: output,
+                content: [{ type: "text", text: JSON.stringify(safeOutput) }],
+                structuredContent: safeOutput,
             };
         } catch (error) {
             const message =

@@ -6,6 +6,7 @@ When to not use:
 - Do not use this tool when a user wants to create a Padel match.
 How to use:
 - To filter specific matches: use the filters described in "Parameters".
+- When presenting the matches to the user, you MUST include ALL data points. 
 Limitations:
 - Requires a valid Authorization header (Bearer <token>) when calling the MCP server.
 - You MUST provide at least two filters.
@@ -37,6 +38,7 @@ When to not use:
 - Do not use this tool when a user wants to find or join an available Padel match.
 How to use:
 - To filter specific slots: use the filters described in "Parameters".
+- When presenting the available slots to the user, you MUST include ALL data points (courtName, type, hasEquipmentBox, price, clubName, city, availableSlots.startTime, and availableSlots.endTime).
 Limitations:
 - Requires a valid Authorization header (Bearer <token>) when calling the MCP server.
 - You MUST provide at least two filters.

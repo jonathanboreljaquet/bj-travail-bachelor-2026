@@ -11,6 +11,13 @@ Voir [README principal](../README.md)
 ```bash
 npm install
 npx prisma generate
+
+```
+
+## Visualiser la base de données
+
+```bash
+npx prisma studio
 ```
 
 ## Documentation
