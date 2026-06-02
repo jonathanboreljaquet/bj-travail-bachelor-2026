@@ -1,5 +1,8 @@
+import bcrypt from "bcryptjs";
 import { PrismaClient } from "../../generated/prisma/client";
 import { faker } from "@faker-js/faker";
+
+const BCRYPT_ROUNDS = 10;
 
 export async function seedParticipant(prisma: PrismaClient) {
     console.log("--- Start seeding participants ---");
@@ -27,6 +30,18 @@ export async function seedParticipant(prisma: PrismaClient) {
             });
         }
     }
+
+    const passwordHash = await bcrypt.hash("pomme123", BCRYPT_ROUNDS);
+
+    await prisma.user.create({
+        data: {
+            firstname: "Jonathan",
+            lastname: "Borel-Jaquet",
+            email: "jonathan.borel@padelcontext.com",
+            password: passwordHash,
+            level: 3,
+        },
+    });
 
     console.log("--- Finished seeding participants ---");
 }

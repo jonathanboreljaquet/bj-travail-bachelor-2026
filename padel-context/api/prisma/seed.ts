@@ -28,7 +28,26 @@ const VALID_CLUB_COURT_SLOTS = [
     { openingTime: "09:00", closingTime: "23:00", slot_duration: 60 },
 ];
 
+async function resetDatabase() {
+    console.log("--- Resetting database before seeding ---");
+
+    await prisma.$executeRawUnsafe(`
+        TRUNCATE TABLE
+            "Participant",
+            "Match",
+            "Court",
+            "Club",
+            "LlmUsageLog",
+            "User"
+        RESTART IDENTITY CASCADE;
+    `);
+
+    console.log("--- Database reset complete ---");
+}
+
 async function main() {
+    await resetDatabase();
+
     await seedClub(prisma, VALID_CLUB_COURT_SLOTS);
     await seedCourt(prisma, VALID_CLUB_COURT_SLOTS);
     await seedUser(prisma);

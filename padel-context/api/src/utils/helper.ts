@@ -100,3 +100,16 @@ export const parseTokenValue = (value: unknown): number | undefined => {
 
     return Math.max(0, Math.trunc(value));
 };
+
+const DEFAULT_MAX_UPCOMING_MATCHES = 5;
+
+const parsedMaxUpcomingMatches = parseNumber(process.env.MAX_UPCOMING_MATCHES);
+
+export const MAX_UPCOMING_MATCHES =
+    parsedMaxUpcomingMatches !== undefined &&
+    Number.isInteger(parsedMaxUpcomingMatches) &&
+    parsedMaxUpcomingMatches > 0
+        ? parsedMaxUpcomingMatches
+        : DEFAULT_MAX_UPCOMING_MATCHES;
+
+export const MAX_UPCOMING_MATCHES_MESSAGE = `You cannot participate in more than ${MAX_UPCOMING_MATCHES} upcoming matches at the same time`;

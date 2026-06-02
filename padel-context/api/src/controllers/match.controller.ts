@@ -5,6 +5,8 @@ import {
     parseDate,
     parseNumber,
     normalizeString,
+    MAX_UPCOMING_MATCHES,
+    MAX_UPCOMING_MATCHES_MESSAGE,
 } from "../utils/helper";
 import { Prisma } from "../../generated/prisma/client";
 
@@ -219,6 +221,22 @@ export const joinMatch = async (req: Request, res: Response): Promise<void> => {
 
         const matchId = Number(matchIdParam);
         const userId = authUser.userId;
+
+        const upcomingMatchesCount = await prisma.participant.count({
+            where: {
+                user_id: userId,
+                match: {
+                    startTime: {
+                        gte: new Date(),
+                    },
+                },
+            },
+        });
+
+        if (upcomingMatchesCount >= MAX_UPCOMING_MATCHES) {
+            res.status(403).json({ message: MAX_UPCOMING_MATCHES_MESSAGE });
+            return;
+        }
 
         const match = await prisma.match.findUnique({
             where: { id: matchId },

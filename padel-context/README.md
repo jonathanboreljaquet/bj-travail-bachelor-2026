@@ -33,6 +33,7 @@ Les variables d'environnement sont centralisées dans le fichier `.env` à la ra
 | `DATABASE_USER`                | padel-context-db_user     | Utilisateur PostgreSQL                                 |
 | `DATABASE_PASSWORD`            | padel-context-db_password | Mot de passe PostgreSQL                                |
 | `AUTH_JWT_SECRET`              | change-me                 | Secret JWT                                             |
+| `MAX_UPCOMING_MATCHES`         | 5                         | Limite maximum de match rejoins par utilisateur        |
 | `MCP_SERVER_HTTP_PORT`         | 3001                      | Port du serveur MCP (conteneur)                        |
 | `MCP_CLIENT_WEB_PORT`          | 3002                      | Port d'accès au client web (hôte)                      |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | (vide)                    | Clé API Google Gemini (obligatoire)                    |

@@ -18,6 +18,7 @@ services:
       POSTGRES_DB: "${DATABASE_NAME:-padel-context-db}"
       POSTGRES_USER: "${DATABASE_USER:-padel-context-db_user}"
       POSTGRES_PASSWORD: "${DATABASE_PASSWORD:-padel-context-db_password}"
+      MAX_UPCOMING_MATCHES: "${MAX_UPCOMING_MATCHES:-5}"
       AUTH_JWT_SECRET: "${AUTH_JWT_SECRET:-change-me}"
       DATABASE_URL: "postgresql://${DATABASE_USER:-padel-context-db_user}:${DATABASE_PASSWORD:-padel-context-db_password}@db:5432/${DATABASE_NAME:-padel-context-db}?schema=public"
     volumes:

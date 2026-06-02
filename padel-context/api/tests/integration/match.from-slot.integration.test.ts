@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 
 import app from "../../src/app";
 import prisma from "../../src/db";
+import { MAX_UPCOMING_MATCHES } from "../../src/utils/helper";
 
 const uniquePrefix = `match-from-slot-integration-${Date.now()}`;
 
@@ -462,5 +463,58 @@ describe("[INTEGRATION TEST] POST /api/matches/from-slot", () => {
         expect(response.body.match.id).toBeDefined();
 
         createdMatchIds.push(response.body.match.id as number);
+    });
+
+    it("returns 403 when the user already has 5 future matches", async () => {
+        const limitUser = await createUser("limit-user");
+        const limitToken = await getAuthToken(limitUser.email, "password123");
+        const limitCourt = await createCourtWithClub({
+            clubName: "limit-club",
+            city: `${uniquePrefix}-LimitCity`,
+            postalCode: "1200",
+            courtName: "limit-court",
+            openingTime: "08:00",
+            closingTime: "22:00",
+            slotDuration: 60,
+        });
+
+        for (let index = 0; index < MAX_UPCOMING_MATCHES; index += 1) {
+            const startTime = new Date();
+            startTime.setUTCDate(startTime.getUTCDate() + 1 + index);
+            startTime.setUTCHours(9, 0, 0, 0);
+
+            const endTime = new Date(startTime);
+            endTime.setUTCHours(10, 0, 0, 0);
+
+            const response = await request(app)
+                .post("/api/matches/from-slot")
+                .set("Authorization", `Bearer ${limitToken}`)
+                .send({
+                    courtId: limitCourt.id,
+                    startTime: startTime.toISOString(),
+                    endTime: endTime.toISOString(),
+                });
+
+            expect(response.status).toBe(201);
+            createdMatchIds.push(response.body.match.id as number);
+        }
+
+        const startTime = new Date();
+        startTime.setUTCDate(startTime.getUTCDate() + 6);
+        startTime.setUTCHours(9, 0, 0, 0);
+
+        const endTime = new Date(startTime);
+        endTime.setUTCHours(10, 0, 0, 0);
+
+        const response = await request(app)
+            .post("/api/matches/from-slot")
+            .set("Authorization", `Bearer ${limitToken}`)
+            .send({
+                courtId: limitCourt.id,
+                startTime: startTime.toISOString(),
+                endTime: endTime.toISOString(),
+            });
+
+        expect(response.status).toBe(403);
     });
 });

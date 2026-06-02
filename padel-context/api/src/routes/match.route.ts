@@ -258,7 +258,7 @@ router.get("/", authenticateJwt, getMatches);
  * /api/matches/from-slot:
  *   post:
  *     summary: Créer un match depuis un créneau disponible
- *     description: Permet à un utilisateur authentifié de créer un match à partir d'un slot disponible, puis de s'y inscrire automatiquement.
+ *     description: Permet à un utilisateur authentifié de créer un match à partir d'un slot disponible, puis de s'y inscrire automatiquement. Avec une limite par défaut de 5 matchs futurs.
  *     tags:
  *       - Matches
  *     security:
@@ -403,6 +403,16 @@ router.get("/", authenticateJwt, getMatches);
  *                 summary: Hors fenêtre de 7 jours
  *                 value:
  *                   message: slot must be within the next 7 days
+ *       403:
+ *         description: Limite de matchs futurs atteinte.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: You cannot participate in more than 5 upcoming matches at the same time
  *       401:
  *         description: Utilisateur non authentifié.
  *         content:
@@ -450,7 +460,7 @@ router.post("/from-slot", authenticateJwt, createMatchFromSlot);
  * /api/matches/{matchId}/join:
  *   post:
  *     summary: Rejoindre un match ouvert
- *     description: Permet à un utilisateur authentifié de rejoindre un match ouvert s'il reste des places disponibles.
+ *     description: Permet à un utilisateur authentifié de rejoindre un match ouvert s'il reste des places disponibles. Avec une limite par défaut de 5 matchs futurs.
  *     tags:
  *       - Matches
  *     security:
@@ -569,6 +579,16 @@ router.post("/from-slot", authenticateJwt, createMatchFromSlot);
  *                 summary: Joueur déjà inscrit
  *                 value:
  *                   message: user already joined this match
+ *       403:
+ *         description: Limite de matchs futurs atteinte.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: You cannot participate in more than 5 upcoming matches at the same time
  *       401:
  *         description: Utilisateur non authentifié.
  *         content:

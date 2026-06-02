@@ -30,17 +30,5 @@ export async function seedUser(prisma: PrismaClient) {
         });
     }
 
-    const passwordHash = await bcrypt.hash("pomme123", BCRYPT_ROUNDS);
-
-    await prisma.user.create({
-        data: {
-            firstname: "Jonathan",
-            lastname: "Borel-Jaquet",
-            email: "jonathan.borel@padelcontext.com",
-            password: passwordHash,
-            level: 3,
-        },
-    });
-
     console.log("--- Finished seeding users ---");
 }

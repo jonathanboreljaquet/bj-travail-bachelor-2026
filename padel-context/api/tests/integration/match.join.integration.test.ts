@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 
 import app from "../../src/app";
 import prisma from "../../src/db";
+import { MAX_UPCOMING_MATCHES } from "../../src/utils/helper";
 
 const uniquePrefix = `match-join-integration-${Date.now()}`;
 
@@ -392,5 +393,50 @@ describe("[INTEGRATION TEST] POST /api/matches/:matchId/join", () => {
         expect(participant.user.email).toBeDefined();
         expect(participant.user.level).toBeDefined();
         expect(participant.joinedAt).toBeDefined();
+    });
+
+    it("returns 403 when the user already joined 5 future matches", async () => {
+        const limitUser = await createUser("limit-user");
+        const limitToken = await getAuthToken(limitUser.email, "password123");
+
+        for (let index = 0; index < MAX_UPCOMING_MATCHES; index += 1) {
+            const matchStartTime = new Date();
+            matchStartTime.setUTCDate(matchStartTime.getUTCDate() + 3 + index);
+            matchStartTime.setUTCHours(18, 0, 0, 0);
+
+            const match = await createMatch({
+                courtId: court.id,
+                creatorId: creator.id,
+                startTime: matchStartTime,
+                durationMinutes: 90,
+                status: "OPEN",
+                availableSpots: 2,
+            });
+
+            const response = await request(app)
+                .post(`/api/matches/${match.id}/join`)
+                .set("Authorization", `Bearer ${limitToken}`);
+
+            expect(response.status).toBe(200);
+        }
+
+        const sixthMatchStartTime = new Date();
+        sixthMatchStartTime.setUTCDate(sixthMatchStartTime.getUTCDate() + 9);
+        sixthMatchStartTime.setUTCHours(18, 0, 0, 0);
+
+        const sixthMatch = await createMatch({
+            courtId: court.id,
+            creatorId: creator.id,
+            startTime: sixthMatchStartTime,
+            durationMinutes: 90,
+            status: "OPEN",
+            availableSpots: 2,
+        });
+
+        const response = await request(app)
+            .post(`/api/matches/${sixthMatch.id}/join`)
+            .set("Authorization", `Bearer ${limitToken}`);
+
+        expect(response.status).toBe(403);
     });
 });

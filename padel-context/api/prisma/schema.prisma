@@ -81,7 +81,7 @@ model Match {
 model Participant {
   user_id  Int
   match_id Int
-  joinedAt DateTime @default(now())
+  joinedAt DateTime @default(now()) @db.Timestamptz()
 
   user  User  @relation(fields: [user_id], references: [id])
   match Match @relation(fields: [match_id], references: [id])

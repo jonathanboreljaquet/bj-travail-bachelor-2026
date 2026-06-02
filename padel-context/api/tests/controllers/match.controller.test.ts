@@ -15,6 +15,8 @@ const findUniqueMock =
     jest.fn<(args: Record<string, unknown>) => Promise<unknown | null>>();
 const updateMock =
     jest.fn<(args: Record<string, unknown>) => Promise<unknown>>();
+const participantCountMock =
+    jest.fn<(args: Record<string, unknown>) => Promise<number>>();
 const participantFindUniqueMock =
     jest.fn<(args: Record<string, unknown>) => Promise<unknown | null>>();
 const participantCreateMock =
@@ -39,6 +41,7 @@ const prismaMock = {
         update: updateMock,
     },
     participant: {
+        count: participantCountMock,
         findUnique: participantFindUniqueMock,
         create: participantCreateMock,
     },
@@ -62,6 +65,7 @@ const mockedNow = new Date("2026-04-10T10:00:00.000Z");
 beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(mockedNow);
+    participantCountMock.mockResolvedValue(0);
 });
 
 afterEach(() => {
@@ -673,6 +677,32 @@ describe("[UNIT TEST] joinMatch", () => {
         expect(response.status).toHaveBeenCalledWith(401);
         expect(response.json).toHaveBeenCalledWith({
             message: "unauthorized",
+        });
+    });
+
+    it("returns 403 when the user already has 5 future matches", async () => {
+        const request = createMockRequestForJoin(123);
+        const response = createMockResponseWithAuthUser(mockAuthUser);
+
+        participantCountMock.mockResolvedValueOnce(5);
+
+        await joinMatch(request, response);
+
+        expect(participantCountMock).toHaveBeenCalledWith({
+            where: {
+                user_id: mockAuthUser.userId,
+                match: {
+                    startTime: {
+                        gte: mockedNow,
+                    },
+                },
+            },
+        });
+        expect(findUniqueMock).not.toHaveBeenCalled();
+        expect(response.status).toHaveBeenCalledWith(403);
+        expect(response.json).toHaveBeenCalledWith({
+            message:
+                "You cannot participate in more than 5 upcoming matches at the same time",
         });
     });
 

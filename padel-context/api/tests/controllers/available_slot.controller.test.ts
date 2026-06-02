@@ -20,6 +20,8 @@ const findCourtByIdMock = jest.fn<
         club: { openingTime: string; closingTime: string };
     } | null>
 >();
+const participantCountMock =
+    jest.fn<(args: Record<string, unknown>) => Promise<number>>();
 const findOverlappingMatchMock =
     jest.fn<
         (args: Record<string, unknown>) => Promise<{ id: number } | null>
@@ -49,6 +51,9 @@ const prismaMock = {
         findMany: findCourtsMock,
         findUnique: findCourtByIdMock,
     },
+    participant: {
+        count: participantCountMock,
+    },
     match: {
         findMany: findMatchesMock,
         findFirst: findOverlappingMatchMock,
@@ -74,6 +79,7 @@ const windowEnd = new Date("2026-04-22T00:00:00.000Z");
 beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(mockedNow);
+    participantCountMock.mockResolvedValue(0);
 });
 
 afterEach(() => {
@@ -668,6 +674,32 @@ describe("[UNIT TEST] createMatchFromSlot", () => {
         expect(response.status).toHaveBeenCalledWith(400);
         expect(response.json).toHaveBeenCalledWith({
             message: "invalid slot range",
+        });
+    });
+
+    it("returns 403 when the user already has 5 future matches", async () => {
+        const request = createMockCreateRequest(validBody);
+        const response = createMockResponseWithAuthUser(authUser);
+
+        participantCountMock.mockResolvedValueOnce(5);
+
+        await createMatchFromSlot(request, response);
+
+        expect(participantCountMock).toHaveBeenCalledWith({
+            where: {
+                user_id: authUser.userId,
+                match: {
+                    startTime: {
+                        gte: mockedNow,
+                    },
+                },
+            },
+        });
+        expect(findCourtByIdMock).not.toHaveBeenCalled();
+        expect(response.status).toHaveBeenCalledWith(403);
+        expect(response.json).toHaveBeenCalledWith({
+            message:
+                "You cannot participate in more than 5 upcoming matches at the same time",
         });
     });
 

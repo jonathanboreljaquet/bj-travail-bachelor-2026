@@ -8,6 +8,8 @@ import {
     toDateAtMinutes,
     toMinutes,
     normalizeString,
+    MAX_UPCOMING_MATCHES,
+    MAX_UPCOMING_MATCHES_MESSAGE,
 } from "../utils/helper";
 
 export const getAvailableSlots = async (
@@ -307,6 +309,22 @@ export const createMatchFromSlot = async (
 
         if (startTime >= endTime) {
             res.status(400).json({ message: "invalid slot range" });
+            return;
+        }
+
+        const upcomingMatchesCount = await prisma.participant.count({
+            where: {
+                user_id: authUser.userId,
+                match: {
+                    startTime: {
+                        gte: new Date(),
+                    },
+                },
+            },
+        });
+
+        if (upcomingMatchesCount >= MAX_UPCOMING_MATCHES) {
+            res.status(403).json({ message: MAX_UPCOMING_MATCHES_MESSAGE });
             return;
         }
 

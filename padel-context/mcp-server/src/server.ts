@@ -6,6 +6,7 @@ import "dotenv/config";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
+import rateLimit from "express-rate-limit";
 import {
     CREATE_MATCH_FROM_SLOT_DESC,
     GET_AVAILABLE_SLOTS_DESC,
@@ -556,7 +557,13 @@ server.registerTool(
     },
 );
 
-app.use("/mcp", async (req, res) => {
+const mcpLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    message: "Too many requests from this IP, please try again later.",
+});
+
+app.use("/mcp", mcpLimiter, async (req, res) => {
     const authHeader = req.headers.authorization;
     const token = authHeader?.startsWith("Bearer ")
         ? authHeader.substring(7)
