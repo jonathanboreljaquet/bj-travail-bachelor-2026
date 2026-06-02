@@ -2,6 +2,15 @@ import { Request, Response } from "express";
 import prisma from "../db";
 import { parseTokenValue } from "../utils/helper";
 
+/**
+ * Récupère la consommation actuelle de tokens LLM de l'utilisateur authentifié.
+ * @param {Request} req - L'objet requête d'Express.
+ * @param {Response} res - L'objet réponse d'Express.
+ * @returns {200} Succès : Retourne les tokens consommés ce mois-ci et la limite mensuelle.
+ * @throws {401} Non autorisé : L'utilisateur n'est pas connecté.
+ * @throws {404} Non trouvé : L'utilisateur n'existe pas en base de données.
+ * @throws {500} Erreur interne : Problème lors de la communication avec la base de données.
+ */
 export const getLlmUsage = async (
     req: Request,
     res: Response,
@@ -42,6 +51,21 @@ export const getLlmUsage = async (
     }
 };
 
+/**
+ * Enregistre un nouvel appel LLM et met à jour la consommation mensuelle de l'utilisateur.
+ * @param {Request} req - L'objet requête d'Express.
+ * @param {string} req.body.prompt - (Requis) Le prompt de la requête envoyée au LLM.
+ * @param {number|string} req.body.inputTokens - (Requis) Le nombre de tokens consommés en entrée (Input Token).
+ * @param {number|string} req.body.outputTokens - (Requis) Le nombre de tokens consommés en sortie (Output Token).
+ * @param {number|string} req.body.totalTokens - (Requis) La somme exacte des tokens (Input + Output).
+ * @param {string} req.body.model - (Requis) Le nom du modèle LLM utilisé.
+ * @param {Response} res - L'objet réponse d'Express.
+ * @returns {201} Créé : Retourne l'ID du log et le nouveau solde de tokens de l'utilisateur.
+ * @throws {400} Mauvaise requête : Paramètres manquants, invalides ou incohérence mathématique dans les tokens.
+ * @throws {401} Non autorisé : L'utilisateur n'est pas connecté.
+ * @throws {404} Non trouvé : L'utilisateur n'existe pas en base de données.
+ * @throws {500} Erreur interne : Échec de la transaction en base de données.
+ */
 export const logLlmUsage = async (
     req: Request,
     res: Response,

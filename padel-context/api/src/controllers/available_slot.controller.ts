@@ -193,52 +193,68 @@ export const getAvailableSlots = async (
 
         // Pour chaque terrain, on génère les créneaux disponibles en excluant les plages horaires occupées par les matchs existants.
         const availableSlots = filteredCourts.map((court) => {
+            // Récupère les horaires du club en minutes depuis minuit (ex: 08:00 = 480, 22:00 = 1320)
             const openingMinutes = toMinutes(court.club.openingTime);
             const closingMinutes = toMinutes(court.club.closingTime);
+
+            // Récupère tous les matchs déjà réservés pour ce terrain précis
             const occupied = byCourt.get(court.id) ?? [];
 
             const slots: Array<{ startTime: string; endTime: string }> = [];
+
+            // Calcul l'heure minimum du premier jour de notre recherche
             const rangeDayStart = new Date(windowStart);
             rangeDayStart.setUTCHours(0, 0, 0, 0);
 
+            // Boucle jour par jour sur la période demandée
             for (
-                let dayReference = new Date(rangeDayStart);
-                dayReference < windowEnd;
-                dayReference.setUTCDate(dayReference.getUTCDate() + 1)
+                let currentDayStart = new Date(rangeDayStart);
+                currentDayStart < windowEnd;
+                currentDayStart.setUTCDate(currentDayStart.getUTCDate() + 1)
             ) {
-                const currentDayStart = new Date(dayReference);
-                currentDayStart.setUTCHours(0, 0, 0, 0);
+                const currentDayEnd = new Date(currentDayStart);
+                currentDayEnd.setUTCDate(currentDayEnd.getUTCDate() + 1);
 
-                const nextDayReference = new Date(dayReference);
-                nextDayReference.setUTCDate(nextDayReference.getUTCDate() + 1);
-                const currentDayEnd = new Date(nextDayReference);
-                currentDayEnd.setUTCHours(0, 0, 0, 0);
-
+                // Calcul currentMinutes selon l'heure actuelle si c'est aujourd'hui ou l'heure d'ouverture si c'est demain ou après
                 const currentMinutes =
                     windowStart > currentDayStart && windowStart < currentDayEnd
                         ? windowStart.getUTCHours() * 60 +
                           windowStart.getUTCMinutes()
                         : openingMinutes;
 
+                // On sélectionne la valeur la plus tardive entre l'ouverture du club et l'heure actuelle
                 const effectiveOpeningMinutes = Math.max(
                     openingMinutes,
                     currentMinutes,
                 );
+
+                // Calcul combien de minutes se sont écoulées depuis l'ouverture officielle du club
                 const startOffset = Math.max(
                     0,
                     effectiveOpeningMinutes - openingMinutes,
                 );
 
+                // Aligne le premier créneau de la journée sur la grille horaire stricte du terrain.
+                // Cette formule garantit que les créneaux respectent l'intervalle fixe imposé
+                // depuis l'heure d'ouverture, empêchant ainsi la création de créneaux asynchrones.
+                //
+                // Exemple d'alignement :
+                // - Ouverture du club : 08:00 (480 min) | Durée d'un créneau : 90 min
+                // - Heure actuelle : 09:00 (offset de 60 min par rapport à l'ouverture)
+                // - Calcul du multiplicateur : Math.ceil(60 / 90) = 1 (on passe au créneau suivant)
+                // - Résultat : 480 + (1 * 90) = 570 min, soit un premier créneau à 09:30.
                 const firstSlotMinutes =
                     openingMinutes +
                     Math.ceil(startOffset / court.slotDuration) *
                         court.slotDuration;
 
+                // Boucle créneau par créneau sur la journée
                 for (
                     let startMinutes = firstSlotMinutes;
                     startMinutes + court.slotDuration <= closingMinutes;
                     startMinutes += court.slotDuration
                 ) {
+                    // Convertit les minutes en objets Date
                     const slotStart = toDateAtMinutes(
                         currentDayStart,
                         startMinutes,
@@ -248,10 +264,12 @@ export const getAvailableSlots = async (
                         startMinutes + court.slotDuration,
                     );
 
+                    // Vérifie si le créneau est bien strictement dans la fenêtre demandée par l'utilisateur
                     if (slotStart < windowStart || slotEnd > windowEnd) {
                         continue;
                     }
 
+                    // Vérifie si le créneau chevauche un match déjà réservé
                     const isOccupied = occupied.some(
                         (match) =>
                             slotStart < match.endTime &&

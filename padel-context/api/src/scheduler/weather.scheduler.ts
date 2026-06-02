@@ -1,8 +1,15 @@
 import cron from "node-cron";
 import weatherService from "../services/weather.service";
 
+/**
+ * Initialise le planificateur (scheduler) pour la mise à jour des données météorologiques.
+ * * Comportement :
+ * 1. Planifie une mise à jour récurrente (toutes les 10 minutes).
+ * 2. Lance une première mise à jour immédiatement pour ne pas démarrer à vide.
+ */
 export function initWeatherScheduler(): void {
-    //https://www.nodecron.com/cron-syntax.html
+    // Syntaxe cron : "*/10 * * * *" -> S'exécute toutes les 10 minutes.
+    // Référence : https://www.nodecron.com/cron-syntax.html
     cron.schedule("*/10 * * * *", async () => {
         try {
             await weatherService.executeWeatherTask();

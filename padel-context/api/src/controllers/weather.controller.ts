@@ -2,8 +2,17 @@ import { Request, Response } from "express";
 import { parseDate } from "../utils/helper";
 import weatherService from "../services/weather.service";
 
+// Expression régulière pour valider un code postal suisse (exactement 4 chiffres)
 const POSTAL_CODE_REGEX = /^\d{4}$/;
 
+/**
+ * Formate une date en une chaîne compacte (YYYYMMDDHH00) tout en arrondissant
+ * à l'heure pile (les minutes sont forcées à "00").
+ * Dans le but d'interroger l'API MeteoSwiss qui fonctionnent par tranches horaires.
+ * Référence : https://opendatadocs.meteoswiss.ch/e-forecast-data/e4-local-forecast-data#data-format
+ * @param {Date} date - L'objet Date à formater.
+ * @returns {string} La date formatée (ex: "202606020400").
+ */
 function formatCompactDate(date: Date): string {
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -13,6 +22,17 @@ function formatCompactDate(date: Date): string {
     return `${year}${month}${day}${hours}${minutes}`;
 }
 
+/**
+ * Récupère les prévisions météorologiques pour un code postal et un créneau précis.
+ * @param {Request} req - L'objet requête d'Express.
+ * @param {string} req.query.postalCode - (Requis) Le code postal à 4 chiffres (ex: "1227" pour Carouge).
+ * @param {string} req.query.datetime - (Requis) La date et l'heure ciblées (format ISO).
+ * @param {Response} res - L'objet réponse d'Express.
+ * @returns {200} Succès : Retourne les données météo associées à la localité et l'heure.
+ * @throws {400} Mauvaise requête : Code postal invalide ou date manquante/mal formatée.
+ * @throws {404} Non trouvé : L'API météo ne connaît aucun point de mesure pour ce code postal.
+ * @throws {500} Erreur interne : Problème inattendu ou panne du service météo.
+ */
 export const getWeather = async (
     req: Request,
     res: Response,

@@ -21,6 +21,11 @@ interface WeatherData {
     temperatureCelsius: number | null;
 }
 
+/**
+ * Service Singleton gérant la récupération, le stockage et la mise en cache
+ * des prévisions météorologiques locales fournies par MeteoSwiss (API STAC).
+ * Référence : https://opendatadocs.meteoswiss.ch/e-forecast-data/e4-local-forecast-data
+ */
 class WeatherService {
     private postalCodeMap: Map<string, string> = new Map();
     private weatherDataMap = {
@@ -45,18 +50,26 @@ class WeatherService {
         windSpeedKmh: null,
     };
 
-    // https://opendatadocs.meteoswiss.ch/e-forecast-data/e4-local-forecast-data#data-structure
+    // Codes officiels des assets de MeteoSwiss
+    // Référence : https://opendatadocs.meteoswiss.ch/e-forecast-data/e4-local-forecast-data#data-structure
     private readonly assetCodes = {
         temperatureCelsius: "tre200h0",
         precipitationProbabilityPct: "rp0003i0",
         windSpeedKmh: "fu3010h0",
     };
 
+    /**
+     * Méthode d'initialisation du service.
+     * Initialise le service (création des dossiers et chargement du fichier de mapping).
+     */
     public async init(): Promise<void> {
         await this.initializeStorage();
         await this.initializePostalCodeMap();
     }
 
+    /**
+     * Méthode pour s'assurer que le dossier de stockage local des fichiers CSV météo existe.
+     */
     public async initializeStorage(): Promise<void> {
         try {
             await fs.mkdir(this.storageDirectory, { recursive: true });
@@ -68,6 +81,11 @@ class WeatherService {
         }
     }
 
+    /**
+     * Méthode pour charger en mémoire le fichier CSV statique qui relie les codes postaux suisses
+     * aux "point_id" utilisés par MeteoSuisse.
+     * Exemple : le code postal "1226" (Thônex) est associé au point_id "122600".
+     */
     public async initializePostalCodeMap(): Promise<void> {
         if (this.isReady) return;
 
@@ -104,6 +122,10 @@ class WeatherService {
         }
     }
 
+    /**
+     * Lit un fichier CSV météo téléchargé et le charge dans la Map en mémoire.
+     * @param {keyof typeof this.assetCodes} category - La catégorie de données météorologiques (ex: "temperatureCelsius").
+     */
     private async loadCsvIntoCache(
         category: keyof typeof this.assetCodes,
     ): Promise<void> {
@@ -146,6 +168,9 @@ class WeatherService {
         }
     }
 
+    /**
+     * Retourne la date du jour au format YYYYMMDD (utilisé pour l'URL de l'API STAC).
+     */
     private getCurrentDateString(): string {
         const now = new Date();
 
@@ -156,6 +181,12 @@ class WeatherService {
         return `${year}${month}${day}`;
     }
 
+    /**
+     * Trouve l'actif le plus récent associé à un code spécifique.
+     * @param {Record<string, StacAsset>} assetsObj - L'objet contenant les actifs STAC.
+     * @param {string} code - Le code à rechercher.
+     * @returns {StacAsset | null} L'actif trouvé ou null s'il n'existe pas.
+     */
     private findLatestAssetByCode(
         assetsObj: Record<string, StacAsset>,
         code: string,
@@ -177,6 +208,12 @@ class WeatherService {
         return filteredEntries[0][1];
     }
 
+    /**
+     * Valide le checksum d'un buffer de données.
+     * @param {Buffer} buffer - Le buffer contenant les données à valider.
+     * @param {string} expectedChecksum - Le checksum attendu.
+     * @returns {boolean} true si le checksum est valide, false sinon.
+     */
     private validateChecksum(
         buffer: Buffer,
         expectedChecksum?: string,
@@ -194,6 +231,12 @@ class WeatherService {
         return hash === expectedRawHash;
     }
 
+    /**
+     * Télécharge et stocke un actif météo dans le système de fichiers et le charge en mémoire.
+     * @param {StacAsset} asset - L'actif à télécharger.
+     * @param {keyof typeof this.assetCodes} category - La catégorie de données météorologiques.
+     * @returns {Promise<void>}
+     */
     private async downloadAndStoreAsset(
         asset: StacAsset,
         category: keyof typeof this.assetCodes,
@@ -246,6 +289,12 @@ class WeatherService {
         await this.loadCsvIntoCache(category);
     }
 
+    /**
+     * Point d'entrée de la tâche planifiée.
+     * Interroge l'API MeteoSwiss pour voir si de nouveaux assets météo sont disponibles aujourd'hui.
+     * Utilise les en-têtes HTTP (ETag) pour éviter de re-télécharger des fichiers inchangés.
+     * Référence : https://opendatadocs.meteoswiss.ch/general/download#how-to-download-files-automatically
+     */
     public async executeWeatherTask(): Promise<void> {
         const dateStr = this.getCurrentDateString();
         const itemUrl = `${this.baseUrl}/${dateStr}-ch`;
@@ -309,6 +358,9 @@ class WeatherService {
         }
     }
 
+    /**
+     * Récupère le "point_id" correspondant à un code postal.
+     */
     public getPointIdFromPostalCode(postalCode: string): string | undefined {
         if (!this.isReady) {
             console.warn("[WeatherService] postalCodeMap not ready in memory");
@@ -317,6 +369,13 @@ class WeatherService {
         return this.postalCodeMap.get(postalCode);
     }
 
+    /**
+     * Fonction principale utilisée par le contrôleur.
+     * Récupère instantanément depuis le cache en RAM la météo d'un code postal à une heure précise.
+     * @param {string} postalCode - Le code postal (ex: "1227").
+     * @param {string} dateTime - Le jour et l'heure au format stricte "YYYYMMDDHHmm" (ex: "202606030900")
+     * @return {WeatherData} Un objet contenant les données météorologiques de température, précipitation et vent.
+     */
     public async getWeatherDataForPostalCode(
         postalCode: string,
         dateTime: string,
