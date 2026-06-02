@@ -31,8 +31,8 @@ export async function seedParticipant(prisma: PrismaClient) {
         }
     }
 
+    // COMPTE DE TEST : Création d'un utilisateur avec aucun match pour contourner les limitations de matchs.
     const passwordHash = await bcrypt.hash("pomme123", BCRYPT_ROUNDS);
-
     await prisma.user.create({
         data: {
             firstname: "Jonathan",

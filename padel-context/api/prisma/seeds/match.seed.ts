@@ -74,6 +74,7 @@ export async function seedMatch(prisma: PrismaClient) {
                     continue;
                 }
 
+                // Conversion UTC pour garantir que la date de début et de fin d'un match soit en UTC+0
                 const startTime = new Date(today);
                 startTime.setUTCDate(startTime.getUTCDate() + day);
                 startTime.setUTCHours(

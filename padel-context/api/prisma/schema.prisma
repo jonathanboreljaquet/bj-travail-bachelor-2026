@@ -1,7 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// -----------------------------------------------------------------------------
+// CONFIGURATION PRISMA
+// -----------------------------------------------------------------------------
 
 generator client {
   provider = "prisma-client"
@@ -12,27 +11,43 @@ datasource db {
   provider = "postgresql"
 }
 
+// -----------------------------------------------------------------------------
+// ENUMS
+// -----------------------------------------------------------------------------
+
+/// Type d'infrastructure du terrain.
 enum CourtType {
   INDOOR
   OUTDOOR
   COVERED
 }
 
-enum matchStatus {
+/// Statut du match.
+enum MatchStatus {
   OPEN
   COMPLETED
   CANCELED
 }
 
+// -----------------------------------------------------------------------------
+// MODÈLES DE DONNÉES
+// -----------------------------------------------------------------------------
+
+/// Représente un joueur inscrit sur la plateforme.
 model User {
   id        Int      @id @default(autoincrement())
   firstname String
   lastname  String
   email     String   @unique
+  /// Mot de passe haché.
   password  String
+  /// Évaluation du niveau de jeu (ex: de 1 pour débutant à 10 pour expert).
   level     Int      @default(1)
   createdAt DateTime @default(now()) @db.Timestamptz()
+
+  /// Plafond mensuel de tokens autorisés pour les fonctionnalités LLM.
   monthlyTokenLimit Int @default(500000)
+  /// Tokens consommés sur le mois en cours.
   currentMonthTokens Int @default(0)
 
   createdMatches Match[]       @relation("MatchCreator")
@@ -40,6 +55,7 @@ model User {
   llmUsageLogs LlmUsageLog[]
 }
 
+/// Représente un club sportif contenant un ou plusieurs terrains.
 model Club {
   id          Int    @id @default(autoincrement())
   name        String
@@ -51,12 +67,16 @@ model Club {
   courts Court[]
 }
 
+/// Représente un terrain de jeu spécifique au sein d'un club.
 model Court {
   id              Int       @id @default(autoincrement())
   name            String
   type            CourtType @default(OUTDOOR)
+  /// Indique si le terrain dispose d'un coffre de matériel (raquettes/balles) accessible aux joueurs.
   hasEquipmentBox Boolean
+  /// Prix facturé par joueur pour la durée d'un créneau.
   pricePerPerson  Float
+  /// Durée standard d'un créneau de réservation en minutes.
   slotDuration    Int
 
   club_id Int
@@ -64,11 +84,13 @@ model Court {
   matches Match[]
 }
 
+/// Représente une session de jeu créée par un utilisateur sur un terrain donné.
 model Match {
   id              Int         @id @default(autoincrement())
   startTime       DateTime    @db.Timestamptz(3)
   endTime         DateTime    @db.Timestamptz(3)
-  status          matchStatus @default(OPEN)
+  status          MatchStatus @default(OPEN)
+  /// Nombre de places restantes avant que le match ne soit complet.
   availableSpots  Int
 
   court_id     Int
@@ -78,6 +100,7 @@ model Match {
   participants Participant[]
 }
 
+/// Table de liaison (Many-to-Many) représentant les participants à un match.
 model Participant {
   user_id  Int
   match_id Int
@@ -89,6 +112,7 @@ model Participant {
   @@id([user_id, match_id])
 }
 
+/// Historique de consommation de l'API LLM pour la traçabilité et le calcul des quotas.
 model LlmUsageLog {
   id           Int      @id @default(autoincrement())
   user_id      Int

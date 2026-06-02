@@ -1,3 +1,12 @@
+/**
+ * Script de seeding pour l'environnement de développement.
+ * ============================================================================
+ * Ce script initialise la base de données avec un jeu de données fictives
+ * (clubs, terrains, utilisateurs, matchs) pour faciliter les tests locaux.
+ * L'exécution de ce script commence par un nettoyage complet de la base de données
+ * qui de ce fait, supprime toutes les données existantes.
+ * ============================================================================
+ */
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
@@ -15,6 +24,8 @@ const prisma = new PrismaClient({
     adapter,
 });
 
+// Différentes configurations d'ouverture réalistes pour simuler la diversité des clubs.
+// Les durées de créneaux (slot_duration) classiques au padel sont généralement 60, 90 ou 120 minutes.
 const VALID_CLUB_COURT_SLOTS = [
     { openingTime: "07:00", closingTime: "21:00", slot_duration: 60 },
     { openingTime: "07:00", closingTime: "22:00", slot_duration: 90 },

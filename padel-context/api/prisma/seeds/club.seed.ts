@@ -1,6 +1,7 @@
 import { PrismaClient } from "../../generated/prisma/client";
 import { faker } from "@faker-js/faker";
 
+// Liste de villes et codes postaux dans le canton de Genève pour générer des clubs réalistes.
 const GENEVA_CITIES = [
     { city: "Geneve", postalCode: "1201" },
     { city: "Carouge", postalCode: "1227" },
