@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import rateLimit from "express-rate-limit";
+import YAML from "yaml";
 import {
     CREATE_MATCH_FROM_SLOT_DESC,
     GET_AVAILABLE_SLOTS_DESC,
@@ -216,11 +217,50 @@ server.registerTool(
                 availableSlots: courtsWithSlots,
             });
 
+            const yamlOptimizedData = safeOutput.availableSlots.map(
+                (courtData) => {
+                    const schedule: Record<string, string[]> = {};
+
+                    courtData.availableSlots.forEach((slot) => {
+                        const [datePart, timePart] = slot.startTime.split("T");
+                        const endTimePart = slot.endTime.split("T")[1];
+
+                        const startHour = timePart.substring(0, 5);
+                        const endHour = endTimePart.substring(0, 5);
+
+                        let slotStr = `${startHour}-${endHour}`;
+                        if (slot.weather) {
+                            slotStr += ` (Weather: ${slot.weather.temperatureCelsius}°C|${slot.weather.precipitationProbabilityPct}% rain|${slot.weather.windSpeedKmh}km/h wind)`;
+                        }
+
+                        if (!schedule[datePart]) {
+                            schedule[datePart] = [];
+                        }
+                        schedule[datePart].push(slotStr);
+                    });
+
+                    return {
+                        Court: `${courtData.clubName} (${courtData.city}) | ${courtData.courtName} (ID: ${courtData.courtId})`,
+                        Type: courtData.type,
+                        EquipmentBox: courtData.hasEquipmentBox
+                            ? "Racket and ball rental available on site"
+                            : "No equipment available on site",
+                        Price: `${courtData.price} CHF`,
+                        Schedule: schedule,
+                    };
+                },
+            );
+
+            const finalPromptText =
+                yamlOptimizedData.length === 0
+                    ? "No slots available."
+                    : YAML.stringify(yamlOptimizedData);
+
             return {
                 content: [
                     {
                         type: "text",
-                        text: JSON.stringify(safeOutput),
+                        text: finalPromptText,
                     },
                 ],
                 structuredContent: safeOutput,

@@ -5,7 +5,7 @@ export const isoTimeStr = z
     .describe("Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.");
 
 export const getAvailableSlotsInputSchema = z.object({
-    city: z.string().optional(),
+    city: z.string(),
     courtType: z.enum(["INDOOR", "OUTDOOR", "COVERED"]).optional(),
     hasEquipmentBox: z.boolean().optional(),
     minPricePerPerson: z.number().optional(),

@@ -1,4 +1,4 @@
-import { PrismaClient, matchStatus } from "../../generated/prisma/client";
+import { PrismaClient, MatchStatus } from "../../generated/prisma/client";
 import { faker } from "@faker-js/faker";
 
 const DAYS_TO_GENERATE = 7;
@@ -48,14 +48,14 @@ export async function seedMatch(prisma: PrismaClient) {
                 MATCHES_PER_COURT_PER_DAY,
             );
             const matchConfigs = [
-                { status: matchStatus.COMPLETED, availableSpots: 0 },
-                { status: matchStatus.COMPLETED, availableSpots: 0 },
+                { status: MatchStatus.COMPLETED, availableSpots: 0 },
+                { status: MatchStatus.COMPLETED, availableSpots: 0 },
                 {
-                    status: matchStatus.CANCELED,
+                    status: MatchStatus.CANCELED,
                     availableSpots: faker.number.int({ min: 1, max: 3 }),
                 },
                 {
-                    status: matchStatus.OPEN,
+                    status: MatchStatus.OPEN,
                     availableSpots: faker.number.int({ min: 1, max: 3 }),
                 },
             ];

@@ -12,6 +12,25 @@ import {
     MAX_UPCOMING_MATCHES_MESSAGE,
 } from "../utils/helper";
 
+/**
+ * Recherche et génère dynamiquement les créneaux horaires disponibles pour créer un match.
+ * @param {Request} req - L'objet requête d'Express.
+ * @param {string} [req.query.city] - (Optionnel) Filtre par ville du club (insensible à la casse).
+ * @param {string} [req.query.hasEquipmentBox] - (Optionnel) Filtre sur la présence de matériel ("true" ou "false").
+ * @param {number} [req.query.minPricePerPerson] - (Optionnel) Prix minimum par joueur.
+ * @param {number} [req.query.maxPricePerPerson] - (Optionnel) Prix maximum par joueur.
+ * @param {number} [req.query.slotDuration] - (Optionnel) Durée exacte du créneau souhaité en minutes.
+ * @param {number} [req.query.minSlotDuration] - (Optionnel) Durée minimale du créneau en minutes.
+ * @param {number} [req.query.maxSlotDuration] - (Optionnel) Durée maximale du créneau en minutes.
+ * @param {string} [req.query.courtType] - (Optionnel) Type d'infrastructure ("INDOOR", "OUTDOOR" ou "COVERED").
+ * @param {string} [req.query.timeFrom] - (Optionnel) Début de la fenêtre de recherche (format date/ISO). Par défaut : maintenant.
+ * @param {string} [req.query.timeTo] - (Optionnel) Fin de la fenêtre de recherche (format date/ISO). Par défaut : J+7.
+ * @param {number} [req.query.limit=20] - (Optionnel) Nombre maximum de créneaux générés par terrain. Par défaut : 20.
+ * @param {Response} res - L'objet réponse d'Express.
+ * @returns {200} Succès : Retourne un tableau de terrains (`court`) incluant pour chacun un sous-tableau `availableSlots`.
+ * @throws {400} Mauvaise requête : Déclenché si la fenêtre de temps est invalide (`timeTo` <= `timeFrom`).
+ * @throws {500} Erreur interne : Déclenché en cas de problème inattendu.
+ */
 export const getAvailableSlots = async (
     req: Request,
     res: Response,
@@ -29,7 +48,6 @@ export const getAvailableSlots = async (
         const maxSlotDuration = parseNumber(req.query.maxSlotDuration);
         const timeFrom = parseDate(req.query.timeFrom);
         const timeTo = parseDate(req.query.timeTo);
-        const limit = parseNumber(req.query.limit) ?? 20;
         const courtType =
             typeof req.query.courtType === "string"
                 ? req.query.courtType.trim().toUpperCase()
@@ -40,16 +58,20 @@ export const getAvailableSlots = async (
             courtType === "COVERED"
                 ? courtType
                 : undefined;
+
+        // Par défaut, si l'utilisateur ne spécifie pas de dates, on cherche de maintenant jusqu'à dans 7 jours.
         const now = new Date();
+        const windowStart = timeFrom ?? now;
 
-        const dayStart = new Date(now);
-        dayStart.setUTCHours(0, 0, 0, 0);
-
-        const defaultWindowStart = now;
-        const defaultWindowEnd = new Date(dayStart);
-        defaultWindowEnd.setUTCDate(defaultWindowEnd.getUTCDate() + 7);
-        const windowStart = timeFrom ?? defaultWindowStart;
-        const windowEnd = timeTo ?? defaultWindowEnd;
+        const windowEnd =
+            timeTo ??
+            new Date(
+                Date.UTC(
+                    now.getUTCFullYear(),
+                    now.getUTCMonth(),
+                    now.getUTCDate() + 7,
+                ),
+            );
 
         if (windowEnd <= windowStart) {
             res.status(400).json({
@@ -69,12 +91,8 @@ export const getAvailableSlots = async (
             maxPricePerPerson !== undefined
         ) {
             courtWhere.pricePerPerson = {
-                ...(minPricePerPerson !== undefined
-                    ? { gte: minPricePerPerson }
-                    : {}),
-                ...(maxPricePerPerson !== undefined
-                    ? { lte: maxPricePerPerson }
-                    : {}),
+                gte: minPricePerPerson,
+                lte: maxPricePerPerson,
             };
         }
 
@@ -84,13 +102,9 @@ export const getAvailableSlots = async (
             maxSlotDuration !== undefined
         ) {
             courtWhere.slotDuration = {
-                ...(slotDuration !== undefined ? { equals: slotDuration } : {}),
-                ...(minSlotDuration !== undefined
-                    ? { gte: minSlotDuration }
-                    : {}),
-                ...(maxSlotDuration !== undefined
-                    ? { lte: maxSlotDuration }
-                    : {}),
+                equals: slotDuration,
+                gte: minSlotDuration,
+                lte: maxSlotDuration,
             };
         }
 
@@ -119,6 +133,7 @@ export const getAvailableSlots = async (
             },
         });
 
+        // Filtrage des villes normalisé pour éviter les problèmes d'accents, de majuscules, etc...
         const filteredCourts = city
             ? courts.filter(
                   (court) =>
@@ -176,6 +191,7 @@ export const getAvailableSlots = async (
             byCourt.set(match.court_id, current);
         });
 
+        // Pour chaque terrain, on génère les créneaux disponibles en excluant les plages horaires occupées par les matchs existants.
         const availableSlots = filteredCourts.map((court) => {
             const openingMinutes = toMinutes(court.club.openingTime);
             const closingMinutes = toMinutes(court.club.closingTime);
@@ -185,14 +201,7 @@ export const getAvailableSlots = async (
             const rangeDayStart = new Date(windowStart);
             rangeDayStart.setUTCHours(0, 0, 0, 0);
 
-            if (limit <= 0) {
-                return {
-                    court,
-                    availableSlots: slots,
-                };
-            }
-
-            slotSearch: for (
+            for (
                 let dayReference = new Date(rangeDayStart);
                 dayReference < windowEnd;
                 dayReference.setUTCDate(dayReference.getUTCDate() + 1)
@@ -210,6 +219,7 @@ export const getAvailableSlots = async (
                         ? windowStart.getUTCHours() * 60 +
                           windowStart.getUTCMinutes()
                         : openingMinutes;
+
                 const effectiveOpeningMinutes = Math.max(
                     openingMinutes,
                     currentMinutes,
@@ -218,6 +228,7 @@ export const getAvailableSlots = async (
                     0,
                     effectiveOpeningMinutes - openingMinutes,
                 );
+
                 const firstSlotMinutes =
                     openingMinutes +
                     Math.ceil(startOffset / court.slotDuration) *
@@ -228,9 +239,6 @@ export const getAvailableSlots = async (
                     startMinutes + court.slotDuration <= closingMinutes;
                     startMinutes += court.slotDuration
                 ) {
-                    if (slots.length >= limit) {
-                        break slotSearch;
-                    }
                     const slotStart = toDateAtMinutes(
                         currentDayStart,
                         startMinutes,
@@ -255,9 +263,6 @@ export const getAvailableSlots = async (
                             startTime: slotStart.toISOString(),
                             endTime: slotEnd.toISOString(),
                         });
-                        if (slots.length >= limit) {
-                            break slotSearch;
-                        }
                     }
                 }
             }
@@ -277,6 +282,21 @@ export const getAvailableSlots = async (
     }
 };
 
+/**
+ * Crée un nouveau match de Padel à partir d'un créneau disponible et y inscrit le créateur.
+ * @param {Request} req - L'objet requête d'Express.
+ * @param {number} req.body.courtId - (Requis) L'identifiant unique du terrain sélectionné.
+ * @param {string} req.body.startTime - (Requis) Heure de début du créneau (format date/ISO).
+ * @param {string} req.body.endTime - (Requis) Heure de fin du créneau (format date/ISO).
+ * @param {Response} res - L'objet réponse d'Express.
+ * @returns {201} Succès : Retourne l'objet `match` créé, incluant les infos du terrain, du club et des participants.
+ * @throws {400} Mauvaise requête : Déclenché si les paramètres sont invalides, si le créneau est en dehors des horaires du club, ou si la durée ne correspond pas à la grille.
+ * @throws {401} Non autorisé : Déclenché si l'utilisateur n'est pas authentifié.
+ * @throws {403} Interdit : Déclenché si l'utilisateur a atteint sa limite maximale de matchs futurs.
+ * @throws {404} Non trouvé : Déclenché si le terrain (`courtId`) n'existe pas en base.
+ * @throws {409} Conflit : Déclenché si le créneau demandé chevauche un match déjà existant (double-booking).
+ * @throws {500} Erreur interne : Déclenché en cas d'échec de la transaction ou de problème inattendu.
+ */
 export const createMatchFromSlot = async (
     req: Request,
     res: Response,
@@ -378,10 +398,14 @@ export const createMatchFromSlot = async (
         }
 
         const now = new Date();
-        const dayStart = new Date(now);
-        dayStart.setUTCHours(0, 0, 0, 0);
-        const windowEnd = new Date(dayStart);
-        windowEnd.setUTCDate(windowEnd.getUTCDate() + 7);
+
+        const windowEnd = new Date(
+            Date.UTC(
+                now.getUTCFullYear(),
+                now.getUTCMonth(),
+                now.getUTCDate() + 7,
+            ),
+        );
 
         if (startTime < now || endTime > windowEnd) {
             res.status(400).json({

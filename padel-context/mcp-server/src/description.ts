@@ -38,7 +38,8 @@ When to not use:
 - Do not use this tool when a user wants to find or join an available Padel match.
 How to use:
 - To filter specific slots: use the filters described in "Parameters".
-- When presenting the available slots to the user, you MUST include ALL data points (courtName, type, hasEquipmentBox, price, clubName, city, availableSlots.startTime, and availableSlots.endTime).
+- PROMPT THE USER FOR MISSING INFO: If the user does not explicitly mention a city in their message, DO NOT call this tool. You MUST ask the user which city they want to play in. DO NOT guess or use system context (e.g., Geneva).
+- EXHAUSTIVE DISPLAY: When presenting the available slots to the user, you MUST include and format ALL data points returned by the tool (info and schedule).
 Limitations:
 - Requires a valid Authorization header (Bearer <token>) when calling the MCP server.
 - You MUST provide at least two filters.
@@ -47,7 +48,7 @@ Limitations:
 - timeTo MUST be strictly greater than timeFrom.
 - The requested time range MUST be less than or equal to 7 days.
 Parameters:
-- city (string, optional): Target city. If requested, the tool filters courts to clubs located in this city.
+- city (string, required): Target city. MUST be explicitly stated by the user. If missing, do not guess, abort the tool call and ask the user.
 - courtType (string, optional): Target court type. Strict allowed values: "INDOOR", "OUTDOOR", "COVERED".
 - hasEquipmentBox (boolean, optional): If requested, the tool filters courts based on equipment rental box availability.
 - minPricePerPerson (number, optional): If requested, the tool filters courts with pricePerPerson greater than or equal to this value.
