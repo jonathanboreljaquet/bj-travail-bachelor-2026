@@ -6,7 +6,8 @@ When to not use:
 - Do not use this tool when a user wants to create a Padel match.
 How to use:
 - To filter specific matches: use the filters described in "Parameters".
-- When presenting the matches to the user, you MUST include ALL data points. 
+- PROMPT THE USER FOR MISSING INFO: If the user does not explicitly mention a city in their message, DO NOT call this tool. You MUST ask the user which city they want to play in. DO NOT guess or use system context (e.g., Geneva).
+- EXHAUSTIVE DISPLAY: When presenting the matches to the user, you MUST include and format ALL data points returned by the tool.
 Limitations:
 - Requires a valid Authorization header (Bearer <token>) when calling the MCP server.
 - You MUST provide at least two filters.
@@ -15,7 +16,7 @@ Limitations:
 - The requested time range MUST be less than or equal to 7 days.
 - The 'participantAverageLevelTolerance' parameter has no effect if 'participantAverageLevel' is not provided.
 Parameters:
-- city (string, optional): Target city. If requested, the tool filters matches to return only those at courts in clubs located in this city.
+- city (string, required): Target city. MUST be explicitly stated by the user. If missing, do not guess, abort the tool call and ask the user.
 - courtType (string, optional): Target court type. If requested, the tool filters matches to return only those on courts of this type. Strict allowed values: "INDOOR", "OUTDOOR", "COVERED".
 - hasEquipmentBox (boolean, optional): If requested, the tool filters matches to return only those on courts that provide an equipment rental box (hasEquipmentBox = true).
 - minPricePerPerson (number, optional): If requested, the tool filters matches to return only those on courts with a price equal to or greater than this value.
@@ -39,7 +40,7 @@ When to not use:
 How to use:
 - To filter specific slots: use the filters described in "Parameters".
 - PROMPT THE USER FOR MISSING INFO: If the user does not explicitly mention a city in their message, DO NOT call this tool. You MUST ask the user which city they want to play in. DO NOT guess or use system context (e.g., Geneva).
-- EXHAUSTIVE DISPLAY: When presenting the available slots to the user, you MUST include and format ALL data points returned by the tool (info and schedule).
+- EXHAUSTIVE DISPLAY: When presenting the available slots to the user, you MUST include and format ALL data points returned by the tool.
 Limitations:
 - Requires a valid Authorization header (Bearer <token>) when calling the MCP server.
 - You MUST provide at least two filters.

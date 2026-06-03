@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import rateLimit from "express-rate-limit";
-import YAML from "yaml";
+import yaml from "yaml";
 import {
     CREATE_MATCH_FROM_SLOT_DESC,
     GET_AVAILABLE_SLOTS_DESC,
@@ -245,7 +245,7 @@ server.registerTool(
                         EquipmentBox: courtData.hasEquipmentBox
                             ? "Racket and ball rental available on site"
                             : "No equipment available on site",
-                        Price: `${courtData.price} CHF`,
+                        Price: `${courtData.pricePerPerson} CHF`,
                         Schedule: schedule,
                     };
                 },
@@ -254,7 +254,7 @@ server.registerTool(
             const finalPromptText =
                 yamlOptimizedData.length === 0
                     ? "No slots available."
-                    : YAML.stringify(yamlOptimizedData);
+                    : yaml.stringify(yamlOptimizedData);
 
             return {
                 content: [
@@ -359,12 +359,10 @@ server.registerTool(
 
                     const playersCount = match.participants.length;
                     const averageLevel =
-                        playersCount > 0
-                            ? match.participants.reduce(
-                                  (acc, p) => acc + p.user.level,
-                                  0,
-                              ) / playersCount
-                            : null;
+                        match.participants.reduce(
+                            (acc, p) => acc + p.user.level,
+                            0,
+                        ) / playersCount;
 
                     return {
                         id: match.id,
@@ -374,16 +372,14 @@ server.registerTool(
                         endTime: dayjs(match.endTime)
                             .tz(LOCAL_TIMEZONE)
                             .format("YYYY-MM-DDTHH:mm:ss"),
-                        status: match.status,
                         availableSpots: match.availableSpots,
                         courtName: match.court.name,
                         type: courtTypeTranslations[match.court.type],
                         hasEquipmentBox: match.court.hasEquipmentBox,
-                        price: match.court.pricePerPerson,
+                        pricePerPerson: match.court.pricePerPerson,
                         duration: match.court.slotDuration,
                         clubName: match.court.club.name,
                         city: match.court.club.city,
-                        playersCount,
                         averageLevel,
                         weather,
                     };
@@ -394,11 +390,13 @@ server.registerTool(
                 matches: flattenedMatches,
             });
 
+            const yamlText = yaml.stringify(safeOutput.matches);
+
             return {
                 content: [
                     {
                         type: "text",
-                        text: JSON.stringify(safeOutput),
+                        text: yamlText,
                     },
                 ],
                 structuredContent: safeOutput,
@@ -484,7 +482,7 @@ server.registerTool(
             });
 
             return {
-                content: [{ type: "text", text: JSON.stringify(safeOutput) }],
+                content: [{ type: "text", text: yaml.stringify(safeOutput) }],
                 structuredContent: safeOutput,
             };
         } catch (error) {
@@ -580,7 +578,7 @@ server.registerTool(
             });
 
             return {
-                content: [{ type: "text", text: JSON.stringify(safeOutput) }],
+                content: [{ type: "text", text: yaml.stringify(safeOutput) }],
                 structuredContent: safeOutput,
             };
         } catch (error) {

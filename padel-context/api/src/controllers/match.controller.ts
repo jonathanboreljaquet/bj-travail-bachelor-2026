@@ -10,6 +10,29 @@ import {
 } from "../utils/helper";
 import { Prisma } from "../../generated/prisma/client";
 
+/**
+ * Recherche et filtre dynamiquement les matchs ouverts.
+ * @param {Request} req - L'objet requête d'Express.
+ * @param {string} [req.query.city] - (Optionnel) Filtre par ville du club (insensible à la casse).
+ * @param {string} [req.query.hasEquipmentBox] - (Optionnel) Filtre sur la présence de matériel ("true" ou "false").
+ * @param {number} [req.query.minPricePerPerson] - (Optionnel) Prix minimum par joueur.
+ * @param {number} [req.query.maxPricePerPerson] - (Optionnel) Prix maximum par joueur.
+ * @param {number} [req.query.slotDuration] - (Optionnel) Durée exacte du match en minutes.
+ * @param {number} [req.query.minSlotDuration] - (Optionnel) Durée minimale du match en minutes.
+ * @param {number} [req.query.maxSlotDuration] - (Optionnel) Durée maximale du match en minutes.
+ * @param {string} [req.query.courtType] - (Optionnel) Type d'infrastructure ("INDOOR", "OUTDOOR" ou "COVERED").
+ * @param {number} [req.query.availableSpots] - (Optionnel) Nombre exact de places restantes souhaité.
+ * @param {number} [req.query.minAvailableSpots] - (Optionnel) Nombre minimum de places restantes.
+ * @param {string} [req.query.startTimeFrom] - (Optionnel) Date/Heure de début minimum (format ISO).
+ * @param {string} [req.query.startTimeTo] - (Optionnel) Date/Heure de début maximum (format ISO).
+ * @param {string} [req.query.endTimeFrom] - (Optionnel) Date/Heure de fin minimum (format ISO).
+ * @param {string} [req.query.endTimeTo] - (Optionnel) Date/Heure de fin maximum (format ISO).
+ * @param {number} [req.query.participantAverageLevel] - (Optionnel) Niveau moyen cible recherché pour le match.
+ * @param {number} [req.query.participantAverageLevelTolerance=0.5] - (Optionnel) Marge de tolérance autour du niveau moyen. Par défaut : 0.5.
+ * @param {Response} res - L'objet réponse d'Express.
+ * @returns {200} Succès : Retourne un tableau d'objets `match` correspondants aux critères.
+ * @throws {500} Erreur interne : Déclenché en cas d'échec de la requête en base de données.
+ */
 export const getMatches = async (
     req: Request,
     res: Response,
@@ -42,7 +65,6 @@ export const getMatches = async (
         const startTimeTo = parseDate(req.query.startTimeTo);
         const endTimeFrom = parseDate(req.query.endTimeFrom);
         const endTimeTo = parseDate(req.query.endTimeTo);
-        const limit = parseNumber(req.query.limit) ?? 10;
 
         const participantAverageLevel = parseNumber(
             req.query.participantAverageLevel,
@@ -60,21 +82,19 @@ export const getMatches = async (
             startTimeFrom && startTimeFrom > now ? startTimeFrom : now;
         where.startTime = {
             gte: effectiveStartTimeFrom,
-            ...(startTimeTo ? { lte: startTimeTo } : {}),
+            lte: startTimeTo,
         };
 
         where.availableSpots = {
             gt: 0,
-            ...(availableSpots !== undefined ? { equals: availableSpots } : {}),
-            ...(minAvailableSpots !== undefined
-                ? { gte: minAvailableSpots }
-                : {}),
+            equals: availableSpots,
+            gte: minAvailableSpots,
         };
 
-        if (endTimeFrom || endTimeTo) {
+        if (endTimeFrom !== undefined || endTimeTo !== undefined) {
             where.endTime = {
-                ...(endTimeFrom ? { gte: endTimeFrom } : {}),
-                ...(endTimeTo ? { lte: endTimeTo } : {}),
+                gte: endTimeFrom,
+                lte: endTimeTo,
             };
         }
 
@@ -88,23 +108,23 @@ export const getMatches = async (
             minSlotDuration !== undefined ||
             maxSlotDuration !== undefined
         ) {
-            const courtWhere = (where.court ??= {});
+            const courtWhere: Prisma.CourtWhereInput = {};
 
-            if (hasEquipmentBox !== undefined)
+            if (hasEquipmentBox !== undefined) {
                 courtWhere.hasEquipmentBox = hasEquipmentBox;
-            if (normalizedCourtType) courtWhere.type = normalizedCourtType;
+            }
+
+            if (normalizedCourtType) {
+                courtWhere.type = normalizedCourtType;
+            }
 
             if (
                 minPricePerPerson !== undefined ||
                 maxPricePerPerson !== undefined
             ) {
                 courtWhere.pricePerPerson = {
-                    ...(minPricePerPerson !== undefined
-                        ? { gte: minPricePerPerson }
-                        : {}),
-                    ...(maxPricePerPerson !== undefined
-                        ? { lte: maxPricePerPerson }
-                        : {}),
+                    gte: minPricePerPerson,
+                    lte: maxPricePerPerson,
                 };
             }
 
@@ -114,15 +134,9 @@ export const getMatches = async (
                 maxSlotDuration !== undefined
             ) {
                 courtWhere.slotDuration = {
-                    ...(slotDuration !== undefined
-                        ? { equals: slotDuration }
-                        : {}),
-                    ...(minSlotDuration !== undefined
-                        ? { gte: minSlotDuration }
-                        : {}),
-                    ...(maxSlotDuration !== undefined
-                        ? { lte: maxSlotDuration }
-                        : {}),
+                    equals: slotDuration,
+                    gte: minSlotDuration,
+                    lte: maxSlotDuration,
                 };
             }
 
@@ -134,11 +148,12 @@ export const getMatches = async (
                     },
                 };
             }
+
+            where.court = courtWhere;
         }
 
         const matches = await prisma.match.findMany({
             where,
-            take: limit * 3,
             orderBy: { startTime: "asc" },
             select: {
                 id: true,
@@ -177,6 +192,7 @@ export const getMatches = async (
             },
         });
 
+        // Filtrage supplémentaire côté application pour le niveau moyen des participants
         const formattedMatches = matches.filter((match) => {
             if (participantAverageLevel === undefined) return true;
             if (match.participants.length === 0) return false;
@@ -191,9 +207,7 @@ export const getMatches = async (
             );
         });
 
-        const finalMatches = formattedMatches.slice(0, limit);
-
-        res.status(200).json(finalMatches);
+        res.status(200).json(formattedMatches);
     } catch (error) {
         res.status(500).json({
             message: "Error while fetching matches",
@@ -202,6 +216,18 @@ export const getMatches = async (
     }
 };
 
+/**
+ * Permet à un utilisateur authentifié de rejoindre un match existant.
+ * @param {Request} req - L'objet requête d'Express.
+ * @param {string} req.params.matchId - (Requis) L'identifiant unique du match à rejoindre.
+ * @param {Response} res - L'objet réponse d'Express.
+ * @returns {200} Succès : L'utilisateur est inscrit, retourne le match mis à jour.
+ * @throws {400} Mauvaise requête : ID invalide, match fermé, match complet, ou utilisateur déjà inscrit.
+ * @throws {401} Non autorisé : L'utilisateur n'est pas connecté.
+ * @throws {403} Interdit : L'utilisateur a déjà atteint sa limite de matchs futurs.
+ * @throws {404} Non trouvé : Le match n'existe pas.
+ * @throws {500} Erreur interne : Échec de la transaction ou problème inattendu.
+ */
 export const joinMatch = async (req: Request, res: Response): Promise<void> => {
     try {
         const matchIdParam = req.params.matchId;
@@ -238,61 +264,26 @@ export const joinMatch = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const match = await prisma.match.findUnique({
-            where: { id: matchId },
-            select: {
-                id: true,
-                status: true,
-                availableSpots: true,
-                startTime: true,
-                endTime: true,
-                court_id: true,
-                creator_id: true,
-                court: {
-                    select: {
-                        name: true,
-                        type: true,
-                        club: {
-                            select: {
-                                name: true,
-                                city: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
-
-        if (!match) {
-            res.status(404).json({ message: "match not found" });
-            return;
-        }
-
-        if (match.status !== "OPEN") {
-            res.status(400).json({ message: "match is not open" });
-            return;
-        }
-
-        if (match.availableSpots <= 0) {
-            res.status(400).json({ message: "no available spots" });
-            return;
-        }
-
-        const existingParticipant = await prisma.participant.findUnique({
-            where: {
-                user_id_match_id: {
-                    user_id: userId,
-                    match_id: matchId,
-                },
-            },
-        });
-
-        if (existingParticipant) {
-            res.status(400).json({ message: "user already joined this match" });
-            return;
-        }
-
         const result = await prisma.$transaction(async (tx) => {
+            const currentMatch = await tx.match.findUnique({
+                where: { id: matchId },
+                select: { status: true, availableSpots: true },
+            });
+
+            if (!currentMatch) throw new Error("MATCH_NOT_FOUND");
+            if (currentMatch.status !== "OPEN")
+                throw new Error("MATCH_NOT_OPEN");
+            if (currentMatch.availableSpots <= 0)
+                throw new Error("NO_AVAILABLE_SPOTS");
+
+            const existingParticipant = await tx.participant.findUnique({
+                where: {
+                    user_id_match_id: { user_id: userId, match_id: matchId },
+                },
+            });
+
+            if (existingParticipant) throw new Error("ALREADY_JOINED");
+
             await tx.participant.create({
                 data: {
                     user_id: userId,
@@ -300,11 +291,11 @@ export const joinMatch = async (req: Request, res: Response): Promise<void> => {
                 },
             });
 
-            const newAvailableSpots = match.availableSpots - 1;
+            const newAvailableSpots = currentMatch.availableSpots - 1;
             const newStatus =
-                newAvailableSpots === 0 ? "COMPLETED" : match.status;
+                newAvailableSpots === 0 ? "COMPLETED" : currentMatch.status;
 
-            const updatedMatch = await tx.match.update({
+            return tx.match.update({
                 where: { id: matchId },
                 data: {
                     availableSpots: newAvailableSpots,
@@ -345,8 +336,6 @@ export const joinMatch = async (req: Request, res: Response): Promise<void> => {
                     },
                 },
             });
-
-            return updatedMatch;
         });
 
         res.status(200).json({
@@ -354,6 +343,25 @@ export const joinMatch = async (req: Request, res: Response): Promise<void> => {
             match: result,
         });
     } catch (error) {
+        if (error instanceof Error) {
+            switch (error.message) {
+                case "MATCH_NOT_FOUND":
+                    res.status(404).json({ message: "match not found" });
+                    return;
+                case "MATCH_NOT_OPEN":
+                    res.status(400).json({ message: "match is not open" });
+                    return;
+                case "NO_AVAILABLE_SPOTS":
+                    res.status(400).json({ message: "no available spots" });
+                    return;
+                case "ALREADY_JOINED":
+                    res.status(400).json({
+                        message: "user already joined this match",
+                    });
+                    return;
+            }
+        }
+
         res.status(500).json({
             message: "Error while joining match",
             error: error,

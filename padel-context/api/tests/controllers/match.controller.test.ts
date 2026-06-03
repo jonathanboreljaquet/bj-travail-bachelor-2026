@@ -26,9 +26,11 @@ const transactionMock = jest.fn<
         callback: (tx: {
             participant: {
                 create: typeof participantCreateMock;
+                findUnique: typeof participantFindUniqueMock;
             };
             match: {
                 update: typeof updateMock;
+                findUnique: typeof findUniqueMock;
             };
         }) => Promise<unknown>,
     ) => Promise<unknown>
@@ -66,6 +68,19 @@ beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(mockedNow);
     participantCountMock.mockResolvedValue(0);
+
+    transactionMock.mockImplementation(async (callback) => {
+        return await callback({
+            participant: {
+                create: participantCreateMock,
+                findUnique: participantFindUniqueMock,
+            },
+            match: {
+                update: updateMock,
+                findUnique: findUniqueMock,
+            },
+        });
+    });
 });
 
 afterEach(() => {
@@ -241,7 +256,6 @@ const runGetMatchesCase = async ({
     expect(prismaMock.match.findMany).toHaveBeenCalledWith({
         where: expectedWhere,
         select: expectedSelect,
-        take: 30,
         orderBy: { startTime: "asc" },
     });
     expect(response.status).toHaveBeenCalledWith(200);
@@ -859,13 +873,6 @@ describe("[UNIT TEST] joinMatch", () => {
         findUniqueMock.mockResolvedValueOnce(matchData);
         participantFindUniqueMock.mockResolvedValueOnce(null);
 
-        transactionMock.mockImplementation(async (callback) => {
-            return await callback({
-                participant: { create: participantCreateMock },
-                match: { update: updateMock },
-            });
-        });
-
         updateMock.mockResolvedValueOnce(updatedMatch);
 
         await joinMatch(request, response);
@@ -909,13 +916,6 @@ describe("[UNIT TEST] joinMatch", () => {
 
         findUniqueMock.mockResolvedValueOnce(matchData);
         participantFindUniqueMock.mockResolvedValueOnce(null);
-
-        transactionMock.mockImplementation(async (callback) => {
-            return await callback({
-                participant: { create: participantCreateMock },
-                match: { update: updateMock },
-            });
-        });
 
         updateMock.mockResolvedValueOnce(updatedMatch);
 
@@ -964,13 +964,6 @@ describe("[UNIT TEST] joinMatch", () => {
 
         findUniqueMock.mockResolvedValueOnce(matchData);
         participantFindUniqueMock.mockResolvedValueOnce(null);
-
-        transactionMock.mockImplementation(async (callback) => {
-            return await callback({
-                participant: { create: participantCreateMock },
-                match: { update: updateMock },
-            });
-        });
 
         updateMock.mockResolvedValueOnce(updatedMatch);
 

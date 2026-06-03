@@ -17,7 +17,7 @@ export const getAvailableSlotsInputSchema = z.object({
 });
 
 export const getOpenMatchesInputSchema = z.object({
-    city: z.string().optional(),
+    city: z.string(),
     courtType: z.enum(["INDOOR", "OUTDOOR", "COVERED"]).optional(),
     hasEquipmentBox: z.boolean().optional(),
     minPricePerPerson: z.number().optional(),
@@ -165,7 +165,7 @@ export const availableSlotOutputSchema = z.object({
     courtName: z.string(),
     type: z.string(),
     hasEquipmentBox: z.boolean(),
-    price: z.number(),
+    pricePerPerson: z.number(),
     clubName: z.string(),
     city: z.string(),
     availableSlots: z.array(slotTimeOutputSchema),
@@ -179,17 +179,14 @@ export const matchOutputSchema = z.object({
     id: z.number(),
     startTime: z.string(),
     endTime: z.string(),
-    status: z.string(),
     availableSpots: z.number(),
     courtName: z.string(),
     type: z.string(),
     hasEquipmentBox: z.boolean(),
-    price: z.number(),
-    duration: z.number(),
+    pricePerPerson: z.number(),
     clubName: z.string(),
     city: z.string(),
-    playersCount: z.number(),
-    averageLevel: z.number().nullable(),
+    averageLevel: z.number(),
     weather: weatherOutputSchema.optional(),
 });
 
