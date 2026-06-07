@@ -10,17 +10,15 @@ Purpose:
 Registers the current user into an existing open Padel match. It returns a success message and the updated number of remaining spots.
 
 Guidelines:
-- When to use: Use this tool ONLY when the user explicitly confirms they want to join a specific match they previously selected.
+- When to use: Use this tool ONLY when the user explicitly confirms they want to join a specific match they previously selected via the 'get-open-matches' tool.
 - You should follow these CRITICAL rules:
-  1. The 'matchId' must be retrieved accurately from a previous call to 'get-open-matches'.
+  1. The 'matchId' must be retrieved accurately from a previous call to 'get-open-matches'. Do not guess or invent it.
   2. Upon success, inform the user that they are registered and announce how many spots are still open for that match.
+  3. ERROR RECOVERY: If the tool returns an error (e.g., the match is full, already joined, or invalid ID), apologize to the user and immediately suggest calling 'get-open-matches' to find another available match today.
 
 Limitations:
 - Do NOT use this tool to create a new match from a blank slot (use 'create-match-from-slot' for that).
-- This tool requires an authenticated user context (JWT token).
-
-Parameter Explanation:
-- matchId (integer, required): The unique identifier of the existing match the user wants to join.
+- This tool REQUIRES prior knowledge of existing matches. Never call this blindly without having offered choices to the user first.
 
 Examples:
 - User: "I want to join the match with ID 45." -> Assistant calls tool with matchId=45.
@@ -32,7 +30,7 @@ export const joinOpenMatchInputSchema = z.object({
         .number()
         .int()
         .describe(
-            "ID of the match to join. MUST be extracted from the 'get-open-matches' tool results.",
+            "MANDATORY: The unique identifier of the existing match the user wants to join. This MUST be extracted directly from the results of a prior 'get-open-matches' search. Do not invent or guess this ID.",
         ),
 });
 

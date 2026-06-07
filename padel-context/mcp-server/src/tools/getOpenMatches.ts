@@ -23,45 +23,91 @@ Guidelines:
 - You should follow these CRITICAL rules:
   1. The 'city' parameter is MANDATORY. Do not guess it from context. Abort and ask the user if missing.
   2. PAGINATION LIMIT: If the results contain many matches, you MUST strictly display only the first 5 matches.
-  3. EXHAUSTIVE AND RAW DATA: For each match displayed, you MUST explicitly mention 'courtType', 'availableSpots', 'averageLevel', 'hasEquipmentBox', and 'pricePerPerson'. If 'weather' data is present, you MUST display the EXACT temperature, rain probability, and wind speed exactly as provided by the tool.
-  4. ORCHESTRATION: After presenting up to 5 matches, ask the user if they want to join one or see more. When they confirm, trigger the 'join-open-match' tool using the specific match ID.
+  3. EXHAUSTIVE AND RAW DATA: For each match displayed, you MUST explicitly mention 'courtType', 'availableSpots', 'averageLevel', 'hasEquipmentBox', and 'pricePerPerson'. If 'weather' data is present, you MUST display the EXACT temperature, rain probability, and wind speed.
+  4. ORCHESTRATION: After presenting up to 5 matches, ask the user if they want to join one or see more options. When they confirm, trigger the 'join-open-match' tool using the specific match ID.
+  5. ERROR RECOVERY: If no matches are found, apologize and immediately suggest creating a new match using the 'get-available-slots' tool instead.
 
 Limitations:
 - Do NOT use this tool if the user wants to create a brand new match on an empty court (use 'get-available-slots' instead).
 - This tool does not join the match for the user; it only retrieves the list.
 
-Parameter Explanation:
-- city (string, required): The geographical location to search in.
-- availableSpots (integer, optional): Exact number of spots the user needs.
-- participantAverageLevel (number, optional): The target skill level of the players.
-- hasEquipmentBox (boolean, optional): Filters for matches on courts providing equipment.
-
 Examples:
-- User: "Are there any matches I can join in Lausanne tonight?" -> Assistant calls tool with city="Lausanne", startTimeFrom="[tonight 18:00]".
+- User: "Are there any matches I can join in Lausanne tonight?" -> Assistant calls tool with city="Lausanne", startTimeFrom="[YYYY-MM-DDT18:00:00Z]".
 `;
 
 // Schémas de validation des données d'entrée du tools
+// Schémas de validation des données d'entrée du tool
 export const getOpenMatchesInputSchema = z.object({
     city: z
         .string()
         .describe(
-            "Target city. MUST be explicitly stated by the user. If missing, do not guess, abort the tool call and ask the user.",
+            "MANDATORY: Target city. MUST be explicitly stated by the user. If missing, do not guess, abort the tool call and ask the user.",
         ),
-    courtType: z.enum(["INDOOR", "OUTDOOR", "COVERED"]).optional(),
-    hasEquipmentBox: z.boolean().optional(),
-    minPricePerPerson: z.number().optional(),
-    maxPricePerPerson: z.number().optional(),
-    slotDuration: z.number().int().optional(),
-    minSlotDuration: z.number().int().optional(),
-    maxSlotDuration: z.number().int().optional(),
-    availableSpots: z.number().int().optional(),
-    minAvailableSpots: z.number().int().optional(),
+    courtType: z
+        .enum(["INDOOR", "OUTDOOR", "COVERED"])
+        .optional()
+        .describe(
+            "Preference for the type of court. Use only if explicitly requested.",
+        ),
+    hasEquipmentBox: z
+        .boolean()
+        .optional()
+        .describe(
+            "Set to true ONLY if the user explicitly needs rental rackets and balls.",
+        ),
+    minPricePerPerson: z
+        .number()
+        .optional()
+        .describe("Minimum budget per person in CHF."),
+    maxPricePerPerson: z
+        .number()
+        .optional()
+        .describe("Maximum budget per person in CHF."),
+    slotDuration: z
+        .number()
+        .int()
+        .optional()
+        .describe("Exact match duration in minutes (e.g., 90 for 1.5 hours)."),
+    minSlotDuration: z
+        .number()
+        .int()
+        .optional()
+        .describe("Minimum match duration in minutes."),
+    maxSlotDuration: z
+        .number()
+        .int()
+        .optional()
+        .describe("Maximum match duration in minutes."),
+    availableSpots: z
+        .number()
+        .int()
+        .optional()
+        .describe(
+            "Exact number of open spots the user needs. E.g., if the user says 'me and my friend want to play', set this to 2.",
+        ),
+    minAvailableSpots: z
+        .number()
+        .int()
+        .optional()
+        .describe(
+            "Minimum number of open spots required to accommodate the user's group.",
+        ),
     startTimeFrom: isoTimeStr.optional(),
     startTimeTo: isoTimeStr.optional(),
     endTimeFrom: isoTimeStr.optional(),
     endTimeTo: isoTimeStr.optional(),
-    participantAverageLevel: z.number().optional(),
-    participantAverageLevelTolerance: z.number().optional(),
+    participantAverageLevel: z
+        .number()
+        .optional()
+        .describe(
+            "The target skill level of the match (e.g., 1.0 for beginners to 10.0 for pros).",
+        ),
+    participantAverageLevelTolerance: z
+        .number()
+        .optional()
+        .describe(
+            "Allowed deviation from the target skill level (e.g., 1.0 or 2.0).",
+        ),
 });
 
 // Interface pour typer la réponse brute de l'API REST

@@ -31,12 +31,6 @@ Limitations:
 - Do NOT use this tool if the user wants to find or join an ALREADY EXISTING match (use 'get-open-matches' instead).
 - This tool only returns available blank slots; it does not book them.
 
-Parameter Explanation:
-- city (string, required): The target geographical location.
-- courtType (string, optional): Preference for INDOOR, OUTDOOR, or COVERED.
-- timeFrom / timeTo (string, optional): ISO time strings defining the search window.
-- hasEquipmentBox (boolean, optional): Filters for courts that provide playing equipment.
-
 Examples:
 - User: "I want to play in Geneva tomorrow morning." -> Assistant calls tool with city="Geneva", timeFrom="[tomorrow 08:00]", timeTo="[tomorrow 12:00]".
 `;
@@ -46,15 +40,51 @@ export const getAvailableSlotsInputSchema = z.object({
     city: z
         .string()
         .describe(
-            "Target city. MUST be explicitly stated by the user. If missing, do not guess, abort the tool call and ask the user.",
+            "MANDATORY: Target city for the Padel match. MUST be explicitly stated by the user. If missing, do not guess, abort the tool call and ask the user.",
         ),
-    courtType: z.enum(["INDOOR", "OUTDOOR", "COVERED"]).optional(),
-    hasEquipmentBox: z.boolean().optional(),
-    minPricePerPerson: z.number().optional(),
-    maxPricePerPerson: z.number().optional(),
-    slotDuration: z.number().int().optional(),
-    minSlotDuration: z.number().int().optional(),
-    maxSlotDuration: z.number().int().optional(),
+    courtType: z
+        .enum(["INDOOR", "OUTDOOR", "COVERED"])
+        .optional()
+        .describe(
+            "Preference for the type of court. Use only if the user explicitly specifies indoor, outdoor, or covered.",
+        ),
+    hasEquipmentBox: z
+        .boolean()
+        .optional()
+        .describe(
+            "Set to true ONLY if the user explicitly requests a court that provides rental rackets and balls.",
+        ),
+    minPricePerPerson: z
+        .number()
+        .optional()
+        .describe("Minimum acceptable price per person in CHF."),
+    maxPricePerPerson: z
+        .number()
+        .optional()
+        .describe(
+            "Maximum acceptable price per person in CHF. Use this if the user mentions a budget.",
+        ),
+    slotDuration: z
+        .number()
+        .int()
+        .optional()
+        .describe(
+            "Exact duration of the desired play session in minutes (e.g., 90 for 1.5 hours).",
+        ),
+    minSlotDuration: z
+        .number()
+        .int()
+        .optional()
+        .describe(
+            "Minimum acceptable duration of the play session in minutes.",
+        ),
+    maxSlotDuration: z
+        .number()
+        .int()
+        .optional()
+        .describe(
+            "Maximum acceptable duration of the play session in minutes.",
+        ),
     timeFrom: isoTimeStr.optional(),
     timeTo: isoTimeStr.optional(),
 });
