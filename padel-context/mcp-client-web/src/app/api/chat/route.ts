@@ -77,6 +77,25 @@ export async function POST(request: Request) {
   const { messages }: { messages: UIMessage[] } = await request.json();
   const prompt = getLatestUserPrompt(messages) ?? "Prompt non disponible.";
 
+  const WINDOW_SIZE = 6;
+
+  function getSafeSlidingWindow(
+    messages: UIMessage[],
+    maxMessages: number,
+  ): UIMessage[] {
+    if (messages.length <= maxMessages) return messages;
+
+    let startIndex = messages.length - maxMessages;
+
+    while (startIndex > 0 && messages[startIndex].role !== "user") {
+      startIndex--;
+    }
+
+    if (startIndex < 0) startIndex = 0;
+
+    return messages.slice(startIndex);
+  }
+
   const usageResponse = await fetch(`${apiUrl}/api/llm-usage/me`, {
     headers: {
       Authorization: `Bearer ${jwtToken}`,
@@ -150,7 +169,9 @@ export async function POST(request: Request) {
     const result = streamText({
       model: google(modelId),
       system: systemPrompt,
-      messages: await convertToModelMessages(messages),
+      messages: await convertToModelMessages(
+        getSafeSlidingWindow(messages, WINDOW_SIZE),
+      ),
       tools,
       stopWhen: stepCountIs(5),
       experimental_telemetry: {
