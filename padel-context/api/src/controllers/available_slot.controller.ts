@@ -1,16 +1,23 @@
 import { Request, Response } from "express";
 import prisma from "../db";
 import { Prisma } from "../../generated/prisma/client";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+
 import {
     parseBoolean,
     parseDate,
     parseNumber,
-    toDateAtMinutes,
     toMinutes,
     normalizeString,
     MAX_UPCOMING_MATCHES,
     MAX_UPCOMING_MATCHES_MESSAGE,
 } from "../utils/helper";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+const LOCAL_TIMEZONE = "Europe/Zurich";
 
 /**
  * Recherche et génère dynamiquement les créneaux horaires disponibles pour créer un match.
@@ -191,98 +198,75 @@ export const getAvailableSlots = async (
             byCourt.set(match.court_id, current);
         });
 
-        // Pour chaque terrain, on génère les créneaux disponibles en excluant les plages horaires occupées par les matchs existants.
+        const windowStartMs = windowStart.getTime();
+        const windowEndMs = windowEnd.getTime();
+
         const availableSlots = filteredCourts.map((court) => {
-            // Récupère les horaires du club en minutes depuis minuit (ex: 08:00 = 480, 22:00 = 1320)
-            const openingMinutes = toMinutes(court.club.openingTime);
-            const closingMinutes = toMinutes(court.club.closingTime);
-
-            // Récupère tous les matchs déjà réservés pour ce terrain précis
             const occupied = byCourt.get(court.id) ?? [];
-
             const slots: Array<{ startTime: string; endTime: string }> = [];
 
-            // Calcul l'heure minimum du premier jour de notre recherche
-            const rangeDayStart = new Date(windowStart);
-            rangeDayStart.setUTCHours(0, 0, 0, 0);
+            // Extraction des heures et minutes d'ouverture/fermeture du club (ex: "07:00" -> 7 et 0)
+            const [openH, openM] = court.club.openingTime
+                .split(":")
+                .map(Number);
+            const [closeH, closeM] = court.club.closingTime
+                .split(":")
+                .map(Number);
 
-            // Boucle jour par jour sur la période demandée
-            for (
-                let currentDayStart = new Date(rangeDayStart);
-                currentDayStart < windowEnd;
-                currentDayStart.setUTCDate(currentDayStart.getUTCDate() + 1)
-            ) {
-                const currentDayEnd = new Date(currentDayStart);
-                currentDayEnd.setUTCDate(currentDayEnd.getUTCDate() + 1);
+            // Définition du premier jour à scanner en heure locale (Europe/Zurich)
+            let currentDayLocal = dayjs(windowStart)
+                .tz(LOCAL_TIMEZONE)
+                .startOf("day");
+            const lastDayLocal = dayjs(windowEnd)
+                .tz(LOCAL_TIMEZONE)
+                .startOf("day");
 
-                // Calcul currentMinutes selon l'heure actuelle si c'est aujourd'hui ou l'heure d'ouverture si c'est demain ou après
-                const currentMinutes =
-                    windowStart > currentDayStart && windowStart < currentDayEnd
-                        ? windowStart.getUTCHours() * 60 +
-                          windowStart.getUTCMinutes()
-                        : openingMinutes;
+            // Boucle jour par jour jusqu'à atteindre la date de fin
+            while (currentDayLocal.valueOf() <= lastDayLocal.valueOf()) {
+                // Fixe l'heure d'ouverture et de fermeture sur la journée locale en cours
+                let slotStartLocal = currentDayLocal.hour(openH).minute(openM);
+                const clubCloseLocal = currentDayLocal
+                    .hour(closeH)
+                    .minute(closeM);
 
-                // On sélectionne la valeur la plus tardive entre l'ouverture du club et l'heure actuelle
-                const effectiveOpeningMinutes = Math.max(
-                    openingMinutes,
-                    currentMinutes,
-                );
-
-                // Calcul combien de minutes se sont écoulées depuis l'ouverture officielle du club
-                const startOffset = Math.max(
-                    0,
-                    effectiveOpeningMinutes - openingMinutes,
-                );
-
-                // Aligne le premier créneau de la journée sur la grille horaire stricte du terrain.
-                // Cette formule garantit que les créneaux respectent l'intervalle fixe imposé
-                // depuis l'heure d'ouverture, empêchant ainsi la création de créneaux asynchrones.
-                //
-                // Exemple d'alignement :
-                // - Ouverture du club : 08:00 (480 min) | Durée d'un créneau : 90 min
-                // - Heure actuelle : 09:00 (offset de 60 min par rapport à l'ouverture)
-                // - Calcul du multiplicateur : Math.ceil(60 / 90) = 1 (on passe au créneau suivant)
-                // - Résultat : 480 + (1 * 90) = 570 min, soit un premier créneau à 09:30.
-                const firstSlotMinutes =
-                    openingMinutes +
-                    Math.ceil(startOffset / court.slotDuration) *
-                        court.slotDuration;
-
-                // Boucle créneau par créneau sur la journée
-                for (
-                    let startMinutes = firstSlotMinutes;
-                    startMinutes + court.slotDuration <= closingMinutes;
-                    startMinutes += court.slotDuration
+                // Génération de tous les créneaux de la journée (de 07:00 à 22:00 par exemple)
+                while (
+                    slotStartLocal
+                        .add(court.slotDuration, "minute")
+                        .valueOf() <= clubCloseLocal.valueOf()
                 ) {
-                    // Convertit les minutes en objets Date
-                    const slotStart = toDateAtMinutes(
-                        currentDayStart,
-                        startMinutes,
-                    );
-                    const slotEnd = toDateAtMinutes(
-                        currentDayStart,
-                        startMinutes + court.slotDuration,
+                    const slotEndLocal = slotStartLocal.add(
+                        court.slotDuration,
+                        "minute",
                     );
 
-                    // Vérifie si le créneau est bien strictement dans la fenêtre demandée par l'utilisateur
-                    if (slotStart < windowStart || slotEnd > windowEnd) {
-                        continue;
+                    const slotStartMs = slotStartLocal.valueOf();
+                    const slotEndMs = slotEndLocal.valueOf();
+
+                    // Vérification pour voir si le créneau est strictement dans la fenêtre globale demandée
+                    if (
+                        slotStartMs >= windowStartMs &&
+                        slotEndMs <= windowEndMs
+                    ) {
+                        // Vérification de chevauchement avec aucun match existant
+                        const isOccupied = occupied.some(
+                            (match) =>
+                                slotStartMs < match.endTime.getTime() &&
+                                slotEndMs > match.startTime.getTime(),
+                        );
+
+                        if (!isOccupied) {
+                            slots.push({
+                                startTime: slotStartLocal.utc().toISOString(),
+                                endTime: slotEndLocal.utc().toISOString(),
+                            });
+                        }
                     }
 
-                    // Vérifie si le créneau chevauche un match déjà réservé
-                    const isOccupied = occupied.some(
-                        (match) =>
-                            slotStart < match.endTime &&
-                            slotEnd > match.startTime,
-                    );
-
-                    if (!isOccupied) {
-                        slots.push({
-                            startTime: slotStart.toISOString(),
-                            endTime: slotEnd.toISOString(),
-                        });
-                    }
+                    slotStartLocal = slotEndLocal;
                 }
+
+                currentDayLocal = currentDayLocal.add(1, "day");
             }
 
             return {
@@ -397,18 +381,26 @@ export const createMatchFromSlot = async (
 
         const openingMinutes = toMinutes(court.club.openingTime);
         const closingMinutes = toMinutes(court.club.closingTime);
-        const startMinutes =
-            startTime.getUTCHours() * 60 + startTime.getUTCMinutes();
-        const endMinutes = endTime.getUTCHours() * 60 + endTime.getUTCMinutes();
 
-        if (startMinutes < openingMinutes || endMinutes > closingMinutes) {
+        const localStartTime = dayjs(startTime).tz(LOCAL_TIMEZONE);
+        const localEndTime = dayjs(endTime).tz(LOCAL_TIMEZONE);
+
+        const startMinutesLocal =
+            localStartTime.hour() * 60 + localStartTime.minute();
+        const endMinutesLocal =
+            localEndTime.hour() * 60 + localEndTime.minute();
+
+        if (
+            startMinutesLocal < openingMinutes ||
+            endMinutesLocal > closingMinutes
+        ) {
             res.status(400).json({
                 message: "slot is outside club opening hours",
             });
             return;
         }
 
-        if ((startMinutes - openingMinutes) % court.slotDuration !== 0) {
+        if ((startMinutesLocal - openingMinutes) % court.slotDuration !== 0) {
             res.status(400).json({
                 message: "slot is not aligned with court slotDuration",
             });

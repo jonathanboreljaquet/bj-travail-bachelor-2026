@@ -300,10 +300,10 @@ describe("[INTEGRATION TEST] POST /api/matches/from-slot", () => {
     it("returns 400 when slot is outside club opening hours", async () => {
         const startTime = new Date();
         startTime.setUTCDate(startTime.getUTCDate() + 1);
-        startTime.setUTCHours(7, 0, 0, 0);
+        startTime.setUTCHours(5, 0, 0, 0);
 
         const endTime = new Date(startTime);
-        endTime.setUTCHours(8, 0, 0, 0);
+        endTime.setUTCHours(6, 0, 0, 0);
 
         const response = await request(app)
             .post("/api/matches/from-slot")

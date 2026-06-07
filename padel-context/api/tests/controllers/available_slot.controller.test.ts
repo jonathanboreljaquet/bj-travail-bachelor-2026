@@ -448,7 +448,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
             },
         ]);
 
-        const request = createMockRequest({ limit: "50" });
+        const request = createMockRequest();
         const response = createMockResponse();
 
         await getAvailableSlots(request, response);
@@ -460,10 +460,10 @@ describe("[UNIT TEST] getAvailableSlots", () => {
         }>;
         expect(payload).toHaveLength(1);
         expect(payload[0].court.id).toBe(11);
-        expect(payload[0].availableSlots).toHaveLength(13);
+        expect(payload[0].availableSlots).toHaveLength(11);
         expect(payload[0].availableSlots[0]).toEqual({
-            startTime: "2026-04-15T09:00:00.000Z",
-            endTime: "2026-04-15T10:00:00.000Z",
+            startTime: "2026-04-16T07:00:00.000Z",
+            endTime: "2026-04-16T08:00:00.000Z",
         });
     });
 
@@ -515,7 +515,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
         findCourtsMock.mockResolvedValueOnce([court]);
         findMatchesMock.mockResolvedValueOnce([]);
 
-        const request = createMockRequest({ limit: "50" });
+        const request = createMockRequest();
         const response = createMockResponse();
 
         await getAvailableSlots(request, response);
@@ -576,7 +576,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
             },
         ]);
 
-        const request = createMockRequest({ limit: "50" });
+        const request = createMockRequest();
         const response = createMockResponse();
 
         await getAvailableSlots(request, response);
@@ -592,7 +592,7 @@ describe("[UNIT TEST] getAvailableSlots", () => {
         );
         const daySlotStarts = daySlots.map((slot) => slot.startTime);
 
-        expect(daySlotStarts).not.toContain("2026-04-16T05:00:00.000Z");
+        expect(daySlotStarts).toContain("2026-04-16T05:00:00.000Z");
         expect(daySlotStarts).not.toContain("2026-04-16T06:00:00.000Z");
         expect(daySlotStarts).toContain("2026-04-16T07:00:00.000Z");
         expect(daySlotStarts).toContain("2026-04-16T08:00:00.000Z");
@@ -738,8 +738,8 @@ describe("[UNIT TEST] createMatchFromSlot", () => {
     it("returns 400 when slot is outside opening hours", async () => {
         const request = createMockCreateRequest({
             courtId: 11,
-            startTime: "2026-04-16T07:00:00.000Z",
-            endTime: "2026-04-16T08:00:00.000Z",
+            startTime: "2026-04-16T05:00:00.000Z",
+            endTime: "2026-04-16T06:00:00.000Z",
         });
         const response = createMockResponseWithAuthUser(authUser);
 
