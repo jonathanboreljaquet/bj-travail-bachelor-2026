@@ -3,7 +3,7 @@ import { faker } from "@faker-js/faker";
 
 // Liste de villes et codes postaux dans le canton de Genève pour générer des clubs réalistes.
 const GENEVA_CITIES = [
-    { city: "Geneve", postalCode: "1201" },
+    { city: "Servette", postalCode: "1203" },
     { city: "Carouge", postalCode: "1227" },
     { city: "Grand-Lancy", postalCode: "1212" },
     { city: "Meyrin", postalCode: "1217" },

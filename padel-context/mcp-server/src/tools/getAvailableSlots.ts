@@ -16,17 +16,29 @@ import dayjs from "dayjs";
 // Description détaillée de du tool pour le LLM
 const GET_AVAILABLE_SLOTS_DESC = `
 Purpose:
-Searches and lists available Padel time slots by court based on filters.
+Searches and lists available Padel time slots by court based on filters. It returns structured data including court details (type, price, equipment box availability, club info), available time ranges, and outdoor weather forecasts.
 
 Guidelines:
 - When to use: Use this tool to check court availability when a user wants to play or create a new match.
-- CRITICAL GUARDRAIL: The 'city' parameter is mandatory. If the user does not explicitly state a city in their prompt, DO NOT guess or use system context. You MUST abort and ask the user which city they want to play in.
-- TIME WINDOW: If the user asks for a specific time, set 'timeFrom' to that time and always add at least 2 hours to calculate 'timeTo'.
-- EXHAUSTIVE DISPLAY: When presenting slots, you MUST include all data points returned.
-- ORCHESTRATION: Once you present the available slots, ask the user which one they want to book. When they confirm, you MUST trigger the 'create-match-from-slot' tool.
+- You should follow these CRITICAL rules:
+  1. The 'city' parameter is MANDATORY. Do not guess it. If missing, abort the tool call and ask the user.
+  2. If the user specifies a time, set 'timeFrom' and add at least 2 hours to calculate 'timeTo'.
+  3. PAGINATION LIMIT: If the tool returns a large list, you MUST strictly display only the first 5 slots.
+  4. EXHAUSTIVE AND RAW DATA: For each slot displayed, you MUST explicitly mention 'courtType', 'availableSpots', 'hasEquipmentBox', and 'pricePerPerson'. If 'weather' data is present, you MUST display the EXACT temperature, rain probability, and wind speed exactly as provided by the tool.
+  5. ORCHESTRATION: After displaying up to 5 slots, ask the user if they want to see more options or if they want to book one. When they confirm a booking, trigger the 'create-match-from-slot' tool.
 
 Limitations:
 - Do NOT use this tool if the user wants to find or join an ALREADY EXISTING match (use 'get-open-matches' instead).
+- This tool only returns available blank slots; it does not book them.
+
+Parameter Explanation:
+- city (string, required): The target geographical location.
+- courtType (string, optional): Preference for INDOOR, OUTDOOR, or COVERED.
+- timeFrom / timeTo (string, optional): ISO time strings defining the search window.
+- hasEquipmentBox (boolean, optional): Filters for courts that provide playing equipment.
+
+Examples:
+- User: "I want to play in Geneva tomorrow morning." -> Assistant calls tool with city="Geneva", timeFrom="[tomorrow 08:00]", timeTo="[tomorrow 12:00]".
 `;
 
 // Schémas de validation des données d'entrée du tool
@@ -82,11 +94,6 @@ export const getAvailableSlotsTool = {
         try {
             const input = getAvailableSlotsInputSchema.parse(rawInput);
 
-            console.log(
-                "Input reçu pour getAvailableSlotsTool :",
-                JSON.stringify(input, null, 2),
-            );
-
             const searchParams = new URLSearchParams();
             for (const [key, value] of Object.entries(input)) {
                 if (value != null) {
@@ -106,10 +113,6 @@ export const getAvailableSlotsTool = {
             }
             const queryString = searchParams.toString();
             const url = `${API_BASE_URL}/available-slots${queryString ? `?${queryString}` : ""}`;
-            console.log(
-                "URL de l'API pour récupérer les créneaux disponibles :",
-                url,
-            );
 
             const jwtToken = tokenContext.getStore();
             if (!jwtToken) {
@@ -140,10 +143,6 @@ export const getAvailableSlotsTool = {
             }
 
             const rawAvailableSlots = (await res.json()) as ApiAvailableSlot[];
-            console.log(
-                "REPONSE BRUTE DE L'API :",
-                JSON.stringify(rawAvailableSlots, null, 2),
-            );
 
             if (!rawAvailableSlots.length) {
                 return {

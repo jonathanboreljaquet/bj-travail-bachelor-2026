@@ -40,7 +40,7 @@ npm start       # démarrage simple
 
 ## Inspection
 
-# Lancer l'inspecteur MCP pour tester manuellement
+### Lancer l'inspecteur MCP pour tester manuellement
 
 ```bash
 npx @modelcontextprotocol/inspector

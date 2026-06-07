@@ -7,13 +7,23 @@ import { API_BASE_URL, tokenContext } from "../utils/utils";
 // Description détaillée du tool pour le LLM
 const JOIN_OPEN_MATCH_DESC = `
 Purpose:
-Joins an existing open Padel match.
+Registers the current user into an existing open Padel match. It returns a success message and the updated number of remaining spots.
 
 Guidelines:
-- When to use: Use this tool ONLY when the user explicitly confirms they want to join a specific Padel match.
+- When to use: Use this tool ONLY when the user explicitly confirms they want to join a specific match they previously selected.
+- You should follow these CRITICAL rules:
+  1. The 'matchId' must be retrieved accurately from a previous call to 'get-open-matches'.
+  2. Upon success, inform the user that they are registered and announce how many spots are still open for that match.
 
 Limitations:
-- Do not use this tool to create a new match from an available slot (use 'create-match-from-slot' for that).
+- Do NOT use this tool to create a new match from a blank slot (use 'create-match-from-slot' for that).
+- This tool requires an authenticated user context (JWT token).
+
+Parameter Explanation:
+- matchId (integer, required): The unique identifier of the existing match the user wants to join.
+
+Examples:
+- User: "I want to join the match with ID 45." -> Assistant calls tool with matchId=45.
 `;
 
 // Schémas de validation des données d'entrée du tools
@@ -46,10 +56,6 @@ export const joinOpenMatchTool = {
         try {
             const { matchId } = joinOpenMatchInputSchema.parse(rawInput);
 
-            console.log(
-                `Input reçu pour joinOpenMatchTool : matchId=${matchId}`,
-            );
-
             const jwtToken = tokenContext.getStore();
             if (!jwtToken) {
                 return {
@@ -64,7 +70,6 @@ export const joinOpenMatchTool = {
             }
 
             const url = `${API_BASE_URL}/matches/${matchId}/join`;
-            console.log("URL de l'API pour rejoindre un match :", url);
 
             const res = await fetch(url, {
                 method: "POST",

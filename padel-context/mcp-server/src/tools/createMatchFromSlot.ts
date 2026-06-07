@@ -13,13 +13,24 @@ import {
 // Description détaillée du tool pour guider le LLM
 const CREATE_MATCH_FROM_SLOT_DESC = `
 Purpose:
-Creates a new Padel match from an available time slot.
+Creates and registers a new Padel match using an available time slot on a specific court. It returns the creation status, the new match ID, and the number of available spots remaining.
 
 Guidelines:
-- When to use: Use this tool ONLY when the user confirms they want to create a new match from a specific available slot they selected.
+- When to use: Use this tool ONLY when the user explicitly confirms they want to book/create a new match from a specific time slot they previously selected.
+- You should follow these CRITICAL rules:
+  1. Ensure you have the exact 'courtId', 'startTime', and 'endTime' from the user's prior selection.
+  2. After a successful creation, confirm to the user by providing the new match ID and telling them how many spots are left for others to join.
 
 Limitations:
-- Do not use this tool to join an already existing open match (use 'join-open-match' for that).
+- Do NOT use this tool to join an already existing open match (use 'join-open-match' for that).
+
+Parameter Explanation:
+- courtId (integer, required): The unique identifier of the selected court.
+- startTime (string, required): The ISO time string for when the match begins.
+- endTime (string, required): The ISO time string for when the match ends.
+
+Examples:
+- User: "Yes, let's book the 10:00 AM slot on Court 1." -> Assistant calls tool with courtId=1, startTime="[10:00]", endTime="[11:30]".
 `;
 
 // Schéma de validation des données d'entrée du tool
@@ -53,10 +64,6 @@ export const createMatchFromSlotTool = {
             const { courtId, startTime, endTime } =
                 createMatchFromSlotInputSchema.parse(rawInput);
 
-            console.log(
-                `Input reçu pour createMatchFromSlotTool : courtId=${courtId}, startTime=${startTime}, endTime=${endTime}`,
-            );
-
             const jwtToken = tokenContext.getStore();
             if (!jwtToken) {
                 return {
@@ -78,7 +85,6 @@ export const createMatchFromSlotTool = {
             const utcEndTime = dayjs.tz(endTime, LOCAL_TIMEZONE).utc().format();
 
             const url = `${API_BASE_URL}/matches/from-slot`;
-            console.log("URL de l'API pour créer un match :", url);
 
             const res = await fetch(url, {
                 method: "POST",
