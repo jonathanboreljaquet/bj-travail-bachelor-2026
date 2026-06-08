@@ -6,6 +6,7 @@ import {
   isTextUIPart,
   stepCountIs,
   streamText,
+  type ToolSet,
   type UIMessage,
 } from "ai";
 import { getChatRatelimit } from "@/lib/ratelimit";
@@ -21,14 +22,16 @@ export function getLatestUserPrompt(messages: UIMessage[]): string {
   const message = messages.at(-1);
 
   if (!message || message.role !== "user") {
-    return "";
+    return "[Action système]";
   }
 
-  return message.parts
+  const text = message.parts
     .filter(isTextUIPart)
     .map((part) => part.text)
     .join("\n")
     .trim();
+
+  return text || "[Validation d'une action de l'outil par l'utilisateur]";
 }
 
 const google = createGoogleGenerativeAI({
@@ -41,12 +44,7 @@ export async function POST(request: Request) {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
   if (!apiKey) {
-    return Response.json(
-      {
-        error: "Missing model API key.",
-      },
-      { status: 500 },
-    );
+    return Response.json({ error: "Missing model API key." }, { status: 500 });
   }
 
   const cookieStore = await cookies();
@@ -68,33 +66,12 @@ export async function POST(request: Request) {
         error:
           "Vous avez le droit à 5 questions par minute, veuillez patienter.",
       },
-      {
-        status: 429,
-      },
+      { status: 429 },
     );
   }
 
   const { messages }: { messages: UIMessage[] } = await request.json();
   const prompt = getLatestUserPrompt(messages) ?? "Prompt non disponible.";
-
-  const WINDOW_SIZE = 6;
-
-  function getSafeSlidingWindow(
-    messages: UIMessage[],
-    maxMessages: number,
-  ): UIMessage[] {
-    if (messages.length <= maxMessages) return messages;
-
-    let startIndex = messages.length - maxMessages;
-
-    while (startIndex > 0 && messages[startIndex].role !== "user") {
-      startIndex--;
-    }
-
-    if (startIndex < 0) startIndex = 0;
-
-    return messages.slice(startIndex);
-  }
 
   const usageResponse = await fetch(`${apiUrl}/api/llm-usage/me`, {
     headers: {
@@ -142,6 +119,16 @@ export async function POST(request: Request) {
 
   try {
     const tools = await mcpClient.tools();
+
+    // Liste des outils sensibles
+    const unsafeTools = ["create-match-from-slot", "join-open-match"];
+
+    for (const toolName of unsafeTools) {
+      if (tools[toolName]) {
+        tools[toolName].needsApproval = true;
+      }
+    }
+
     const now = new Date();
     const currentDate = now.toLocaleDateString("fr-CH", {
       timeZone: "Europe/Zurich",
@@ -169,22 +156,16 @@ export async function POST(request: Request) {
     const result = streamText({
       model: google(modelId),
       system: systemPrompt,
-      messages: await convertToModelMessages(
-        getSafeSlidingWindow(messages, WINDOW_SIZE),
-      ),
-      tools,
+      // Toujours garder la conversion pour éviter l'erreur Zod
+      messages: await convertToModelMessages(messages),
+      tools: tools as ToolSet,
       stopWhen: stepCountIs(5),
       experimental_telemetry: {
         isEnabled: true,
         functionId: "padel-context-mcp",
       },
-    });
-
-    return result.toUIMessageStreamResponse({
-      onFinish: async () => {
+      onFinish: async ({ usage }) => {
         try {
-          const usage = await result.usage;
-
           if (
             !usage ||
             typeof usage.inputTokens !== "number" ||
@@ -194,7 +175,9 @@ export async function POST(request: Request) {
             return;
           }
 
-          const totalTokens = usage.inputTokens + usage.outputTokens;
+          const inputTokens = usage.inputTokens;
+          const outputTokens = usage.outputTokens;
+          const totalTokens = inputTokens + outputTokens;
 
           const response = await fetch(`${apiUrl}/api/llm-usage/log`, {
             method: "POST",
@@ -204,9 +187,9 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify({
               prompt,
-              inputTokens: usage.inputTokens,
-              outputTokens: usage.outputTokens,
-              totalTokens: totalTokens,
+              inputTokens,
+              outputTokens,
+              totalTokens,
               model: modelId,
             }),
           });
@@ -226,6 +209,8 @@ export async function POST(request: Request) {
         }
       },
     });
+
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     await mcpClient.close();
 

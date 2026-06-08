@@ -2,7 +2,6 @@ import { createMcpExpressApp } from "@modelcontextprotocol/express";
 import { NodeStreamableHTTPServerTransport } from "@modelcontextprotocol/node";
 import { McpServer } from "@modelcontextprotocol/server";
 import "dotenv/config";
-import rateLimit from "express-rate-limit";
 import { getAvailableSlotsTool } from "./tools/getAvailableSlots";
 import { getOpenMatchesTool } from "./tools/getOpenMatches";
 import { joinOpenMatchTool } from "./tools/joinOpenMatch";
@@ -52,14 +51,7 @@ server.registerTool(
     createMatchFromSlotTool.handler,
 );
 
-// Limiteur de requêtes pour protéger le serveur MCP contre les abus (30 requêtes par minute maximum par IP)
-const mcpLimiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 30,
-    message: "Too many requests from this IP, please try again later.",
-});
-
-app.use("/mcp", mcpLimiter, async (req, res) => {
+app.use("/mcp", async (req, res) => {
     const authHeader = req.headers.authorization;
     const token = authHeader?.startsWith("Bearer ")
         ? authHeader.substring(7)
