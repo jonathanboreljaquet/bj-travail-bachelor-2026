@@ -128,6 +128,19 @@ export async function POST(request: Request) {
     },
   });
 
+  // Fermeture idempotente : la connexion MCP doit être fermée quel que soit le
+  // chemin de sortie (succès, erreur de stream, abandon client, erreur de setup).
+  let mcpClientClosed = false;
+  const closeMcpClient = async () => {
+    if (mcpClientClosed) return;
+    mcpClientClosed = true;
+    try {
+      await mcpClient.close();
+    } catch (closeError) {
+      console.error("Erreur lors de la fermeture du client MCP:", closeError);
+    }
+  };
+
   try {
     const tools = await mcpClient.tools();
 
@@ -217,14 +230,21 @@ export async function POST(request: Request) {
         } catch (error) {
           console.error("Erreur inattendue lors du logging LLM:", error);
         } finally {
-          await mcpClient.close();
+          await closeMcpClient();
         }
+      },
+      onError: async ({ error }) => {
+        console.error("Erreur lors du streaming LLM:", error);
+        await closeMcpClient();
+      },
+      onAbort: async () => {
+        await closeMcpClient();
       },
     });
 
     return result.toUIMessageStreamResponse();
   } catch (error) {
-    await mcpClient.close();
+    await closeMcpClient();
 
     const message =
       error instanceof Error ? error.message : "Unable to process chat request";
