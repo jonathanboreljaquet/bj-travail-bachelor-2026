@@ -34,6 +34,22 @@ export function getLatestUserPrompt(messages: UIMessage[]): string {
   return text || "[Validation d'une action de l'outil par l'utilisateur]";
 }
 
+const CONTEXT_WINDOW_SIZE = 6;
+
+function getSafeSlidingWindow(
+  messages: UIMessage[],
+  maxMessages: number,
+): UIMessage[] {
+  if (messages.length <= maxMessages) return messages;
+
+  let startIndex = messages.length - maxMessages;
+  while (startIndex > 0 && messages[startIndex].role !== "user") {
+    startIndex--;
+  }
+
+  return messages.slice(startIndex);
+}
+
 const google = createGoogleGenerativeAI({
   apiKey:
     process.env.GOOGLE_GENERATIVE_AI_API_KEY ??
@@ -156,8 +172,9 @@ export async function POST(request: Request) {
     const result = streamText({
       model: google(modelId),
       system: systemPrompt,
-      // Toujours garder la conversion pour éviter l'erreur Zod
-      messages: await convertToModelMessages(messages),
+      messages: await convertToModelMessages(
+        getSafeSlidingWindow(messages, CONTEXT_WINDOW_SIZE),
+      ),
       tools: tools as ToolSet,
       stopWhen: stepCountIs(5),
       experimental_telemetry: {
