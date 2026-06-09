@@ -12,12 +12,13 @@ import {
 import { getChatRatelimit } from "@/lib/ratelimit";
 import { getRateLimitIdentifier } from "@/lib/request-identifier";
 import { API_URL, MCP_SERVER_URL } from "@/lib/config";
+import { SENSITIVE_TOOL_NAMES } from "@/lib/sensitive-tools";
 
 export const runtime = "nodejs";
 
 const modelId = process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite";
 
-export function getLatestUserPrompt(messages: UIMessage[]): string {
+function getLatestUserPrompt(messages: UIMessage[]): string {
   const message = messages.at(-1);
 
   if (!message || message.role !== "user") {
@@ -128,8 +129,6 @@ export async function POST(request: Request) {
     },
   });
 
-  // Fermeture idempotente : la connexion MCP doit être fermée quel que soit le
-  // chemin de sortie (succès, erreur de stream, abandon client, erreur de setup).
   let mcpClientClosed = false;
   const closeMcpClient = async () => {
     if (mcpClientClosed) return;
@@ -144,10 +143,7 @@ export async function POST(request: Request) {
   try {
     const tools = await mcpClient.tools();
 
-    // Liste des outils sensibles
-    const unsafeTools = ["create-match-from-slot", "join-open-match"];
-
-    for (const toolName of unsafeTools) {
+    for (const toolName of SENSITIVE_TOOL_NAMES) {
       if (tools[toolName]) {
         tools[toolName].needsApproval = true;
       }

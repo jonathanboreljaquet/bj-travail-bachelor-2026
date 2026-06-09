@@ -7,6 +7,10 @@ import {
   lastAssistantMessageIsCompleteWithApprovalResponses,
 } from "ai";
 import { logoutAction } from "@/app/actions/auth";
+import {
+  isSensitiveTool,
+  SENSITIVE_TOOL_LABELS,
+} from "@/lib/sensitive-tools";
 import MarkdownMessage from "./MarkdownMessage";
 
 type TokenUsage = {
@@ -187,11 +191,12 @@ export default function ChatbotClient({
 
                   // === TRADUCTION VISUELLE DES OUTILS ===
                   // On crée des titres et descriptions "User Friendly"
-                  let friendlyTitle = toolName;
+                  const friendlyTitle = isSensitiveTool(toolName)
+                    ? SENSITIVE_TOOL_LABELS[toolName]
+                    : toolName;
                   let friendlyDetails = null;
 
                   if (toolName === "create-match-from-slot") {
-                    friendlyTitle = "🎾 Création de match";
                     friendlyDetails = (
                       <ul className="space-y-1.5 text-xs text-black/80">
                         <li>
@@ -220,7 +225,6 @@ export default function ChatbotClient({
                       </ul>
                     );
                   } else if (toolName === "join-open-match") {
-                    friendlyTitle = "🤝 Inscription à un match";
                     friendlyDetails = (
                       <ul className="space-y-1.5 text-xs text-black/80">
                         <li>
@@ -236,10 +240,7 @@ export default function ChatbotClient({
                     );
                   }
 
-                  if (
-                    toolName === "create-match-from-slot" ||
-                    toolName === "join-open-match"
-                  ) {
+                  if (isSensitiveTool(toolName)) {
                     // 1. En chargement
                     if (state === "partial-call" || state === "call") {
                       return (
