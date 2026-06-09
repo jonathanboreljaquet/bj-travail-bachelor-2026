@@ -50,15 +50,11 @@ function getSafeSlidingWindow(
   return messages.slice(startIndex);
 }
 
-const google = createGoogleGenerativeAI({
-  apiKey:
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ??
-    process.env.MCP_CLIENT_GEMINI_API_KEY,
-});
+const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+const google = createGoogleGenerativeAI({ apiKey });
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
   if (!apiKey) {
     return Response.json({ error: "Missing model API key." }, { status: 500 });
   }
