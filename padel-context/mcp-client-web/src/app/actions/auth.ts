@@ -30,6 +30,8 @@ export async function login(formData: FormData) {
       name: "padel_context_jwt_token",
       value: jwtToken,
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
