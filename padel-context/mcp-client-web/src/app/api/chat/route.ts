@@ -69,20 +69,25 @@ export async function POST(request: Request) {
     );
   }
 
-  const identifier = getRateLimitIdentifier(request, jwtToken);
-  const rateLimitResult = await getChatRatelimit().limit(identifier);
+  const { messages }: { messages: UIMessage[] } = await request.json();
 
-  if (!rateLimitResult.success) {
-    return Response.json(
-      {
-        error:
-          "Vous avez le droit à 5 questions par minute, veuillez patienter.",
-      },
-      { status: 429 },
-    );
+  const isNewUserPrompt = messages.at(-1)?.role === "user";
+
+  if (isNewUserPrompt) {
+    const identifier = getRateLimitIdentifier(request, jwtToken);
+    const rateLimitResult = await getChatRatelimit().limit(identifier);
+
+    if (!rateLimitResult.success) {
+      return Response.json(
+        {
+          error:
+            "Vous avez le droit à 5 questions par minute, veuillez patienter.",
+        },
+        { status: 429 },
+      );
+    }
   }
 
-  const { messages }: { messages: UIMessage[] } = await request.json();
   const prompt = getLatestUserPrompt(messages) ?? "Prompt non disponible.";
 
   const usageResponse = await fetch(`${API_URL}/api/llm-usage/me`, {

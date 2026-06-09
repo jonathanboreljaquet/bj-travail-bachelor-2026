@@ -1,14 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
+  getToolName,
+  isToolUIPart,
   lastAssistantMessageIsCompleteWithApprovalResponses,
 } from "ai";
 import { logoutAction } from "@/app/actions/auth";
 import {
+  type CreateMatchFromSlotInput,
   isSensitiveTool,
+  type JoinOpenMatchInput,
   SENSITIVE_TOOL_LABELS,
 } from "@/lib/sensitive-tools";
 import MarkdownMessage from "./MarkdownMessage";
@@ -175,74 +186,73 @@ export default function ChatbotClient({
                     );
                   }
 
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const p = part as any;
-                  const toolName =
-                    p.toolName ||
-                    p.toolInvocation?.toolName ||
-                    (p.type.startsWith("tool-")
-                      ? p.type.replace("tool-", "")
-                      : "inconnu");
-                  const state = p.state || p.toolInvocation?.state || "call";
-                  const args =
-                    p.args || p.toolInvocation?.args || p.input || {};
-                  const approvalId =
-                    p.approval?.id || p.toolInvocation?.approval?.id;
+                  if (!isToolUIPart(part)) {
+                    return null;
+                  }
+
+                  const toolName = getToolName(part);
+
+                  if (!isSensitiveTool(toolName)) {
+                    return null;
+                  }
 
                   // === TRADUCTION VISUELLE DES OUTILS ===
-                  // On crée des titres et descriptions "User Friendly"
-                  const friendlyTitle = isSensitiveTool(toolName)
-                    ? SENSITIVE_TOOL_LABELS[toolName]
-                    : toolName;
-                  let friendlyDetails = null;
+                  // Titre + détails "user friendly" pour la carte de validation.
+                  const friendlyTitle = SENSITIVE_TOOL_LABELS[toolName];
+                  let friendlyDetails: ReactNode = null;
 
                   if (toolName === "create-match-from-slot") {
+                    const input = (part.input ?? {}) as CreateMatchFromSlotInput;
                     friendlyDetails = (
                       <ul className="space-y-1.5 text-xs text-black/80">
                         <li>
                           <strong>Action :</strong> Créer une nouvelle session
                           de jeu.
                         </li>
-                        {args.startTime && args.endTime && (
+                        {input.startTime && input.endTime && (
                           <li>
                             ⏰ <strong>Créneau :</strong> De{" "}
-                            {new Date(args.startTime).toLocaleTimeString(
+                            {new Date(input.startTime).toLocaleTimeString(
                               "fr-CH",
                               { hour: "2-digit", minute: "2-digit" },
                             )}
                             à{" "}
-                            {new Date(args.endTime).toLocaleTimeString(
+                            {new Date(input.endTime).toLocaleTimeString(
                               "fr-CH",
                               { hour: "2-digit", minute: "2-digit" },
                             )}
                           </li>
                         )}
-                        {args.club && (
+                        {input.club && (
                           <li>
-                            📍 <strong>Lieu :</strong> {args.club}
+                            📍 <strong>Lieu :</strong> {input.club}
                           </li>
                         )}
                       </ul>
                     );
                   } else if (toolName === "join-open-match") {
+                    const input = (part.input ?? {}) as JoinOpenMatchInput;
                     friendlyDetails = (
                       <ul className="space-y-1.5 text-xs text-black/80">
                         <li>
                           <strong>Action :</strong> Rejoindre une partie
                           existante.
                         </li>
-                        {args.matchId && (
+                        {input.matchId && (
                           <li className="font-mono bg-zinc-100 px-1 py-0.5 rounded w-fit">
-                            🆔 Match ID : {args.matchId}
+                            🆔 Match ID : {input.matchId}
                           </li>
                         )}
                       </ul>
                     );
                   }
 
-                  if (isSensitiveTool(toolName)) {
-                    // 1. En chargement
-                    if (state === "partial-call" || state === "call") {
+                  // Rendu selon l'état réel du tool part (AI SDK v6).
+                  switch (part.state) {
+                    // Préparation des arguments, puis traitement post-validation.
+                    case "input-streaming":
+                    case "input-available":
+                    case "approval-responded":
                       return (
                         <div
                           key={i}
@@ -252,10 +262,9 @@ export default function ChatbotClient({
                           Préparation : {friendlyTitle}...
                         </div>
                       );
-                    }
 
-                    // 2. Demande de validation
-                    if (state === "approval-requested") {
+                    // Demande de validation humaine (HITL).
+                    case "approval-requested":
                       return (
                         <div
                           key={i}
@@ -286,27 +295,23 @@ export default function ChatbotClient({
 
                             <div className="flex gap-2">
                               <button
-                                onClick={() => {
-                                  if (approvalId) {
-                                    addToolApprovalResponse({
-                                      id: approvalId,
-                                      approved: true,
-                                    });
-                                  }
-                                }}
+                                onClick={() =>
+                                  addToolApprovalResponse({
+                                    id: part.approval.id,
+                                    approved: true,
+                                  })
+                                }
                                 className="flex-1 bg-black text-white px-3 py-2 rounded-md text-xs font-semibold hover:bg-black/80 transition-colors"
                               >
                                 Confirmer l&apos;action
                               </button>
                               <button
-                                onClick={() => {
-                                  if (approvalId) {
-                                    addToolApprovalResponse({
-                                      id: approvalId,
-                                      approved: false,
-                                    });
-                                  }
-                                }}
+                                onClick={() =>
+                                  addToolApprovalResponse({
+                                    id: part.approval.id,
+                                    approved: false,
+                                  })
+                                }
                                 className="flex-1 bg-white border border-black/20 text-black px-3 py-2 rounded-md text-xs font-semibold hover:bg-zinc-50 transition-colors"
                               >
                                 Annuler
@@ -315,10 +320,9 @@ export default function ChatbotClient({
                           </div>
                         </div>
                       );
-                    }
 
-                    // 3. Action réussie
-                    if (state === "result" || state === "output-available") {
+                    // Action réussie.
+                    case "output-available":
                       return (
                         <div
                           key={i}
@@ -330,15 +334,14 @@ export default function ChatbotClient({
                           <div>
                             <strong>{friendlyTitle}</strong>
                             <p className="opacity-80 mt-0.5">
-                              L&apos;action a été accepté avec succès !
+                              L&apos;action a été effectuée avec succès !
                             </p>
                           </div>
                         </div>
                       );
-                    }
 
-                    // 4. Action refusée ou échouée
-                    if (state === "error" || state === "output-denied") {
+                    // Action refusée par l'utilisateur.
+                    case "output-denied":
                       return (
                         <div
                           key={i}
@@ -355,7 +358,29 @@ export default function ChatbotClient({
                           </div>
                         </div>
                       );
-                    }
+
+                    // Échec d'exécution de l'outil.
+                    case "output-error":
+                      return (
+                        <div
+                          key={i}
+                          className="mt-3 rounded-md bg-red-50 p-3 text-xs text-red-800 border border-red-200 flex items-start gap-2"
+                        >
+                          <span className="text-red-600 text-base leading-none">
+                            ✗
+                          </span>
+                          <div>
+                            <strong>Échec de l&apos;action</strong>
+                            <p className="opacity-80 mt-0.5">
+                              Une erreur est survenue, l&apos;action n&apos;a pas
+                              pu être réalisée.
+                            </p>
+                          </div>
+                        </div>
+                      );
+
+                    default:
+                      return null;
                   }
                 })}
               </div>

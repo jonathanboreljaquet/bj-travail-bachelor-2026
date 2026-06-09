@@ -13,3 +13,13 @@ export const SENSITIVE_TOOL_LABELS: Record<SensitiveToolName, string> = {
   "create-match-from-slot": "🎾 Création de match",
   "join-open-match": "🤝 Inscription à un match",
 };
+
+export type CreateMatchFromSlotInput = {
+  startTime?: string;
+  endTime?: string;
+  club?: string;
+};
+
+export type JoinOpenMatchInput = {
+  matchId?: string;
+};
