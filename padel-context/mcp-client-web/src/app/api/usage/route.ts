@@ -1,8 +1,7 @@
 import { cookies } from "next/headers";
+import { API_URL } from "@/lib/config";
 
 export const runtime = "nodejs";
-
-const apiUrl = "http://api:3000";
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -15,7 +14,7 @@ export async function GET() {
     );
   }
 
-  const response = await fetch(`${apiUrl}/api/llm-usage/me`, {
+  const response = await fetch(`${API_URL}/api/llm-usage/me`, {
     headers: {
       Authorization: `Bearer ${jwtToken}`,
     },

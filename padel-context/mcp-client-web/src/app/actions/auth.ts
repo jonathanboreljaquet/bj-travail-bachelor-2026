@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { API_URL } from "@/lib/config";
 
 export async function login(formData: FormData) {
   const email = formData.get("email") as string;
@@ -12,7 +13,7 @@ export async function login(formData: FormData) {
   }
 
   try {
-    const res = await fetch("http://api:3000/api/auth/login", {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

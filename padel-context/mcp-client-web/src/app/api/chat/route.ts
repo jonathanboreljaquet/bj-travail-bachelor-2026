@@ -11,12 +11,11 @@ import {
 } from "ai";
 import { getChatRatelimit } from "@/lib/ratelimit";
 import { getRateLimitIdentifier } from "@/lib/request-identifier";
+import { API_URL, MCP_SERVER_URL } from "@/lib/config";
 
 export const runtime = "nodejs";
 
 const modelId = process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite";
-const mcpServerUrl = "http://mcp-server:3001/mcp";
-const apiUrl = "http://api:3000";
 
 export function getLatestUserPrompt(messages: UIMessage[]): string {
   const message = messages.at(-1);
@@ -85,7 +84,7 @@ export async function POST(request: Request) {
   const { messages }: { messages: UIMessage[] } = await request.json();
   const prompt = getLatestUserPrompt(messages) ?? "Prompt non disponible.";
 
-  const usageResponse = await fetch(`${apiUrl}/api/llm-usage/me`, {
+  const usageResponse = await fetch(`${API_URL}/api/llm-usage/me`, {
     headers: {
       Authorization: `Bearer ${jwtToken}`,
     },
@@ -124,7 +123,7 @@ export async function POST(request: Request) {
   const mcpClient = await createMCPClient({
     transport: {
       type: "http",
-      url: mcpServerUrl,
+      url: MCP_SERVER_URL,
       headers: jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {},
     },
   });
@@ -192,7 +191,7 @@ export async function POST(request: Request) {
           const outputTokens = usage.outputTokens;
           const totalTokens = inputTokens + outputTokens;
 
-          const response = await fetch(`${apiUrl}/api/llm-usage/log`, {
+          const response = await fetch(`${API_URL}/api/llm-usage/log`, {
             method: "POST",
             headers: {
               Authorization: `Bearer ${jwtToken}`,

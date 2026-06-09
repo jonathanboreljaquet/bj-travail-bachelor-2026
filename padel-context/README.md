@@ -37,7 +37,7 @@ Les variables d'environnement sont centralisées dans le fichier `.env` à la ra
 | `MCP_SERVER_HTTP_PORT`         | 3001                      | Port du serveur MCP (conteneur)                        |
 | `MCP_CLIENT_WEB_PORT`          | 3002                      | Port d'accès au client web (hôte)                      |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | (vide)                    | Clé API Google Gemini (obligatoire)                    |
-| `GEMINI_MODEL`                 | models/gemma-4-26b-a4b-it | Modèle Gemini à utiliser                               |
+| `GEMINI_MODEL`                 | gemini-3.1-flash-lite     | Modèle Gemini à utiliser                               |
 | `LANGFUSE_SECRET_KEY`          | (vide)                    | Clé secrète Langfuse (optionnel)                       |
 | `LANGFUSE_PUBLIC_KEY`          | (vide)                    | Clé publique Langfuse (optionnel)                      |
 | `LANGFUSE_BASE_URL`            | (vide)                    | URL Langfuse (optionnel)                               |

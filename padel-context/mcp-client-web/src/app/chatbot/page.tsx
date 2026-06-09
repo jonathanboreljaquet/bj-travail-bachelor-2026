@@ -1,12 +1,11 @@
 import { cookies } from "next/headers";
 import ChatbotClient from "./ChatbotClient";
+import { API_URL } from "@/lib/config";
 
 type TokenUsage = {
   currentMonthTokens: number;
   monthlyTokenLimit: number;
 };
-
-const apiUrl = "http://api:3000";
 
 async function getInitialTokenUsage(): Promise<{
   usage: TokenUsage | null;
@@ -19,7 +18,7 @@ async function getInitialTokenUsage(): Promise<{
     return { usage: null, error: "Utilisateur non authentifié." };
   }
 
-  const response = await fetch(`${apiUrl}/api/llm-usage/me`, {
+  const response = await fetch(`${API_URL}/api/llm-usage/me`, {
     headers: {
       Authorization: `Bearer ${jwtToken}`,
     },
