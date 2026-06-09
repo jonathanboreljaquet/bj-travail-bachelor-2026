@@ -14,10 +14,14 @@ import { getRateLimitIdentifier } from "@/lib/request-identifier";
 import { API_URL, MCP_SERVER_URL } from "@/lib/config";
 import { SENSITIVE_TOOL_NAMES } from "@/lib/sensitive-tools";
 
-export const runtime = "nodejs";
-
 const modelId = process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite";
+const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const google = createGoogleGenerativeAI({ apiKey });
 
+/**
+ * Extrait le texte de la dernière question de l'utilisateur.
+ * Si le dernier message n'est pas de l'utilisateur,renvoie un libellé générique.
+ */
 function getLatestUserPrompt(messages: UIMessage[]): string {
   const message = messages.at(-1);
 
@@ -36,6 +40,13 @@ function getLatestUserPrompt(messages: UIMessage[]): string {
 
 const CONTEXT_WINDOW_SIZE = 6;
 
+/**
+ * Applique une fenêtre glissante (sliding window) sur une liste de messages
+ * pour ne conserver que les N (CONTEXT_WINDOW_SIZE) derniers éléments tout en préservant la cohérence du contexte.
+ * @param {UIMessage[]} messages - La liste complète des messages de la conversation.
+ * @param {number} maxMessages - La limite maximale de messages à conserver.
+ * @returns {UIMessage[]} La sous-liste des messages conservés.
+ */
 function getSafeSlidingWindow(
   messages: UIMessage[],
   maxMessages: number,
@@ -49,10 +60,6 @@ function getSafeSlidingWindow(
 
   return messages.slice(startIndex);
 }
-
-const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-const google = createGoogleGenerativeAI({ apiKey });
 
 export async function POST(request: Request) {
   if (!apiKey) {
@@ -88,8 +95,9 @@ export async function POST(request: Request) {
     }
   }
 
-  const prompt = getLatestUserPrompt(messages) ?? "Prompt non disponible.";
+  const lastPrompt = getLatestUserPrompt(messages) ?? "Prompt non disponible.";
 
+  // Récupère la consommation de tokens du mois auprès de l'API.
   const usageResponse = await fetch(`${API_URL}/api/llm-usage/me`, {
     headers: {
       Authorization: `Bearer ${jwtToken}`,
@@ -126,6 +134,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Quota mensuel atteint" }, { status: 403 });
   }
 
+  // Ouvre une connexion au serveur MCP en transmettant le JWT pour l'authentification.
   const mcpClient = await createMCPClient({
     transport: {
       type: "http",
@@ -134,6 +143,8 @@ export async function POST(request: Request) {
     },
   });
 
+  // Fermeture idempotente de la connexion MCP. Appelée sur TOUS les chemins de
+  // sortie (succès, erreur, abandon, erreur de setup) sans jamais fermer deux fois.
   let mcpClientClosed = false;
   const closeMcpClient = async () => {
     if (mcpClientClosed) return;
@@ -148,6 +159,7 @@ export async function POST(request: Request) {
   try {
     const tools = await mcpClient.tools();
 
+    // Marque les outils nécessitante une confirmation humaine (HITL).
     for (const toolName of SENSITIVE_TOOL_NAMES) {
       if (tools[toolName]) {
         tools[toolName].needsApproval = true;
@@ -186,6 +198,7 @@ export async function POST(request: Request) {
       ),
       tools: tools as ToolSet,
       stopWhen: stepCountIs(5),
+      abortSignal: request.signal,
       experimental_telemetry: {
         isEnabled: true,
         functionId: "padel-context-mcp",
@@ -212,7 +225,7 @@ export async function POST(request: Request) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              prompt,
+              prompt: lastPrompt,
               inputTokens,
               outputTokens,
               totalTokens,
