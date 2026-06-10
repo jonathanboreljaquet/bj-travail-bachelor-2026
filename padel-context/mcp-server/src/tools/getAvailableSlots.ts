@@ -16,23 +16,16 @@ import dayjs from "dayjs";
 // Description détaillée de du tool pour le LLM
 const GET_AVAILABLE_SLOTS_DESC = `
 Purpose:
-Searches and lists available Padel time slots by court based on filters. It returns structured data including court details (type, price, equipment box availability, club info), available time ranges, and outdoor weather forecasts.
+Searches and lists available Padel time slots by court based on filters.
 
 Guidelines:
 - When to use: Use this tool to check court availability when a user wants to play or create a new match.
-- You should follow these CRITICAL rules:
-  1. The 'city' parameter is MANDATORY. Do not guess it. If missing, abort the tool call and ask the user.
-  2. If the user specifies a time, set 'timeFrom' and add at least 2 hours to calculate 'timeTo'.
-  3. PAGINATION LIMIT: If the tool returns a large list, you MUST strictly display only the first 5 slots.
-  4. EXHAUSTIVE AND RAW DATA: For each slot displayed, you MUST explicitly mention 'courtType', 'availableSpots', 'hasEquipmentBox', and 'pricePerPerson'. If 'weather' data is present, you MUST display the EXACT temperature, rain probability, and wind speed exactly as provided by the tool.
-  5. ORCHESTRATION: After displaying up to 5 slots, ask the user if they want to see more options or if they want to book one. When they confirm a booking, trigger the 'create-match-from-slot' tool.
+- If the user specifies a time, set 'timeFrom' and add at least 2 hours to calculate 'timeTo'.
+- For each court displayed, you MUST explicitly mention the court 'name' (COMPLETELY, e.g., {name} (ID:{id})), 'type', 'hasEquipmentBox', 'pricePerPerson' and 'club'.
+- For each slots displayed, you MUST explicitly mention the slot 'startTime' and 'endTime'. - If 'weather' data is present, you MUST display the EXACT temperature, rain probability, and wind speed.
 
 Limitations:
 - Do NOT use this tool if the user wants to find or join an ALREADY EXISTING match (use 'get-open-matches' instead).
-- This tool only returns available blank slots; it does not book them.
-
-Examples:
-- User: "I want to play in Geneva tomorrow morning." -> Assistant calls tool with city="Geneva", timeFrom="[tomorrow 08:00]", timeTo="[tomorrow 12:00]".
 `;
 
 // Schémas de validation des données d'entrée du tool
@@ -40,7 +33,7 @@ export const getAvailableSlotsInputSchema = z.object({
     city: z
         .string()
         .describe(
-            "MANDATORY: Target city for the Padel match. MUST be explicitly stated by the user. If missing, do not guess, abort the tool call and ask the user.",
+            "MANDATORY: Target city. MUST be explicitly stated by the user. Do not guess it from context. Only the user can provide it. Abort and ask the user if missing.",
         ),
     courtType: z
         .enum(["INDOOR", "OUTDOOR", "COVERED"])
@@ -229,7 +222,7 @@ export const getAvailableSlotsTool = {
                     return {
                         court: {
                             id: item.court.id,
-                            name: item.court.name,
+                            name: `${item.court.name} (ID:${item.court.id})`,
                             type: courtTypeTranslations[item.court.type],
                             hasEquipmentBox: item.court.hasEquipmentBox,
                             pricePerPerson: item.court.pricePerPerson + "CHF",

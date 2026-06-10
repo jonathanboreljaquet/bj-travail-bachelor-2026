@@ -16,32 +16,22 @@ import {
 // Description détaillée du tool pour le LLM
 const GET_OPEN_MATCHES_DESC = `
 Purpose:
-Searches and lists currently open Padel matches that need players. It returns match details including start/end times, available spots, average player level, court properties (equipment box, price), and weather information.
+Searches and lists currently open Padel matches that need players.
 
 Guidelines:
-- When to use: Use this tool when a user explicitly wants to find or join an existing, partially filled Padel match.
-- You should follow these CRITICAL rules:
-  1. The 'city' parameter is MANDATORY. Do not guess it from context. Abort and ask the user if missing.
-  2. PAGINATION LIMIT: If the results contain many matches, you MUST strictly display only the first 5 matches.
-  3. EXHAUSTIVE AND RAW DATA: For each match displayed, you MUST explicitly mention 'courtType', 'availableSpots', 'averageLevel', 'hasEquipmentBox', and 'pricePerPerson'. If 'weather' data is present, you MUST display the EXACT temperature, rain probability, and wind speed.
-  4. ORCHESTRATION: After presenting up to 5 matches, ask the user if they want to join one or see more options. When they confirm, trigger the 'join-open-match' tool using the specific match ID.
-  5. ERROR RECOVERY: If no matches are found, apologize and immediately suggest creating a new match using the 'get-available-slots' tool instead.
+- When to use: Use this tool when a user explicitly wants to find or join an existing Padel match.
+- For each match displayed, you MUST explicitly mention the match 'id', 'courtType', 'availableSpots', 'averageLevel', 'hasEquipmentBox', and 'pricePerPerson'. If 'weather' data is present, you MUST display the EXACT temperature, rain probability, and wind speed.
 
 Limitations:
 - Do NOT use this tool if the user wants to create a brand new match on an empty court (use 'get-available-slots' instead).
-- This tool does not join the match for the user; it only retrieves the list.
-
-Examples:
-- User: "Are there any matches I can join in Lausanne tonight?" -> Assistant calls tool with city="Lausanne", startTimeFrom="[YYYY-MM-DDT18:00:00Z]".
 `;
 
-// Schémas de validation des données d'entrée du tools
 // Schémas de validation des données d'entrée du tool
 export const getOpenMatchesInputSchema = z.object({
     city: z
         .string()
         .describe(
-            "MANDATORY: Target city. MUST be explicitly stated by the user. If missing, do not guess, abort the tool call and ask the user.",
+            "MANDATORY: Target city. MUST be explicitly stated by the user. Do not guess it from context. Only the user can provide it. Abort and ask the user if missing.",
         ),
     courtType: z
         .enum(["INDOOR", "OUTDOOR", "COVERED"])
@@ -82,9 +72,7 @@ export const getOpenMatchesInputSchema = z.object({
         .number()
         .int()
         .optional()
-        .describe(
-            "Exact number of open spots the user needs. E.g., if the user says 'me and my friend want to play', set this to 2.",
-        ),
+        .describe("Exact number of open spots the user needs."),
     minAvailableSpots: z
         .number()
         .int()
@@ -99,9 +87,7 @@ export const getOpenMatchesInputSchema = z.object({
     participantAverageLevel: z
         .number()
         .optional()
-        .describe(
-            "The target skill level of the match (e.g., 1.0 for beginners to 10.0 for pros).",
-        ),
+        .describe("The target skill level of the match between 1.0 and 10.0."),
     participantAverageLevelTolerance: z
         .number()
         .optional()

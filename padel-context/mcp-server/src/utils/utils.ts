@@ -26,7 +26,9 @@ export const dateParameters = [
 
 export const isoTimeStr = z
     .string()
-    .describe("Local time strictly in 'YYYY-MM-DDTHH:mm:ss' format.");
+    .describe(
+        "Local time (Europe/Zurich) strictly in 'YYYY-MM-DDTHH:mm:ss' format. Do NOT append a timezone offset or a 'Z' (UTC) suffix. Example: '2026-04-15T10:00:00'.",
+    );
 
 // Le contexte partagé pour le token JWT
 export const tokenContext = new AsyncLocalStorage<string | undefined>();

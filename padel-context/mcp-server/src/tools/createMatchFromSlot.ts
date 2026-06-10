@@ -13,21 +13,14 @@ import {
 // Description détaillée du tool pour guider le LLM
 const CREATE_MATCH_FROM_SLOT_DESC = `
 Purpose:
-Creates and registers a new Padel match using an available time slot on a specific court. It returns the creation status, the new match ID, and the number of available spots remaining.
+Creates and registers a new Padel match using an available time slot on a specific court.
 
 Guidelines:
 - When to use: Use this tool ONLY when the user explicitly confirms they want to book/create a new match from a specific time slot they previously selected via the 'get-available-slots' tool.
-- You should follow these CRITICAL rules:
-  1. Ensure you have the exact 'courtId', 'startTime', and 'endTime' from the user's prior selection. Do NOT invent or guess these values.
-  2. After a successful creation, confirm to the user by providing the new match ID and telling them how many spots are left for others to join.
-  3. ERROR RECOVERY: If the tool returns an error (e.g., slot is no longer available), apologize to the user and proactively suggest searching for new available slots.
+- Ensure you have the exact 'courtId', 'startTime', and 'endTime' from the user's prior selection. Do NOT invent or guess these values.
 
 Limitations:
-- Do NOT use this tool to join an ALREADY EXISTING open match (use 'join-open-match' for that).
-- This tool REQUIRES prior knowledge of available slots. Never call this blindly without having offered choices to the user first.
-
-Examples:
-- User: "Yes, let's book the 10:00 AM slot on Court 1." -> Assistant calls tool with courtId=1, startTime="[YYYY-MM-DDT10:00:00Z]", endTime="[YYYY-MM-DDT11:30:00Z]".
+- Do NOT use this tool to join an already existing open match (use 'join-open-match' for that).
 `;
 
 // Schéma de validation des données d'entrée du tool

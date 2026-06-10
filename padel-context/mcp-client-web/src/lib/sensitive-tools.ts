@@ -15,9 +15,9 @@ export const SENSITIVE_TOOL_LABELS: Record<SensitiveToolName, string> = {
 };
 
 export type CreateMatchFromSlotInput = {
+  courtId?: number;
   startTime?: string;
   endTime?: string;
-  club?: string;
 };
 
 export type JoinOpenMatchInput = {

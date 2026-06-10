@@ -7,21 +7,14 @@ import { API_BASE_URL, tokenContext } from "../utils/utils";
 // Description détaillée du tool pour le LLM
 const JOIN_OPEN_MATCH_DESC = `
 Purpose:
-Registers the current user into an existing open Padel match. It returns a success message and the updated number of remaining spots.
+Registers the current user into an existing open Padel match.
 
 Guidelines:
 - When to use: Use this tool ONLY when the user explicitly confirms they want to join a specific match they previously selected via the 'get-open-matches' tool.
-- You should follow these CRITICAL rules:
-  1. The 'matchId' must be retrieved accurately from a previous call to 'get-open-matches'. Do not guess or invent it.
-  2. Upon success, inform the user that they are registered and announce how many spots are still open for that match.
-  3. ERROR RECOVERY: If the tool returns an error (e.g., the match is full, already joined, or invalid ID), apologize to the user and immediately suggest calling 'get-open-matches' to find another available match today.
+- The 'matchId' must be retrieved accurately from a previous call to 'get-open-matches'. Do not guess or invent it.
 
 Limitations:
 - Do NOT use this tool to create a new match from a blank slot (use 'create-match-from-slot' for that).
-- This tool REQUIRES prior knowledge of existing matches. Never call this blindly without having offered choices to the user first.
-
-Examples:
-- User: "I want to join the match with ID 45." -> Assistant calls tool with matchId=45.
 `;
 
 // Schémas de validation des données d'entrée du tools
