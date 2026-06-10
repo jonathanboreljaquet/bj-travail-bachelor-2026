@@ -134,12 +134,16 @@ export async function POST(request: Request) {
     return Response.json({ error: "Quota mensuel atteint" }, { status: 403 });
   }
 
-  // Ouvre une connexion au serveur MCP en transmettant le JWT pour l'authentification.
+  // Ouvre une connexion au serveur MCP en transmettant le JWT pour l'authentification utilisateur.
+  // et le secret interne pour authentifier le client MCP auprès du serveur MCP.
   const mcpClient = await createMCPClient({
     transport: {
       type: "http",
       url: MCP_SERVER_URL,
-      headers: jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {},
+      headers: {
+        Authorization: `Bearer ${jwtToken}`,
+        "internal-secret": process.env.MCP_INTERNAL_SECRET ?? "",
+      },
     },
   });
 

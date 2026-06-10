@@ -75,6 +75,7 @@ services:
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: "300"
+      MCP_INTERNAL_SECRET: "${MCP_INTERNAL_SECRET:-}"
     volumes:
       - ./mcp-server/src:/app/src
     depends_on:
@@ -103,6 +104,7 @@ services:
       LANGFUSE_BASE_URL: "${LANGFUSE_BASE_URL:-}"
       UPSTASH_REDIS_REST_URL: "${UPSTASH_REDIS_REST_URL:-}"
       UPSTASH_REDIS_REST_TOKEN: "${UPSTASH_REDIS_REST_TOKEN:-}"
+      MCP_INTERNAL_SECRET: "${MCP_INTERNAL_SECRET:-}"
     volumes:
       - ./mcp-client-web/src:/app/src
     depends_on:

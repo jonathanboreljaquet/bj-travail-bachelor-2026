@@ -51,7 +51,17 @@ server.registerTool(
     createMatchFromSlotTool.handler,
 );
 
+const MCP_INTERNAL_SECRET = process.env.MCP_INTERNAL_SECRET;
+
 app.use("/mcp", async (req, res) => {
+    if (
+        MCP_INTERNAL_SECRET &&
+        req.headers["internal-secret"] !== MCP_INTERNAL_SECRET
+    ) {
+        res.status(403).json({ error: "Forbidden: invalid internal secret." });
+        return;
+    }
+
     const authHeader = req.headers.authorization;
     const token = authHeader?.startsWith("Bearer ")
         ? authHeader.substring(7)
