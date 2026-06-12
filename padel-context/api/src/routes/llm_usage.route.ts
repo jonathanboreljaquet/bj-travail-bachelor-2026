@@ -31,7 +31,7 @@ const router = Router();
  *                   description: Limite mensuelle de tokens
  *                   example: 500000
  *       401:
- *         description: Token manquant ou invalide
+ *         description: Authentification échouée (token manquant ou invalide).
  *         content:
  *           application/json:
  *             schema:
@@ -157,7 +157,7 @@ router.get("/me", authenticateJwt, getLlmUsage);
  *                 value:
  *                   message: "totalTokens must equal inputTokens + outputTokens"
  *       401:
- *         description: Token manquant ou invalide
+ *         description: Authentification échouée (token manquant ou invalide).
  *         content:
  *           application/json:
  *             schema:

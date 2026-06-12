@@ -368,3 +368,81 @@ export const joinMatch = async (req: Request, res: Response): Promise<void> => {
         });
     }
 };
+
+/**
+ * Récupère tous les matchs de l'utilisateur connecté, quel que soit leur statut.
+ * @param {Request} req - L'objet requête d'Express.
+ * @param {Response} res - L'objet réponse d'Express.
+ * @returns {200} Succès : Retourne le tableau des matchs de l'utilisateur, triés par date de début décroissante.
+ * @throws {401} Non autorisé : L'utilisateur n'est pas connecté.
+ * @throws {500} Erreur interne : Déclenché en cas d'échec de la requête en base de données.
+ */
+export const getMyMatches = async (
+    req: Request,
+    res: Response,
+): Promise<void> => {
+    try {
+        const authUser = res.locals.authUser as
+            | { userId: number; email: string }
+            | undefined;
+
+        if (!authUser) {
+            res.status(401).json({ message: "unauthorized" });
+            return;
+        }
+
+        const userId = authUser.userId;
+
+        const matches = await prisma.match.findMany({
+            where: {
+                participants: {
+                    some: { user_id: userId },
+                },
+            },
+            orderBy: { startTime: "asc" },
+            select: {
+                id: true,
+                startTime: true,
+                endTime: true,
+                status: true,
+                availableSpots: true,
+                creator_id: true,
+                court: {
+                    select: {
+                        name: true,
+                        type: true,
+                        hasEquipmentBox: true,
+                        pricePerPerson: true,
+                        slotDuration: true,
+                        club: {
+                            select: {
+                                name: true,
+                                city: true,
+                                postalCode: true,
+                                openingTime: true,
+                                closingTime: true,
+                            },
+                        },
+                    },
+                },
+                participants: {
+                    select: {
+                        user: {
+                            select: {
+                                firstname: true,
+                                level: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        res.status(200).json(matches);
+    } catch (error) {
+        res.status(500).json({
+            message: "Error while fetching user matches",
+            error: error,
+        });
+    }
+};

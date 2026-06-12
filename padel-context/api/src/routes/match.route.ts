@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { getMatches, joinMatch } from "../controllers/match.controller";
+import {
+    getMatches,
+    joinMatch,
+    getMyMatches,
+} from "../controllers/match.controller";
 import { createMatchFromSlot } from "../controllers/available_slot.controller";
 import { authenticateJwt } from "../middlewares/auth.middleware";
 
@@ -255,6 +259,122 @@ const router = Router();
 router.get("/", authenticateJwt, getMatches);
 /**
  * @swagger
+ * /api/matches/me:
+ *   get:
+ *     summary: Récupérer tous les matchs de l'utilisateur connecté
+ *     description: |
+ *       Retourne l'ensemble des matchs auxquels l'utilisateur authentifié participe quel que soit leur statut (OPEN, COMPLETED, CANCELED).
+ *
+ *       Les résultats sont triés par date de début croissante.
+ *     tags:
+ *       - Matches
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des matchs de l'utilisateur.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 101
+ *                   startTime:
+ *                     type: string
+ *                     format: date-time
+ *                     example: 2026-04-15T18:00:00.000Z
+ *                   endTime:
+ *                     type: string
+ *                     format: date-time
+ *                     example: 2026-04-15T20:00:00.000Z
+ *                   status:
+ *                     type: string
+ *                     enum: [OPEN, COMPLETED, CANCELED]
+ *                     example: COMPLETED
+ *                   availableSpots:
+ *                     type: integer
+ *                     example: 0
+ *                   creator_id:
+ *                     type: integer
+ *                     example: 21
+ *                   court:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                         example: Court Alpha
+ *                       type:
+ *                         type: string
+ *                         example: INDOOR
+ *                       hasEquipmentBox:
+ *                         type: boolean
+ *                         example: true
+ *                       pricePerPerson:
+ *                         type: number
+ *                         example: 18
+ *                       slotDuration:
+ *                         type: integer
+ *                         example: 120
+ *                       club:
+ *                         type: object
+ *                         properties:
+ *                           name:
+ *                             type: string
+ *                             example: Geneva Club
+ *                           city:
+ *                             type: string
+ *                             example: Lancy
+ *                           postalCode:
+ *                             type: string
+ *                             example: "1212"
+ *                           openingTime:
+ *                             type: string
+ *                             example: 08:00
+ *                           closingTime:
+ *                             type: string
+ *                             example: 23:00
+ *                   participants:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         user:
+ *                           type: object
+ *                           properties:
+ *                             firstname:
+ *                               type: string
+ *                               example: Jonathan
+ *                             level:
+ *                               type: integer
+ *                               example: 2
+ *       401:
+ *         description: Authentification échouée (token manquant ou invalide).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: missing or invalid authorization header
+ *       500:
+ *         description: Erreur interne lors de la récupération des matchs de l'utilisateur.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error while fetching user matches
+ */
+router.get("/me", authenticateJwt, getMyMatches);
+/**
+ * @swagger
  * /api/matches/from-slot:
  *   post:
  *     summary: Créer un match depuis un créneau disponible
@@ -414,7 +534,7 @@ router.get("/", authenticateJwt, getMatches);
  *                   type: string
  *                   example: You cannot participate in more than 5 upcoming matches at the same time
  *       401:
- *         description: Utilisateur non authentifié.
+ *         description: Authentification échouée (token manquant ou invalide).
  *         content:
  *           application/json:
  *             schema:
@@ -422,7 +542,7 @@ router.get("/", authenticateJwt, getMatches);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: unauthorized
+ *                   example: missing or invalid authorization header
  *       404:
  *         description: Terrain introuvable.
  *         content:
@@ -590,7 +710,7 @@ router.post("/from-slot", authenticateJwt, createMatchFromSlot);
  *                   type: string
  *                   example: You cannot participate in more than 5 upcoming matches at the same time
  *       401:
- *         description: Utilisateur non authentifié.
+ *         description: Authentification échouée (token manquant ou invalide).
  *         content:
  *           application/json:
  *             schema:
@@ -598,7 +718,7 @@ router.post("/from-slot", authenticateJwt, createMatchFromSlot);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: unauthorized
+ *                   example: missing or invalid authorization header
  *       404:
  *         description: Match introuvable.
  *         content:
