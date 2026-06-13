@@ -146,14 +146,6 @@ const router = Router();
  *           default: 0.5
  *         description: Tolérance absolue autour de `participantAverageLevel`.
  *         example: 0.1
- *       - in: query
- *         name: limit
- *         required: false
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Nombre maximum de matchs retournés.
- *         example: 10
  *     responses:
  *       200:
  *         description: Liste des matchs correspondant aux filtres.
@@ -208,6 +200,9 @@ const router = Router();
  *                           city:
  *                             type: string
  *                             example: Lancy
+ *                           postalCode:
+ *                             type: string
+ *                             example: "1212"
  *                           openingTime:
  *                             type: string
  *                             example: 08:00
@@ -523,16 +518,6 @@ router.get("/me", authenticateJwt, getMyMatches);
  *                 summary: Hors fenêtre de 7 jours
  *                 value:
  *                   message: slot must be within the next 7 days
- *       403:
- *         description: Limite de matchs futurs atteinte.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: You cannot participate in more than 5 upcoming matches at the same time
  *       401:
  *         description: Authentification échouée (token manquant ou invalide).
  *         content:
@@ -543,6 +528,16 @@ router.get("/me", authenticateJwt, getMyMatches);
  *                 message:
  *                   type: string
  *                   example: missing or invalid authorization header
+ *       403:
+ *         description: Limite de matchs futurs atteinte.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: You cannot participate in more than 5 upcoming matches at the same time
  *       404:
  *         description: Terrain introuvable.
  *         content:
@@ -699,16 +694,6 @@ router.post("/from-slot", authenticateJwt, createMatchFromSlot);
  *                 summary: Joueur déjà inscrit
  *                 value:
  *                   message: user already joined this match
- *       403:
- *         description: Limite de matchs futurs atteinte.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: You cannot participate in more than 5 upcoming matches at the same time
  *       401:
  *         description: Authentification échouée (token manquant ou invalide).
  *         content:
@@ -719,6 +704,16 @@ router.post("/from-slot", authenticateJwt, createMatchFromSlot);
  *                 message:
  *                   type: string
  *                   example: missing or invalid authorization header
+ *       403:
+ *         description: Limite de matchs futurs atteinte.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: You cannot participate in more than 5 upcoming matches at the same time
  *       404:
  *         description: Match introuvable.
  *         content:

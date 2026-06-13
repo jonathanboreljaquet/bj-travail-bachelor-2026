@@ -49,15 +49,15 @@ const router = Router();
  *                   type: string
  *                   description: Datetime arrondi à l'heure pleine (format YYYYMMDDHHmm)
  *                   example: "202605121700"
- *                 precipitation:
+ *                 precipitationProbabilityPct:
  *                   type: number
  *                   nullable: true
- *                   description: Précipitations en mm
- *                 wind:
+ *                   description: Probabilité de précipitations en %
+ *                 windSpeedKmh:
  *                   type: number
  *                   nullable: true
  *                   description: Vitesse du vent en km/h
- *                 temperature:
+ *                 temperatureCelsius:
  *                   type: number
  *                   nullable: true
  *                   description: Température en °C
@@ -67,17 +67,17 @@ const router = Router();
  *                 value:
  *                   postalCode: "1202"
  *                   datetime: "202605121700"
- *                   precipitation: 0.2
- *                   wind: 9.2
- *                   temperature: 18.5
+ *                   precipitationProbabilityPct: 20
+ *                   windSpeedKmh: 9.2
+ *                   temperatureCelsius: 18.5
  *               without_data:
  *                 summary: Sans données météo
  *                 value:
  *                   postalCode: "1202"
  *                   datetime: "202605121700"
- *                   precipitation: null
- *                   wind: null
- *                   temperature: null
+ *                   precipitationProbabilityPct: null
+ *                   windSpeedKmh: null
+ *                   temperatureCelsius: null
  *       400:
  *         description: Paramètres invalides
  *         content:

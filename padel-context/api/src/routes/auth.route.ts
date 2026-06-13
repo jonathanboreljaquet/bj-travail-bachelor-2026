@@ -44,36 +44,34 @@ const router = Router();
  *                   example: "login successful"
  *                 token:
  *                   type: string
- *                   format: jwt
  *                   description: Token JWT valide pour 24 heures
  *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *                 user:
  *                   type: object
  *                   properties:
  *                     id:
- *                       type: string
+ *                       type: integer
  *                       description: ID unique de l'utilisateur
- *                       example: "123e4567-e89b-12d3-a456-426614174000"
+ *                       example: 21
  *                     firstname:
  *                       type: string
  *                       description: Prénom de l'utilisateur
- *                       example: "John"
+ *                       example: "Jonathan"
  *                     lastname:
  *                       type: string
  *                       description: Nom de famille de l'utilisateur
- *                       example: "Doe"
+ *                       example: "Borel-Jaquet"
  *                     email:
  *                       type: string
  *                       format: email
  *                       description: Adresse email de l'utilisateur
  *                       example: "jonathan.borel@padelcontext.com"
  *                     level:
- *                       type: string
- *                       description: Niveau de compétence en padel
- *                       enum: ["débutant", "intermédiaire", "avancé"]
- *                       example: "intermédiaire"
+ *                       type: integer
+ *                       description: Niveau de jeu (de 1 pour débutant à 10 pour expert)
+ *                       example: 2
  *       400:
- *         description: Erreur de validation - Email ou mot de passe manquants ou invalides
+ *         description: Erreur de validation - Body invalide, ou email/mot de passe manquants ou invalides
  *         content:
  *           application/json:
  *             schema:
@@ -91,6 +89,10 @@ const router = Router();
  *                 summary: Paramètres vides
  *                 value:
  *                   message: "email and password are required"
+ *               invalid_body:
+ *                 summary: Body absent ou non JSON (pas un objet)
+ *                 value:
+ *                   message: "invalid request body"
  *       401:
  *         description: Authentification échouée - Email non trouvé ou mot de passe incorrect
  *         content:

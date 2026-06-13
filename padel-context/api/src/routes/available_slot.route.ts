@@ -99,26 +99,6 @@ const router = Router();
  *         description: Fin de la fenêtre de disponibilité à retourner.
  *         example: 2026-04-15T20:00:00.000Z
  *     responses:
- *       400:
- *         description: Fenêtre invalide (`timeTo <= timeFrom`).
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: timeTo must be greater than timeFrom
- *       401:
- *         description: Authentification échouée (token manquant ou invalide).
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: missing or invalid authorization header
  *       200:
  *         description: Liste des terrains avec leurs créneaux disponibles.
  *         content:
@@ -158,6 +138,9 @@ const router = Router();
  *                           city:
  *                             type: string
  *                             example: Lancy
+ *                           postalCode:
+ *                             type: string
+ *                             example: "1212"
  *                           openingTime:
  *                             type: string
  *                             example: 08:00
@@ -200,6 +183,26 @@ const router = Router();
  *               no_matching_courts_or_slots:
  *                 summary: Aucun terrain ou créneau disponible
  *                 value: []
+ *       400:
+ *         description: Fenêtre invalide (`timeTo <= timeFrom`).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: timeTo must be greater than timeFrom
+ *       401:
+ *         description: Authentification échouée (token manquant ou invalide).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: missing or invalid authorization header
  *       500:
  *         description: Erreur interne lors de la récupération des créneaux disponibles.
  *         content:

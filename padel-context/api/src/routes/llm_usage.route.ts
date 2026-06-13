@@ -156,6 +156,10 @@ router.get("/me", authenticateJwt, getLlmUsage);
  *                 summary: totalTokens ne correspond pas à la somme inputTokens + outputTokens
  *                 value:
  *                   message: "totalTokens must equal inputTokens + outputTokens"
+ *               invalid_body:
+ *                 summary: Body absent ou non JSON (pas un objet)
+ *                 value:
+ *                   message: "invalid request body"
  *       401:
  *         description: Authentification échouée (token manquant ou invalide).
  *         content:
