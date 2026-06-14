@@ -1,42 +1,41 @@
 # MCP Server
 
-Serveur Model Context Protocol pour l'application padel-context.
+Serveur **Model Context Protocol** de l'application Padel Context. Il expose les
+fonctionnalités de l'API REST sous forme d'outils (tools) consommables par un
+client IA, en relayant le JWT de l'utilisateur.
+
+## Stack technique
+
+- Node.js + Express (TypeScript)
+- SDK Model Context Protocol (`@modelcontextprotocol/*`)
+- `dayjs` (dates) · `yaml` · `express-rate-limit`
+- Exécution : `tsx`
 
 ## Arborescence du projet
 
-Le dossier `mcp-server/` est organisé de la manière suivante :
-
 ```text
 mcp-server/
-├── src/                    # Code source principal du serveur MCP
-│   ├── server.ts           # Point d'entrée du serveur MCP
-│   ├── tools/              # Outils MCP exposés au client
-│   │   ├── createMatchFromSlot.ts
-│   │   ├── getAvailableSlots.ts
-│   │   ├── getOpenMatches.ts
-│   │   └── joinOpenMatch.ts
-│   └── utils/              # Fonctions utilitaires partagées
+├── src/                          # Code source du serveur MCP
+│   ├── server.ts                 # Point d'entrée (HTTP + enregistrement des tools)
+│   ├── tools/                    # Outils MCP exposés au client
+│   │   ├── getOpenMatches.ts     # Rechercher les matchs ouverts
+│   │   ├── getAvailableSlots.ts  # Rechercher les créneaux libres
+│   │   ├── joinOpenMatch.ts      # Rejoindre un match ouvert
+│   │   └── createMatchFromSlot.ts # Créer un match depuis un créneau
+│   └── utils/                    # Fonctions utilitaires partagées
 │       └── utils.ts
-├── Dockerfile              # Image Docker du serveur MCP
-├── package.json            # Dépendances et scripts du serveur MCP
-├── tsconfig.json           # Configuration TypeScript
-├── eslint.config.mjs       # Règles de lint
-├── .prettierrc             # Configuration de formatage
-├── .gitignore              # Fichiers ignorés par Git
-└── README.md               # Documentation du dossier mcp-server
+├── Dockerfile                    # Image Docker du serveur MCP
+├── package.json                  # Dépendances et scripts
+├── tsconfig.json                 # Configuration TypeScript
+├── eslint.config.mjs             # Règles de lint
+├── .prettierrc                   # Configuration de formatage
+└── README.md                     # Documentation du dossier mcp-server
 ```
 
 ## Configuration et lancement avec Docker
 
-Voir [README principal](../README.md)
-
-## Développement local
-
-```bash
-npm install
-npm run dev     # démarrage avec watcher
-npm start       # démarrage simple
-```
+Le lancement complet (tous les services) et les variables d'environnement sont
+décrits dans le [README principal](../README.md#variables-denvironnement).
 
 ## Inspection
 
