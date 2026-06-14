@@ -313,9 +313,24 @@ export const createMatchFromSlot = async (
             return;
         }
 
-        const courtId = Number(req.body?.courtId);
-        const startTime = parseDate(req.body?.startTime);
-        const endTime = parseDate(req.body?.endTime);
+        if (!req.body || typeof req.body !== "object") {
+            res.status(400).json({ message: "invalid request body" });
+            return;
+        }
+
+        const {
+            courtId: courtIdRaw,
+            startTime: startTimeRaw,
+            endTime: endTimeRaw,
+        } = req.body as {
+            courtId?: unknown;
+            startTime?: unknown;
+            endTime?: unknown;
+        };
+
+        const courtId = Number(courtIdRaw);
+        const startTime = parseDate(startTimeRaw);
+        const endTime = parseDate(endTimeRaw);
 
         if (
             !Number.isInteger(courtId) ||
