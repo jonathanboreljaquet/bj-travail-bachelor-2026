@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
-  { href: "/chatbot", label: "Assistant", icon: "💬" },
-  { href: "/matches", label: "Matchs", icon: "🎾" },
+  { href: "/chatbot", label: "ChatBot", icon: "💬" },
+  { href: "/my-matches", label: "Mes matchs", icon: "📋" },
+  { href: "/matches", label: "Classique", icon: "🎾" },
 ];
 
 export default function TabNav() {

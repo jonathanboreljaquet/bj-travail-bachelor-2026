@@ -1,4 +1,4 @@
-import type { CourtType } from "./types";
+import type { CourtType, MatchStatus } from "./types";
 
 const TZ = "Europe/Zurich";
 
@@ -29,4 +29,10 @@ export const COURT_TYPE_LABELS: Record<CourtType, string> = {
   INDOOR: "Intérieur",
   OUTDOOR: "Extérieur",
   COVERED: "Couvert",
+};
+
+export const MATCH_STATUS_LABELS: Record<MatchStatus, string> = {
+  OPEN: "Ouvert",
+  COMPLETED: "Complet",
+  CANCELED: "Annulé",
 };

@@ -1,7 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { API_URL } from "./config";
-import type { AvailableSlotGroup, Match } from "./types";
+import type { AvailableSlotGroup, Match, MyMatch } from "./types";
 
 // Helpers de lecture côté serveur : on récupère le JWT depuis le cookie et on
 // interroge l'API interne. Réservé au serveur (le navigateur ne joint pas l'API
@@ -32,4 +32,9 @@ export async function getAvailableSlots(
   search?: URLSearchParams,
 ): Promise<AvailableSlotGroup[]> {
   return (await authedGet<AvailableSlotGroup[]>("/api/available-slots", search)) ?? [];
+}
+
+// Matchs (tous statuts) auxquels l'utilisateur connecté participe.
+export async function getMyMatches(): Promise<MyMatch[]> {
+  return (await authedGet<MyMatch[]>("/api/matches/me")) ?? [];
 }

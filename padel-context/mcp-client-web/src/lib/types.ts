@@ -49,3 +49,28 @@ export type AvailableSlotGroup = {
   court: Court & { id: number };
   availableSlots: AvailableSlot[];
 };
+
+// Statuts possibles d'un match côté API.
+export type MatchStatus = "OPEN" | "COMPLETED" | "CANCELED";
+
+// Match de l'utilisateur connecté renvoyé par GET /api/matches/me.
+// Contrairement aux matchs ouverts, on récupère tous les statuts ainsi que
+// l'identifiant du créateur. Les participants ne portent ici que le prénom et
+// le niveau (cf. la sélection Prisma de l'endpoint).
+export type MyMatchParticipant = {
+  user: {
+    firstname: string;
+    level: number;
+  };
+};
+
+export type MyMatch = {
+  id: number;
+  startTime: string;
+  endTime: string;
+  status: MatchStatus;
+  availableSpots: number;
+  creator_id: number;
+  court: Court;
+  participants: MyMatchParticipant[];
+};
