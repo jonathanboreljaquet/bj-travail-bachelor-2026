@@ -254,7 +254,16 @@ Le deuxième objectif s'attaque à une limite des modèles de langage. Première
 \newline\newline
 Enfin, le troisième objectif consiste à évaluer la viabilité d'une telle intégration à l'usage. Au-delà de ses bénéfices, recourir à un modèle de langage engendre un coût d'exploitation directement lié à la consommation de tokens, qu'il convient de mesurer et d'encadrer. À cela s'ajoute la complexité de développement et de maintenance causée par l'orchestration entre l'assistant, le serveur MCP et l'application. L'enjeu sera donc de déterminer si l'apport de l'assistant justifie ces coûts, et à quelles conditions une telle solution demeure soutenable.
 \subsection{Plan du document}
-\section{État de l'art}
+Ce rapport s'organise en plusieurs parties qui suivent la progression du projet, de la définition du problème à l'évaluation de la solution.
+\newline\newline
+Tout d'abord, un état de l'art examine les solutions de réservation existantes sur le marché genevois afin de contextualiser la potentielle plus-value du projet, puis présente le Model Context Protocol, ce qu'il permet de réaliser et quels sont ses avantages.
+\newline\newline
+La suite du document décrit la méthodologie de gestion de projet adoptée, à travers la priorisation MoSCoW et la planification Gantt.
+\newline\newline
+Ce rapport parcourt ensuite les trois axes majeurs du travail. Le premier concerne l'analyse et la conception, détaillant la recherche et la justification des besoins ainsi que des choix technologiques du projet. Le deuxième concerne la réalisation, détaillant l'implémentation concrète de l'API REST, du serveur MCP, du client et de son assistant conversationnel, ainsi que les mécanismes de fiabilité et de maîtrise des coûts. Le troisième concerne l'évaluation des résultats, confrontant la solution aux trois questions de recherche : le bénéfice pour l'expérience utilisateur, la fiabilité face aux hallucinations et la viabilité au regard des coûts.
+\newline\newline
+Pour finir, une conclusion synthétise les réponses apportées, les limites du travail et les améliorations envisageables.
+\section{État de l'art}\label{sec:etat_art}
 \subsection{Solutions de réservation actuelles}
 \subsubsection{PadelConnect}
 PadelConnect est une application disponible sur Android, iOS et sur le web, qui permet de réserver des terrains de padel à Genève, plus précisément sur les quatre sites suivants :
