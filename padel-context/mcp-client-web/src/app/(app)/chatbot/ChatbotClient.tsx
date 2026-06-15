@@ -28,6 +28,9 @@ export default function ChatbotClient() {
       transport: new DefaultChatTransport({ api: "/api/chat" }),
       sendAutomaticallyWhen:
         lastAssistantMessageIsCompleteWithApprovalResponses,
+      onFinish: () => {
+        void refreshUsage();
+      },
     });
 
   useEffect(() => {
@@ -48,8 +51,7 @@ export default function ChatbotClient() {
         (message) =>
           message.role === "assistant" &&
           message.parts?.some(
-            (part) =>
-              isToolUIPart(part) && part.state === "approval-requested",
+            (part) => isToolUIPart(part) && part.state === "approval-requested",
           ),
       ),
     [messages],
@@ -67,7 +69,6 @@ export default function ChatbotClient() {
 
     setInput("");
     await sendMessage({ text: value });
-    await refreshUsage();
   }
 
   return (
@@ -125,7 +126,8 @@ export default function ChatbotClient() {
                   let friendlyDetails: ReactNode = null;
 
                   if (toolName === "create-match-from-slot") {
-                    const input = (part.input ?? {}) as CreateMatchFromSlotInput;
+                    const input = (part.input ??
+                      {}) as CreateMatchFromSlotInput;
                     const start = input.startTime
                       ? new Date(input.startTime).toLocaleTimeString("fr-CH", {
                           hour: "2-digit",
@@ -354,8 +356,8 @@ export default function ChatbotClient() {
                               Échec de l&apos;action
                             </strong>
                             <p className="mt-0.5 text-red-700">
-                              Une erreur est survenue, l&apos;action n&apos;a pas
-                              pu être réalisée.
+                              Une erreur est survenue, l&apos;action n&apos;a
+                              pas pu être réalisée.
                             </p>
                           </div>
                         </div>

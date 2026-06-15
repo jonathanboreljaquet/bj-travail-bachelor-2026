@@ -199,6 +199,7 @@ export async function POST(request: Request) {
     const result = streamText({
       model: google(modelId),
       system: systemPrompt,
+      temperature: 0,
       messages: await convertToModelMessages(
         getSafeSlidingWindow(messages, CONTEXT_WINDOW_SIZE),
       ),
