@@ -224,7 +224,7 @@ Outre les facteurs environnementaux, la nature même du padel génère des contr
 \newline\newline
 Enfin, l'aspect logistique ne s'arrête pas à la formation des équipes. De nombreux joueurs occasionnels ne possédant pas leur propre équipement, l'accès au matériel sur le lieu de pratique est primordial. La disponibilité de box de location (raquettes et balles) à proximité des terrains devient alors un critère de choix décisif lors de la réservation.
 \newline\newline
-Au vu de la multitude de paramètres à prendre en compte : contraintes météorologiques, homogénéité des niveaux, flexibilité du matchmaking, budget et disponibilité du matériel, l'organisation d'une partie s'apparente aujourd'hui à un véritable casse-tête logistique. Le traitement simultané de toutes ces variables dépasse largement les capacités d'un système de réservation traditionnel. La problématique de ce travail de bachelor est donc de concevoir une application de réservation centralisée et intelligente utilisant une IA couplée au Model Context Protocol, spécifiquement adaptée aux contraintes du padel genevois pour réduire ces difficultés.
+Au vu de la multitude de paramètres à prendre en compte : contraintes météorologiques, homogénéité des niveaux, flexibilité du matchmaking, budget et disponibilité du matériel, l'organisation d'une partie s'apparente aujourd'hui à un véritable casse-tête logistique. Le traitement simultané de toutes ces variables dépasse largement les capacités d'un système de réservation traditionnel. La problématique de ce travail de bachelor est donc de concevoir PadelContext, une application de réservation centralisée et intelligente utilisant une IA couplée au Model Context Protocol, spécifiquement adaptée aux contraintes du padel genevois pour réduire ces difficultés.
 \subsection{Intérêt de la problématique}
 Aujourd'hui, la réservation de terrains de padel à Genève est un véritable casse-tête organisationnel. En effet, la multitude de variables à prendre en compte rend la planification d'une partie particulièrement complexe.
 \newline\newline
@@ -266,7 +266,7 @@ Pour finir, une conclusion synthétise les réponses apportées, les limites du 
 \section{État de l'art}\label{sec:etat_art}
 \subsection{Solutions de réservation actuelles}
 \subsubsection{PadelConnect}
-PadelConnect est une application disponible sur Android, iOS et sur le web, qui permet de réserver des terrains de padel à Genève, plus précisément sur les quatre sites suivants :
+PadelConnect est une application disponible sur Android, iOS et sur le web, qui permet actuellement de réserver des terrains de padel à Genève, plus précisément sur les quatre sites suivants :
 \newline
 \begin{itemize}
     \item Centre sportif de Bernex 
@@ -299,7 +299,7 @@ L'application ne stipule pas si le terrain désiré propose une box de location 
 \newline\newline
 Celle-ci propose une interface simple pour consulter les disponibilités des terrains et y effectuer des réservations pour des sessions de 1h30. Il est possible de réserver un terrain complet de manière privée pour y inviter des personnes petit à petit, ou de rejoindre une partie publique existante avec de parfaits inconnus. Chaque réservation fournit sa propre page de discussion permettant aux joueurs de communiquer entre eux. 
 \newline\newline
-Concernant les données météorologiques, l'application ne propose aucune fonctionnalité pour anticiper les conditions avant de réserver un terrain en extérieur ; cette vérification reste donc à la charge de l'utilisateur. Toutefois, depuis le 27 octobre 2025, PadelConnect permet à ses utilisateurs d'annuler une partie et de se faire rembourser jusqu'à 180 minutes avant son début. À noter que la somme est remboursée sur le porte-monnaie de l'utilisateur, et non sur sa carte bancaire. Cette fonctionnalité permet de réserver un terrain en extérieur sans avoir à se soucier de la météo, puisqu'il est possible d'annuler et d'être remboursé si les conditions ne sont pas favorables.
+Concernant les données météorologiques, l'application ne propose aucune fonctionnalité pour anticiper les conditions avant de réserver un terrain en extérieur, cette vérification reste donc à la charge de l'utilisateur. Toutefois, depuis le 27 octobre 2025, PadelConnect permet à ses utilisateurs d'annuler une partie et de se faire rembourser jusqu'à 180 minutes avant son début. À noter que la somme est remboursée sur le porte-monnaie de l'utilisateur, et non sur sa carte bancaire. Cette fonctionnalité permet de réserver un terrain en extérieur sans avoir à se soucier de la météo, puisqu'il est possible d'annuler et d'être remboursé si les conditions ne sont pas favorables.
 \newline\newline
 L'application permet également d'y renseigner son niveau de jeu, allant de 1.0 à 10.0 par palier de 0.25, ainsi que son poste (gauche, droite ou indifférent). Ce niveau, totalement arbitraire et peu représentatif du niveau réel d'un joueur, permet tout de même un semblant de matchmaking en sélectionnant des parties avec des joueurs de notre « estimation » de niveau.
 \newline\newline
@@ -315,7 +315,7 @@ Pour finir, l'application propose une fonctionnalité de recherche de joueurs gr
 \subsubsection{PlayPad}
 PlayPad est une application récemment disponible sur Android et iOS. Actuellement, elle permet d'organiser des parties en Suisse romande ainsi qu'en France voisine. Bien qu'elle n'ait pas encore été lancée officiellement, elle intègre des fonctionnalités intéressantes.
 \newline\newline
-Contrairement à PadelConnect, la particularité de PlayPad est de se concentrer essentiellement sur le classement des joueurs. Pour l'instant, l'application ne permet pas de réserver directement un terrain, mais seulement d'en choisir un parmi ceux disponibles ; la réservation effective reste donc à la charge du créateur de la partie. À terme, l'application prévoit d'intégrer la réservation directe dans des clubs partenaires.
+Contrairement à PadelConnect, la particularité de PlayPad est de se concentrer essentiellement sur le classement des joueurs. Pour l'instant, l'application ne permet pas de réserver directement un terrain, mais seulement d'en choisir un parmi ceux disponibles, la réservation effective reste donc à la charge du créateur de la partie. À terme, l'application prévoit d'intégrer la réservation directe dans des clubs partenaires.
 \newline\newline
 Comme mentionné précédemment, le cœur de l'application est son système de classement. En effet, les joueurs collectent des points au fil de leurs matchs pour grimper dans le classement général. Le niveau, toujours sur une base de 1 à 10, n'est plus une simple auto-évaluation : il dépend des résultats obtenus sur le terrain. << Chaque victoire et défaite influence le niveau du joueur >> (PlayPad 2024) \cite{noauthor_playpad_nodate}. 
 L'application introduit également un score de fiabilité (de 0 à 100\%) qui fonctionne comme un score d'assiduité : plus le joueur est actif en mode compétitif, plus son pourcentage de fiabilité augmente. 
@@ -329,6 +329,25 @@ Enfin, la saisie des résultats est publique, ce qui permet à l'ensemble de la 
     \caption{Aperçu de l'application PlayPad}
     \label{fig:play_pad_app}
 \end{figure}
+\subsubsection{Limites des solutions existantes}
+L'analyse de ces deux solutions met en évidence un manque commun : aucune ne décharge réellement l'utilisateur de la logistique d'organisation d'une partie. PadelConnect permet certes de réserver un terrain, mais laisse à l'utilisateur le soin de vérifier la météo, de s'assurer de la disponibilité du matériel et d'évaluer le niveau de ses partenaires. PlayPad, de son côté, se concentre sur le classement des joueurs et ne propose pas encore de réservation directe. Surtout, aucune de ces plateformes n'intègre d'assistant capable de croiser proactivement ces différentes contraintes. Le tableau~\ref{tab:comparaison_solutions} synthétise ces différences et situe PadelContext par rapport à l'existant. C'est précisément cette charge mentale que ce travail cherche à réduire, en s'appuyant sur un assistant conversationnel couplé au Model Context Protocol, présenté dans la section suivante.
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|X|c|c|c|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Critère} & \textbf{PadelConnect} & \textbf{PlayPad} & \textbf{PadelContext} \\ \hline
+    Réservation directe d'un terrain & \checkmark & $\times$ & \checkmark \\ \hline
+    Intégration de la météo à la réservation & $\times$ & $\times$ & \checkmark \\ \hline
+    Assistant IA conversationnel & $\times$ & $\times$ & \checkmark \\ \hline
+    Recherche de partenaires selon le niveau & \checkmark & \checkmark & \checkmark \\ \hline
+    Messagerie entre joueurs & \checkmark & \checkmark & $\times$ \\ \hline
+    Classement basé sur les résultats & $\times$ & \checkmark & $\times$ \\ \hline
+    \end{tabularx}
+    \caption{Comparaison des fonctionnalités de PadelConnect, PlayPad et PadelContext}
+    \label{tab:comparaison_solutions}
+\end{table}
 \subsection{Model Context Protocol}
 Explication du concept de Model Context Protocol, son fonctionnement (Utilisation de données extenres), ses avantages et comment il peut être utilisé pour améliorer les systèmes de réservation.
 \section{Méthodologie}
