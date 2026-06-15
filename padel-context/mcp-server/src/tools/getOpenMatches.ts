@@ -28,11 +28,7 @@ Limitations:
 
 // Schémas de validation des données d'entrée du tool
 export const getOpenMatchesInputSchema = z.object({
-    city: z
-        .string()
-        .describe(
-            "MANDATORY: Target city. MUST be explicitly stated by the user. Do not guess it from context. Only the user can provide it. Abort and ask the user if missing.",
-        ),
+    city: z.string().optional().describe("Target city."),
     courtType: z
         .enum(["INDOOR", "OUTDOOR", "COVERED"])
         .optional()
