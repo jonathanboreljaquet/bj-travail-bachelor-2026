@@ -552,14 +552,14 @@ Le protocole MCP propose nativement deux mécanismes de transport pour acheminer
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\textwidth]{img/transport_mcp_stdio.drawio.png}
-\caption{Mécanisme de transport local via Stdio, adapté de (Dohnal, 2025) \cite{tom_dohnal_build_2025}}
+\caption{Mécanisme de transport local via Stdio, adapté de (Dohnal 2025) \cite{tom_dohnal_build_2025}}
 \label{fig:transport_stdio}
 \end{figure}
 À l'inverse, le mécanisme Streamable HTTP permet au serveur de fonctionner comme un processus réseau indépendant. Il s'appuie sur des requêtes HTTP POST pour l'envoi des commandes et sur des requêtes HTTP GET pouvant établir un flux continu, comme le montre la figure \ref{fig:transport_http}.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\textwidth]{img/transport_mcp_http_streamable.drawio.png}
-\caption{Mécanisme de transport réseau via Streamable HTTP, adapté de (Dohnal, 2025) \cite{tom_dohnal_build_2025}}
+\caption{Mécanisme de transport réseau via Streamable HTTP, adapté de (Dohnal 2025) \cite{tom_dohnal_build_2025}}
 \label{fig:transport_http}
 \end{figure}
 Pour PadelContext, le choix s'est porté sur le transport Streamable HTTP plutôt que sur Stdio. Cette décision rend le serveur MCP découplé de son client, hautement disponible et évolutif. Elle garantit que le serveur pourra être interrogé par d'autres interfaces, services ou agents d'intelligence artificielle sans nécessiter de refonte de l'infrastructure.
@@ -581,19 +581,19 @@ Le développement de l'interface utilisateur du client a été confié à un age
 
 \subsection{Conteneurisation et gestion des environnements}
 
-Dans le cadre de ce projet, la conteneurisation de l'intégralité de l'écosystème applicatif s'est imposée comme une nécessité technique, motivée par des enjeux de reproductibilité et de facilité de déploiement. Pour répondre à ce besoin, j'ai choisis d'utilisé la bibliothèque et plateforme logicielle Docker. 
+Dans le cadre de ce projet, la conteneurisation de l'intégralité de l'écosystème applicatif s'est imposée comme une nécessité technique, motivée par des enjeux de reproductibilité et de facilité de déploiement. Pour répondre à ce besoin, j'ai choisi d'utiliser la plateforme de conteneurisation Docker.
 \newline\newline
-Le fonctionnement de Docker repose sur l'utilisation d'images. Les images Docker sont des modèles permettant de créer un conteneur Docker, qui intègrent toutes les dépendances nécessaires au fonctionnement des applications. Les images Docker sont des conteneurs Docker qui exécutent des applications dans des environnements isolés, où le résultat doit être identique quelle que soit l'infrastructure sous-jacente (trad. de Naga Murali Krishna 2025, p.725) \cite{koneru_containerization_2025}.
+Le fonctionnement de Docker repose sur l'utilisation d'images. Une image Docker est un modèle qui intègre toutes les dépendances nécessaires au fonctionnement d'une application et qui sert à créer des conteneurs. Un conteneur est alors une instance exécutable de cette image, qui fait tourner l'application dans un environnement isolé dont le résultat est identique quelle que soit l'infrastructure sous-jacente (trad. de Koneru 2025, p. 725) \cite{koneru_containerization_2025}.
 \newline\newline
-Cette isolation et cette reproductibilité générale garanties par Docker ont été les principaux arguments de son adoption pour PadelContext. La capacité de pouvoir développer, tester et déployer l'application sur différents appareils sans se soucier du système d'exploitation hôte ou de ses configurations spécifiques s'est avérée extrêmement pratique. 
+Cette isolation et cette reproductibilité générale garanties par Docker ont été les principaux arguments de son adoption pour PadelContext. La capacité de développer, tester et déployer l'application sur différents appareils sans se soucier du système d'exploitation hôte ou de ses configurations spécifiques s'est avérée extrêmement pratique. 
 \newline\newline
-De plus, afin d'optimiser les ressources, chaque conteneur de l'écosystème repose sur une image de base minimaliste de type Alpine Linux. Ces images allégées ne mettent à disposition que le strict nécessaire au fonctionnement de l'application, ce qui réduit considérablement la surface d'attaque potentielle et accélère le temps de déploiement des conteneurs.
+De plus, afin d'optimiser les ressources, chaque conteneur de l'écosystème repose sur une image de base minimaliste de type Alpine Linux. Ces images allégées ne mettent à disposition que le strict nécessaire au fonctionnement de l'application, ce qui réduit considérablement la surface d'attaque potentielle et réduit le temps de déploiement des conteneurs.
 \newline\newline
-Afin de prévenir l'obsolescence prématurée du projet et de minimiser les problèmes de compatibilité durant la phase de développement, un choix strict de sélection des versions a été appliquée pour chaque image Docker. Le choix s'est systématiquement porté sur des versions actives, stables et officiellement maintenues, garantissant ainsi l'accès à une documentation à jour en cas de difficulté de codage.
+Afin de prévenir l'obsolescence prématurée du projet et de minimiser les problèmes de compatibilité durant la phase de développement, un choix strict de sélection des versions a été appliqué pour chaque image Docker. Le choix s'est systématiquement porté sur des versions actives, stables et officiellement maintenues, garantissant ainsi l'accès à une documentation à jour en cas de difficulté de codage.
 \newline\newline
-Pour les images de l'API REST, du serveur MCP et du client MCP fonctionant tous avec un environnement d'exécution JavaScript avec Node.js, l'image Docker \texttt{node:24.14.0-alpine3.23} a été sélectionnée. Ce choix est justifié par les recommandations officielles de Node.js, qui spécifient que la version 24 est la version \textit{LTS (Long-Term Support)} durant la période de réalisation de ce travail de Bachelor. Ce statut LTS garantit la correction des failles de sécurité et des bogues critiques pendant une durée de 30 mois (Node.js, 2025) \cite{noauthor_nodejs_2025}.
+Pour les images de l'API REST, du serveur MCP et du client MCP reposant tous sur l'environnement d'exécution JavaScript Node.js, l'image Docker \texttt{node:24.14.0-alpine3.23} a été sélectionnée. Ce choix est justifié par les recommandations officielles de Node.js, qui spécifient que la version 24 est une version \textit{LTS (Long-Term Support)} durant la période de réalisation de ce travail de Bachelor. Ce statut LTS garantit la correction des failles de sécurité et des bugs critiques pendant une durée de 30 mois (Node.js 2026) \cite{nodejs_nodejs_2026}.
 \newline\newline
-Enfin, pour la base de données PostgreSQL, l'image \texttt{postgres:18.3-alpine} a été retenue. Ce choix suit la même logique de pérennité en s'appuyant sur les recommandations officielles de PostgreSQL, qui identifient la version 18 comme la version majeure la plus récente et supportée à ce jour (PostgreSQL, 2025) \cite{noauthor_postgresql_nodate}. 
+Enfin, pour la base de données PostgreSQL, l'image \texttt{postgres:18.3-alpine3.23} a été retenue. Ce choix suit la même logique de pérennité en s'appuyant sur les recommandations officielles de PostgreSQL, qui identifient la version 18 comme la version majeure la plus récente et supportée à ce jour (PostgreSQL 2026) \cite{postgresql_postgresql_2026}. 
 
 \subsection{Modélisation de la base de données}
 \subsubsection{Schéma relationnel}
