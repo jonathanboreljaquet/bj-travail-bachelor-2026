@@ -505,7 +505,7 @@ Le choix de confier la récupération des données météorologiques à l'API, p
 \newline\newline
 Sur le plan de la configuration, les ports utilisés pour les communications internes entre les conteneurs sont fixés en dur dans le code de chaque service, tandis que les ports exposés sur la machine hôte restent configurables via des variables d'environnement. Cette approche conserve une structure interne stable tout en préservant la souplesse nécessaire au déploiement.
 
-\subsection{Backend}
+\subsection{API REST et base de données}
 \subsubsection{Choix de l'architecture de l'API}
 Dans l'objectif d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
 \newline\newline
@@ -543,9 +543,32 @@ Au-delà du confort de développement, ce choix s'appuie sur des critères de pe
 \newline\newline
 Enfin, pour assurer la fiabilité de l'API REST, j'ai opté pour le framework de test Jest. Jest est un framework qui ne nécessite aucune configuration au préalable. De plus, il fournit un système de mocks intégré ainsi qu'une couverture de code complète (Donvir 2024) \cite{donvir_comparative_2024}. De manière similaire à Prisma, le choix de Jest est principalement justifié par sa rapidité d'intégration et son efficacité, dans l'objectif d'optimiser le temps alloué au développement de l'API REST.
 
-\subsection{Architecture du Model Context Protocol}
-Comment l'IA va interagir avec les différentes sources de données ?
-\subsection{Client et assistant IA}
+\subsection{Serveur MCP}
+Comme présenté dans l'état de l'art, le rôle d'un serveur MCP est d'exposer des fonctionnalités à un modèle de langage à travers une interface standardisée par le protocole. Dans le cas de PadelContext, le serveur expose des outils, désignés par le terme \textit{tools} dans la terminologie MCP, qui permettent au modèle de langage de consulter des données et d'exécuter des actions. Chaque outil définit une opération précise, dotée d'entrées et de sorties typées, que le modèle déclenche en fonction du contexte de la conversation.
+\newline\newline
+Pour faciliter son implémentation, le Model Context Protocol fournit des kits de développement logiciel (SDK) pour de nombreux langages, parmi lesquels PHP, Python, Java ou encore TypeScript. C'est ce dernier qui a été retenu pour le projet. Ce SDK fournit l'ensemble des abstractions et des composants logiciels nécessaires à la création d'un serveur MCP, en masquant la complexité de l'implémentation du protocole. C'est sur cette base que repose le développement du serveur MCP de PadelContext.
+\newline\newline
+Le protocole MCP propose nativement deux mécanismes de transport pour acheminer les messages entre le client et le serveur. Le premier, nommé Stdio, repose sur le lancement du serveur en tant que sous-processus du client. La communication s'effectue alors localement, via les flux d'entrée et de sortie standards du système d'exploitation (Model Context Protocol 2025) \cite{model_context_protocol_transports_2025}, comme l'illustre la figure \ref{fig:transport_stdio}.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{img/transport_mcp_stdio.drawio.png}
+\caption{Mécanisme de transport local via Stdio, adapté de (Dohnal, 2025) \cite{tom_dohnal_build_2025}}
+\label{fig:transport_stdio}
+\end{figure}
+À l'inverse, le mécanisme Streamable HTTP permet au serveur de fonctionner comme un processus réseau indépendant. Il s'appuie sur des requêtes HTTP POST pour l'envoi des commandes et sur des requêtes HTTP GET pouvant établir un flux continu, comme le montre la figure \ref{fig:transport_http}.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{img/transport_mcp_http_streamable.drawio.png}
+\caption{Mécanisme de transport réseau via Streamable HTTP, adapté de (Dohnal, 2025) \cite{tom_dohnal_build_2025}}
+\label{fig:transport_http}
+\end{figure}
+Pour PadelContext, le choix s'est porté sur le transport Streamable HTTP plutôt que sur Stdio. Cette décision rend le serveur MCP découplé de son client, hautement disponible et évolutif. Elle garantit que le serveur pourra être interrogé par d'autres interfaces, services ou agents d'intelligence artificielle sans nécessiter de refonte de l'infrastructure.
+\newline\newline
+Indépendamment du mécanisme de transport retenu, le format des échanges entre le client et le serveur est régi par la spécification JSON-RPC 2.0. Il s'agit d'un protocole d'appel de procédure à distance léger et sans état, qui structure les messages au format JSON (JSON-RPC Working Group 2013) \cite{json-rpc_working_group_json-rpc_2013}.
+\newline\newline
+Enfin, le serveur MCP de PadelContext adopte une architecture passerelle, telle qu'introduite dans l'état de l'art. Plutôt que d'accéder directement à la base de données, le serveur encapsule l'API REST existante du projet, sur laquelle s'appuient ses outils pour fournir les données et exécuter les actions demandées par le modèle de langage. Ce choix permet de réutiliser la logique métier déjà implémentée dans l'API, de conserver une source de vérité unique et de maintenir une séparation claire des responsabilités entre les services.
+
+\subsection{Client MCP et modèle de langage}
 \subsection{Conteneurisation et gestion des environnements}
 
 Dans le cadre de ce projet, la conteneurisation de l'intégralité de l'écosystème applicatif s'est imposée comme une nécessité technique, motivée par des enjeux de reproductibilité et de facilité de déploiement. Pour répondre à ce besoin, j'ai choisis d'utilisé la bibliothèque et plateforme logicielle Docker. 
@@ -752,24 +775,6 @@ Les tests unitaires ont pour objectif de valider le comportement d'un composant 
 \newline\newline
 Contrairement aux tests unitaires, les tests d'intégration visent à vérifier que l'ensemble des composants du système communiquent correctement entre eux. Ils valident le cheminement complet d'une requête HTTP : du routeur au middleware permettant  la vérification du JWT, en passant par le contrôleur, jusqu'à l'écriture ou la lecture dans une véritable base de données PostgreSQL. Ces tests ont été réalisés à l'aide de la bibliothèque Supertest, qui permet de simuler des requêtes HTTP réelles vers l'application Express. Lors de ces validations, des jeux de données réels sont créés en amont puis supprimés en aval afin de ne pas polluer l'environnement de développement. Bien qu'un contrôleur puisse parfaitement fonctionner de manière isolée, il peut échouer lorsqu'il est connecté à la base de données réelle en raison, par exemple, d'une contrainte de clé étrangère non respectée ou d'une erreur de format de date. Les tests d'intégration garantissent ainsi que des actions critiques, telles que la création d'un match depuis un créneau libre ou la participation à un match, fonctionnent de manière transactionnelle et fiable dans des conditions d'utilisation réelles.
 \subsection{Serveur MCP}
-\subsubsection{Méchanisme de transport et communication}
-Le protocole MCP propose nativement deux mécanismes distincts pour acheminer les messages entre le client et le serveur. Le premier mécanisme, nommé Stdio, implique que le client MCP lance directement le serveur MCP en tant que sous-processus. Dans cette configuration, la communication s'effectue localement via les flux d'entrée standard (stdin) et de sortie standard (stdout) du système d'exploitation (Model Context protocol, 2025) \cite{noauthor_transports_2025}, comme illustré par le diagramme de la figure \ref{fig:transport_stdio}. 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth]{img/transport_mcp_stdio.drawio.png}
-\caption{Mécanisme de transport local via Stdio, adapté de (Dohnal, 2025) \cite{tom_dohnal_build_2025}}
-\label{fig:transport_stdio}
-\end{figure}
-À l'inverse, le mécanisme de transport Streamable HTTP permet au serveur MCP de fonctionner comme un processus réseau totalement indépendant. Ce mode de transport s'appuie sur les standards web traditionnels, utilisant des requêtes HTTP POST pour l'envoi de commandes et des requêtes HTTP GET pouvant servir à établir un flux continu (Model Context protocol, 2025) \cite{noauthor_transports_2025}, comme le montre le diagramme de la figure \ref{fig:transport_http}.
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth]{img/transport_mcp_http_streamable.drawio.png}
-\caption{Mécanisme de transport réseau via Streamable HTTP, adapté de (Dohnal, 2025) \cite{tom_dohnal_build_2025}}
-\label{fig:transport_http}
-\end{figure}
-Pour le développement de l'écosystème PadelContext, le choix s'est délibérément porté sur le transport Streamable HTTP plutôt que sur le mécanisme Stdio. Cette décision architecturale repose sur la volonté de rendre le serveur MCP hautement disponible, évolutif et découplé de son client. Cette flexibilité garantit que le serveur pourra facilement être interrogé par d'autres interfaces, de nouveaux services ou de futurs agents d'intelligence artificielle, sans nécessiter de refonte de l'infrastructure logicielle.
-\newline\newline
-Indépendamment du mécanisme de transport physique choisi, le format des échanges entre le client et le serveur est strictement régi par la spécification JSON-RPC 2.0. Il s'agit d'un protocole d'appel de procédure à distance léger, sans état, qui utilise le format de données JSON pour structurer les messages. Selon la spécification officielle, chaque requête envoyée par le client au serveur contient la version du protocole, un identifiant unique, le nom de la méthode à invoquer ainsi que ses paramètres d'exécution. Le serveur traite ensuite cette requête et retourne une réponse standardisée contenant soit le résultat de l'opération, soit un objet d'erreur détaillé en cas d'échec (JSON-RPC, 2013) \cite{noauthor_json-rpc_2013}.
 
 \subsubsection{Définitions des outils MCP}
 Le serveur Model Context Protocol (MCP) constitue le pont de communication essentiel entre l'Assistant IA et les sources de données du système. Son rôle est d'exposer de manière standardisée les points de terminaison de l'API REST de PadelContext, ainsi que l'API externe de MeteoSwiss, sous forme d'outils (tools) directement exécutables par l'intelligence artificielle.
