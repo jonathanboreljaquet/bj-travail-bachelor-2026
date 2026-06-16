@@ -596,11 +596,13 @@ Pour les images de l'API REST, du serveur MCP et du client MCP reposant tous sur
 Enfin, pour la base de données PostgreSQL, l'image \texttt{postgres:18.3-alpine3.23} a été retenue. Ce choix suit la même logique de pérennité en s'appuyant sur les recommandations officielles de PostgreSQL, qui identifient la version 18 comme la version majeure la plus récente et supportée à ce jour (PostgreSQL 2026) \cite{postgresql_postgresql_2026}. 
 
 \subsection{Modélisation de la base de données}
+La structure de la base de données relationnelle de PadelContext est présentée en deux temps. Le schéma relationnel donne une vue d'ensemble des entités et de leurs relations, tandis que le dictionnaire de données en détaille, table par table, les attributs, leurs types et leurs contraintes.
 \subsubsection{Schéma relationnel}
+Le schéma relationnel de la figure \ref{fig:api_entity_relationship_diagram} représente les entités de l'application et les relations qui les lient, telles qu'elles sont générées par l'ORM Prisma à partir du modèle de données.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{img/api_entity_relationship_diagram.png}
-    \caption{Schéma relationnel de la base de données de l'application PadelConnect}
+    \caption{Schéma relationnel de la base de données de l'application PadelContext}
     \label{fig:api_entity_relationship_diagram}
 \end{figure}
 \subsubsection{Dictionnaire de données}
@@ -608,7 +610,7 @@ Le dictionnaire de données ci-dessous détaille la structure des tables de la b
 Il est important de noter la présence de deux énumérations (\textit{Enums}) utilisées pour restreindre les valeurs de certains champs :
 \begin{itemize}
     \item \textbf{CourtType} : Définit le type de terrain (\texttt{INDOOR}, \texttt{OUTDOOR}, \texttt{COVERED}).
-    \item \textbf{matchStatus} : Définit l'état actuel d'une partie (\texttt{OPEN}, \texttt{COMPLETED}, \texttt{CANCELED}).
+    \item \textbf{MatchStatus} : Définit l'état actuel d'une partie (\texttt{OPEN}, \texttt{COMPLETED}, \texttt{CANCELED}).
 \end{itemize}
 
 \vspace{0.5cm}
@@ -625,6 +627,8 @@ Il est important de noter la présence de deux énumérations (\textit{Enums}) u
     \texttt{password} & String & Requis & Mot de passe haché. \\ \hline
     \texttt{level} & Int & Défaut : 1 & Niveau du joueur. \\ \hline
     \texttt{createdAt} & DateTime & Défaut : now() & Date et heure d'inscription sur la plateforme. \\ \hline
+    \texttt{monthlyTokenLimit} & Int & Défaut : 500000 & Plafond mensuel de tokens autorisés pour l'usage de l'assistant conversationnel. \\ \hline
+    \texttt{currentMonthTokens} & Int & Défaut : 0 & Tokens consommés sur le mois en cours. \\ \hline
     \end{tabularx}
     \caption{Dictionnaire de données - Table User}
     \label{tab:dict_user}
@@ -677,7 +681,7 @@ Il est important de noter la présence de deux énumérations (\textit{Enums}) u
     \texttt{id} & Int & PK, Auto-incrément & Identifiant unique de la partie. \\ \hline
     \texttt{startTime} & DateTime & Requis & Date et heure précises du début du match. \\ \hline
     \texttt{endTime} & DateTime & Requis & Date et heure précises de la fin du match. \\ \hline
-    \texttt{status} & matchStatus & Défaut : OPEN & État actuel du match. \\ \hline
+    \texttt{status} & MatchStatus & Défaut : OPEN & État actuel du match. \\ \hline
     \texttt{availableSpots} & Int & Requis & Nombre de places encore disponibles pour ce match. \\ \hline
     \texttt{court\_id} & Int & FK  & Référence au terrain sur lequel se joue le match. \\ \hline
     \texttt{creator\_id} & Int & FK & Référence au joueur ayant initié la création du match. \\ \hline
@@ -699,6 +703,26 @@ Il est important de noter la présence de deux énumérations (\textit{Enums}) u
     \end{tabularx}
     \caption{Dictionnaire de données - Table Participant}
     \label{tab:dict_participant}
+\end{table}
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|l|X|}
+    \hline
+    \multicolumn{4}{|c|}{\cellcolor[gray]{0.9} \textbf{LlmUsageLog}} \\ \hline
+    \textbf{Attribut} & \textbf{Type} & \textbf{Contraintes / Clés} & \textbf{Description} \\ \hline
+    \texttt{id} & Int & PK, Auto-incrément & Identifiant unique de l'enregistrement. \\ \hline
+    \texttt{user\_id} & Int & FK & Référence au joueur à l'origine de la requête. \\ \hline
+    \texttt{createdAt} & DateTime & Défaut : now() & Date et heure de la requête. \\ \hline
+    \texttt{prompt} & String & Requis & Texte de la requête envoyée au modèle de langage. \\ \hline
+    \texttt{inputTokens} & Int & Requis & Nombre de tokens en entrée. \\ \hline
+    \texttt{outputTokens} & Int & Requis & Nombre de tokens en sortie. \\ \hline
+    \texttt{totalTokens} & Int & Requis & Total des tokens consommés par la requête. \\ \hline
+    \texttt{model} & String & Requis & Identifiant du modèle de langage utilisé. \\ \hline
+    \end{tabularx}
+    \caption{Dictionnaire de données - Table LlmUsageLog}
+    \label{tab:dict_llm_usage}
 \end{table}
 
 \subsection{Identification des sources de données}
