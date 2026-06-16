@@ -457,107 +457,8 @@ Le diagramme de Gantt est disponible dans l'annexe \ref{annexe:pdf_gantt}, cepen
     \label{tab:gantt_part2}
 \end{table}
 
-\section{Analyse des besoins et choix technologiques}
-\subsection{Backend}
-\subsubsection{Choix de l'architecture de l'API}
-Dans l'objectif d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
-\newline\newline
-Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Dans le cadre de ce projet, j'ai choisi d'utiliser l'architecture REST.
-En effet, contrairement a l'architecure SOAP qui repose sur des messages XML et une structure de communication plus rigide, l'architecture REST prône la simplicité et une communication sans état. 
-\newline\newline
-De plus, REST s'intègre parfaitement aux standards WEB en priviliégant fortement l'utilisation de format de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre ma base de données, mes application et mon serveur MCP.
-\newline\newline
-Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée (Addanki 2025) \cite{addanki_architectural_2025}.
-\subsubsection{Choix du système de base de données}
-Afin de stocker et gérer efficacement les données nécessaires à mon application et dans le but de permettre à mon API REST d'écrire et founir des données, il a fallu choisir quel type de système de base de données utiliser entre une base de données relationnelle SQL et une base de données non relationnelle NoSQL.
-\newline\newline
-Le choix le plus judicieux a été une base de données relationnelle SQL. En effet, les bases de données relationnelles sont particulièrement adaptées pour gérer des données structurées avec des relations complexes entre les différentes entités, ce qui est le cas dans une application de réservation de terrains de padel. Les données telles que les utilisateurs, les réservations, les matchs, les terrains, etc., sont toutes interconnectées et nécessitent une gestion rigoureuse des relations entre elles.
-\newline\newline
-De plus, le respect des propriétés ACID (Atomicité, Cohérence, Isolation, Durabilité) inhérent aux bases de données relationnelles permet de garantir une fiabilité et une intégrité absolues des données lors des transactions. Dans le contexte d'une plateforme de réservation, cela s'avère indispensable pour gérer les accès concurrents, comme s'assurer que deux groupes de joueurs ne puissent pas réserver le même terrain au même instant, ou garantir qu'une opération d'enregistrement s'annule complètement si une erreur survient en cours de processus.
-\newline\newline
-<< Dès lors que les propriétés ACID sont indispensables pour une base de données, il ne fait aucun doute que le seul choix possible est la base de données relationnelle. >> (trad. de Sahatqija et al. 2018, p. 5) \cite{lupu_concurrent_2024}.
-\newline\newline
-Une fois le choix le type de système de base de données effectué, il a fallu choisir quel SGBDR (Système de Gestion de Base de Données Relationnel) utiliser. Parmi les deux options open-source les plus populaires se trouvent MySQL et PostgreSQL.
-\newline\newline
-Suite à l'analyse d'une étude récente de 2024 comparant les performances de ces deux moteurs de base de données, mon choix s'est définitivement porté sur PostgreSQL. En effet, cette recherche a mis en évidence la performance significative de PostgreSQL par rapport à MySQL à travers plusieurs tests  simulant des conditions de production. Les résultats ont notamment démontré que le temps d'exécution pour la récupération d'une très grande quantité d'enregistrements était environ 13 fois plus rapide avec PostgreSQL qu'avec MySQL. Par ailleurs, pour les requêtes de sélection intégrant une clause de recherche spécifique, PostgreSQL s'est également révélé être environ 9 fois plus efficace MySQL (Sanket Vilas et Ouda 2024, p. 1) \cite{salunke_performance_2024}.
-
-
-\subsubsection{Choix du framework et des outils de développement}
-Pour clôturer les choix technologiques liés à la conception du backend, il a fallu déterminer le framework à utiliser pour développer l'API REST. Mon choix s'est porté sur l'environnement Node.js associé au framework Express.js. Cette décision s'articule autour de trois critères majeurs.
-\newline\newline
-Le premier critère repose sur le fait d'avoir déjà eu l'opportunité d'utiliser Express.js lors d'un projet de développement sur mandat au cours de mes études à la HEG, possédant une bonne maîtrise de ce framework et du langage JavaScript, cela me permet de développer l'API plus efficacement. 
-\newline
-Le second critère concerne la popularité du language JavaScript. En effet, selon l'enquête de 2025 de Stack Overflow, JavaScript demeure le langage de programmation le plus utilisé sur la plateforme (Stack Overflow 2025) \cite{noauthor_technology_nodate}, Stack Overflow étant un forum largemnt répendu et connu, la consultation de celui-ci est avantageuse lors de la réalisation d'un projet académique de cet envergure.
-\newline\newline
-Afin de gagner en efficacité et de réduire le temps de développement de l'API REST, j'ai également choisi d'utiliser Prisma pour la gestion de ma base de données. Cet ORM (Object-Relational Mapping) simplifie considérablement les interactions avec la base de données en offrant une interface de programmation intuitive. Il permet d'automatiser des tâches chronophages et critiques telles que la validation des données, la gestion des migrations structurelles, et la génération de requêtes SQL optimisées et sécurisées.
-\newline\newline
-Au-delà du confort de développement, ce choix s'appuie sur des critères de performance concrets. Prisma offre les meilleures performances lorsqu'il est soumis à des charges parallèles par rapport à des alternatives comme Sequelize ou TypeORM (Zhadko-Bazilevych 2025) \cite{zhadko-bazilevych_analysis_2025}. Pour une plateforme de réservation comme PadelContext, où plusieurs utilisateurs peuvent solliciter l'API simultanément pour rechercher ou réserver un créneau via le serveur MCP, cette capacité à maintenir de hautes performances sous une charge parallèle est un atout technique décisif.
-\newline\newline
-Enfin, pour assurer la fiabilité de mon API REST, j'ai opté pour le framework de test Jest. Jest est un framework qui ne nécessite aucune configuration au préalable. De plus, il fournit un système de mocks intégré ainsi qu'une couverture de code complète (Donvir 2024) \cite{donvir_comparative_2024}. De manière similaire à Prisma, le choix de Jest est principalement justifié par sa rapidité d'intégration et son efficacité, dans l'objectif d'optimiser le temps alloué au développement de l'API REST.
-\subsection{Conteneurisation et gestion des environnements}
-
-Dans le cadre de ce projet, la conteneurisation de l'intégralité de l'écosystème applicatif s'est imposée comme une nécessité technique, motivée par des enjeux de reproductibilité et de facilité de déploiement. Pour répondre à ce besoin, j'ai choisis d'utilisé la bibliothèque et plateforme logicielle Docker. 
-\newline\newline
-Le fonctionnement de Docker repose sur l'utilisation d'images. Les images Docker sont des modèles permettant de créer un conteneur Docker, qui intègrent toutes les dépendances nécessaires au fonctionnement des applications. Les images Docker sont des conteneurs Docker qui exécutent des applications dans des environnements isolés, où le résultat doit être identique quelle que soit l'infrastructure sous-jacente (trad. de Naga Murali Krishna 2025, p.725) \cite{koneru_containerization_2025}.
-\newline\newline
-Cette isolation et cette reproductibilité générale garanties par Docker ont été les principaux arguments de son adoption pour PadelContext. La capacité de pouvoir développer, tester et déployer l'application sur différents appareils sans se soucier du système d'exploitation hôte ou de ses configurations spécifiques s'est avérée extrêmement pratique. 
-\newline\newline
-De plus, afin d'optimiser les ressources, chaque conteneur de l'écosystème repose sur une image de base minimaliste de type Alpine Linux. Ces images allégées ne mettent à disposition que le strict nécessaire au fonctionnement de l'application, ce qui réduit considérablement la surface d'attaque potentielle et accélère le temps de déploiement des conteneurs.
-\newline\newline
-Afin de prévenir l'obsolescence prématurée du projet et de minimiser les problèmes de compatibilité durant la phase de développement, un choix strict de sélection des versions a été appliquée pour chaque image Docker. Le choix s'est systématiquement porté sur des versions actives, stables et officiellement maintenues, garantissant ainsi l'accès à une documentation à jour en cas de difficulté de codage.
-\newline\newline
-Pour les images de l'API REST, du serveur MCP et du client MCP fonctionant tous avec un environnement d'exécution JavaScript avec Node.js, l'image Docker \texttt{node:24.14.0-alpine3.23} a été sélectionnée. Ce choix est justifié par les recommandations officielles de Node.js, qui spécifient que la version 24 est la version \textit{LTS (Long-Term Support)} durant la période de réalisation de ce travail de Bachelor. Ce statut LTS garantit la correction des failles de sécurité et des bogues critiques pendant une durée de 30 mois (Node.js, 2025) \cite{noauthor_nodejs_2025}.
-\newline\newline
-Enfin, pour la base de données PostgreSQL, l'image \texttt{postgres:18.3-alpine} a été retenue. Ce choix suit la même logique de pérennité en s'appuyant sur les recommandations officielles de PostgreSQL, qui identifient la version 18 comme la version majeure la plus récente et supportée à ce jour (PostgreSQL, 2025) \cite{noauthor_postgresql_nodate}. 
-\subsection{Frontend}
-\subsection{Identification des sources de données}
-
-Afin d'utiliser des données météorologiques réelles et concrètes, une phase de recherche a permis d'identifier MeteoSwiss comme source de qualité. Depuis mai 2025, cet Office fédéral de météorologie et de climatologie met progressivement à disposition ses données sous forme d'Open Government Data (OGD). Les données publiques ouvertes permettent, par exemple, aux villes d’optimiser en temps réel leurs transports publics, aux startups de développer des applications qui facilitent notre quotidien, et aux citoyens de suivre plus facilement les actions de leurs responsables politiques (Office fédéral de la statistique, 2026) \cite{noauthor_quest-ce_2026}. 
-\newline\newline
-L'accès aux données de MeteoSwiss s'effectue via une API REST conforme à la norme internationale OGC STAC. La famille de spécifications STAC (SpatioTemporal Asset Catalog) vise à standardiser la structuration et l'interrogation des métadonnées des ressources géospatiales. Les spécifications STAC définissent des types d'objets JSON liés par des relations de type lien afin de prendre en charge une interface navigable et une API RESTful offrant des interfaces de navigation et de recherche supplémentaires (trad. de STAC Community, 2025) \cite{stac_community_spatiotemporal_nodate}.
-\newline\newline
-Parmi l'ensemble des collections disponibles, la collection des données de prévisions locales a été sélectionnée. Celle-ci fournit des prévisions par point pour environ 6 000 sites en Suisse pour les 216 prochaines heures, mis à jour tout les heures. Ces prévisions sont indispensable pour informer l'utilisateur des conditions météorologiques et donc de la faisabilité d'une partie de Padel sur un terrain extérieur (Outdoor). Parmis tout les types de données météorologiques disponibles, trois types spécifiques ont été retenus, comme détaillé dans le tableau \ref{tab:meteo_params}.
-
-\vspace{0.5cm}
-\begin{table}[H]
-    \centering
-    \begin{tabularx}{\textwidth}{|l|l|X|}
-    \hline
-    \rowcolor[gray]{0.9} 
-    \textbf{Identifiant} & \textbf{Groupe} & \textbf{Description} \\ \hline
-    \texttt{tre200h0} & Température & Température de l'air à 2 m au-dessus du sol. \\ \hline
-    \texttt{rp0003i0} & Précipitation & Probabilité de précipitations pendant 3 heures. \\ \hline
-    \texttt{fu3010h0} & Vent & Valeur scalaire de la vitesse du vent ; moyenne horaire en km/h \\ \hline
-    \end{tabularx}
-    \caption{Paramètres météorologiques MeteoSwiss choisis pour le projet PadelContext (MeteoSwiss, 2026) \cite{meteoswiss_local_2026}}
-    \label{tab:meteo_params}
-\end{table}
-\vspace{0.2cm}
-
-La récupération des données suit un processus séquentiel. Ces fichiers CSV fonctionnent comme une bibliothèque historique. Chaque heure, un nouveau fichier est généré pour chaque paramètre, contenant les prévisions des 216 prochaines heures pour l'ensemble du territoire suisse. La structure d'un fichier de données, par exemple pour la température (\texttt{tre200h0}), est organisée selon les en-têtes présentés dans le tableau \ref{tab:csv_structure}.
-
-\vspace{0.5cm}
-\begin{table}[H]
-    \centering
-    \begin{tabularx}{\textwidth}{|l|X|}
-    \hline
-    \rowcolor[gray]{0.9} 
-    \textbf{Colonne CSV} & \textbf{Description} \\ \hline
-    \texttt{point\_id} & Identifiant unique de la station ou de la localité \\ \hline
-    \texttt{point\_type\_id} & Type de point (1 = Station, 2 = Code postal, 3 = Lieu d'intérêt). \\ \hline
-    \texttt{Date} & Horodatage du relevé au format : AAAAMMJJHHmm \\ \hline
-    \texttt{tre200h0} & Valeur de la température pour le créneau donné \\ \hline
-    \end{tabularx}
-    \caption{Structure type des fichiers CSV de données de prévision locales de MeteoSwiss}
-    \label{tab:csv_structure}
-\end{table}
-\vspace{0.2cm}
-
-Afin de lier une réservation de padel à une donnée météo précise, il est nécessaire de connaître le \texttt{point\_id} correspondant à la localité du club. Pour ce faire, un fichier de référence fourni par MeteoSwiss recensant l'intégralité des stations méthéologiques, des codes postaux et des lieux d'intérêt. Ce fichier permet d'effectuer une jointure logique, par exemple, le code postal 1226 (Thônex) est associé au \texttt{point\_id} 122600. 
-
-\subsection{Architecture du Mondel Context Protocol}
-Comment l'IA va interagir avec les différentes sources de données ?
-\section{Conception et architecture de l'application}
+\section{Analyse et conception}
+Ce chapitre établit les fondations du projet PadelContext en faisant le lien entre les besoins à couvrir et les décisions de conception qui en découlent. La réflexion débute par la modélisation fonctionnelle, qui formalise les acteurs du système et leurs cas d'usage, puis présente une vue d'ensemble de l'architecture logicielle et de son écosystème. Les sections suivantes détaillent et justifient les choix technologiques propres à chaque brique de la solution, du backend au serveur Model Context Protocol jusqu'au client et à son assistant conversationnel. Le chapitre se referme sur les aspects transverses, de la conteneurisation à la modélisation de la base de données jusqu'à l'identification des sources de données externes.
 \subsection{Modélisation fonctionnelle}
 \subsubsection{Diagramme de cas d'utilisation}
 \begin{figure}[H]
@@ -599,6 +500,61 @@ Afin d'illustrer cette architecture, le diagramme de la figure \ref{fig:system_a
 \caption{Diagramme de l'architecture logicielle de l'écosystème PadelContext}
 \label{fig:system_architecture.drawio.png}
 \end{figure}
+\subsection{Backend}
+\subsubsection{Choix de l'architecture de l'API}
+Dans l'objectif d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
+\newline\newline
+Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Dans le cadre de ce projet, j'ai choisi d'utiliser l'architecture REST.
+En effet, contrairement a l'architecure SOAP qui repose sur des messages XML et une structure de communication plus rigide, l'architecture REST prône la simplicité et une communication sans état. 
+\newline\newline
+De plus, REST s'intègre parfaitement aux standards WEB en priviliégant fortement l'utilisation de format de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre ma base de données, mes application et mon serveur MCP.
+\newline\newline
+Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée (Addanki 2025) \cite{addanki_architectural_2025}.
+\subsubsection{Choix du système de base de données}
+Afin de stocker et gérer efficacement les données nécessaires à mon application et dans le but de permettre à mon API REST d'écrire et founir des données, il a fallu choisir quel type de système de base de données utiliser entre une base de données relationnelle SQL et une base de données non relationnelle NoSQL.
+\newline\newline
+Le choix le plus judicieux a été une base de données relationnelle SQL. En effet, les bases de données relationnelles sont particulièrement adaptées pour gérer des données structurées avec des relations complexes entre les différentes entités, ce qui est le cas dans une application de réservation de terrains de padel. Les données telles que les utilisateurs, les réservations, les matchs, les terrains, etc., sont toutes interconnectées et nécessitent une gestion rigoureuse des relations entre elles.
+\newline\newline
+De plus, le respect des propriétés ACID (Atomicité, Cohérence, Isolation, Durabilité) inhérent aux bases de données relationnelles permet de garantir une fiabilité et une intégrité absolues des données lors des transactions. Dans le contexte d'une plateforme de réservation, cela s'avère indispensable pour gérer les accès concurrents, comme s'assurer que deux groupes de joueurs ne puissent pas réserver le même terrain au même instant, ou garantir qu'une opération d'enregistrement s'annule complètement si une erreur survient en cours de processus.
+\newline\newline
+<< Dès lors que les propriétés ACID sont indispensables pour une base de données, il ne fait aucun doute que le seul choix possible est la base de données relationnelle. >> (trad. de Sahatqija et al. 2018, p. 5) \cite{lupu_concurrent_2024}.
+\newline\newline
+Une fois le choix le type de système de base de données effectué, il a fallu choisir quel SGBDR (Système de Gestion de Base de Données Relationnel) utiliser. Parmi les deux options open-source les plus populaires se trouvent MySQL et PostgreSQL.
+\newline\newline
+Suite à l'analyse d'une étude récente de 2024 comparant les performances de ces deux moteurs de base de données, mon choix s'est définitivement porté sur PostgreSQL. En effet, cette recherche a mis en évidence la performance significative de PostgreSQL par rapport à MySQL à travers plusieurs tests  simulant des conditions de production. Les résultats ont notamment démontré que le temps d'exécution pour la récupération d'une très grande quantité d'enregistrements était environ 13 fois plus rapide avec PostgreSQL qu'avec MySQL. Par ailleurs, pour les requêtes de sélection intégrant une clause de recherche spécifique, PostgreSQL s'est également révélé être environ 9 fois plus efficace MySQL (Sanket Vilas et Ouda 2024, p. 1) \cite{salunke_performance_2024}.
+
+\subsubsection{Choix du framework et des outils de développement}
+Pour clôturer les choix technologiques liés à la conception du backend, il a fallu déterminer le framework à utiliser pour développer l'API REST. Mon choix s'est porté sur l'environnement Node.js associé au framework Express.js. Cette décision s'articule autour de trois critères majeurs.
+\newline\newline
+Le premier critère repose sur le fait d'avoir déjà eu l'opportunité d'utiliser Express.js lors d'un projet de développement sur mandat au cours de mes études à la HEG, possédant une bonne maîtrise de ce framework et du langage JavaScript, cela me permet de développer l'API plus efficacement. 
+\newline
+Le second critère concerne la popularité du language JavaScript. En effet, selon l'enquête de 2025 de Stack Overflow, JavaScript demeure le langage de programmation le plus utilisé sur la plateforme (Stack Overflow 2025) \cite{noauthor_technology_nodate}, Stack Overflow étant un forum largemnt répendu et connu, la consultation de celui-ci est avantageuse lors de la réalisation d'un projet académique de cet envergure.
+\newline\newline
+Afin de gagner en efficacité et de réduire le temps de développement de l'API REST, j'ai également choisi d'utiliser Prisma pour la gestion de ma base de données. Cet ORM (Object-Relational Mapping) simplifie considérablement les interactions avec la base de données en offrant une interface de programmation intuitive. Il permet d'automatiser des tâches chronophages et critiques telles que la validation des données, la gestion des migrations structurelles, et la génération de requêtes SQL optimisées et sécurisées.
+\newline\newline
+Au-delà du confort de développement, ce choix s'appuie sur des critères de performance concrets. Prisma offre les meilleures performances lorsqu'il est soumis à des charges parallèles par rapport à des alternatives comme Sequelize ou TypeORM (Zhadko-Bazilevych 2025) \cite{zhadko-bazilevych_analysis_2025}. Pour une plateforme de réservation comme PadelContext, où plusieurs utilisateurs peuvent solliciter l'API simultanément pour rechercher ou réserver un créneau via le serveur MCP, cette capacité à maintenir de hautes performances sous une charge parallèle est un atout technique décisif.
+\newline\newline
+Enfin, pour assurer la fiabilité de mon API REST, j'ai opté pour le framework de test Jest. Jest est un framework qui ne nécessite aucune configuration au préalable. De plus, il fournit un système de mocks intégré ainsi qu'une couverture de code complète (Donvir 2024) \cite{donvir_comparative_2024}. De manière similaire à Prisma, le choix de Jest est principalement justifié par sa rapidité d'intégration et son efficacité, dans l'objectif d'optimiser le temps alloué au développement de l'API REST.
+
+\subsection{Architecture du Model Context Protocol}
+Comment l'IA va interagir avec les différentes sources de données ?
+\subsection{Client et assistant IA}
+\subsection{Conteneurisation et gestion des environnements}
+
+Dans le cadre de ce projet, la conteneurisation de l'intégralité de l'écosystème applicatif s'est imposée comme une nécessité technique, motivée par des enjeux de reproductibilité et de facilité de déploiement. Pour répondre à ce besoin, j'ai choisis d'utilisé la bibliothèque et plateforme logicielle Docker. 
+\newline\newline
+Le fonctionnement de Docker repose sur l'utilisation d'images. Les images Docker sont des modèles permettant de créer un conteneur Docker, qui intègrent toutes les dépendances nécessaires au fonctionnement des applications. Les images Docker sont des conteneurs Docker qui exécutent des applications dans des environnements isolés, où le résultat doit être identique quelle que soit l'infrastructure sous-jacente (trad. de Naga Murali Krishna 2025, p.725) \cite{koneru_containerization_2025}.
+\newline\newline
+Cette isolation et cette reproductibilité générale garanties par Docker ont été les principaux arguments de son adoption pour PadelContext. La capacité de pouvoir développer, tester et déployer l'application sur différents appareils sans se soucier du système d'exploitation hôte ou de ses configurations spécifiques s'est avérée extrêmement pratique. 
+\newline\newline
+De plus, afin d'optimiser les ressources, chaque conteneur de l'écosystème repose sur une image de base minimaliste de type Alpine Linux. Ces images allégées ne mettent à disposition que le strict nécessaire au fonctionnement de l'application, ce qui réduit considérablement la surface d'attaque potentielle et accélère le temps de déploiement des conteneurs.
+\newline\newline
+Afin de prévenir l'obsolescence prématurée du projet et de minimiser les problèmes de compatibilité durant la phase de développement, un choix strict de sélection des versions a été appliquée pour chaque image Docker. Le choix s'est systématiquement porté sur des versions actives, stables et officiellement maintenues, garantissant ainsi l'accès à une documentation à jour en cas de difficulté de codage.
+\newline\newline
+Pour les images de l'API REST, du serveur MCP et du client MCP fonctionant tous avec un environnement d'exécution JavaScript avec Node.js, l'image Docker \texttt{node:24.14.0-alpine3.23} a été sélectionnée. Ce choix est justifié par les recommandations officielles de Node.js, qui spécifient que la version 24 est la version \textit{LTS (Long-Term Support)} durant la période de réalisation de ce travail de Bachelor. Ce statut LTS garantit la correction des failles de sécurité et des bogues critiques pendant une durée de 30 mois (Node.js, 2025) \cite{noauthor_nodejs_2025}.
+\newline\newline
+Enfin, pour la base de données PostgreSQL, l'image \texttt{postgres:18.3-alpine} a été retenue. Ce choix suit la même logique de pérennité en s'appuyant sur les recommandations officielles de PostgreSQL, qui identifient la version 18 comme la version majeure la plus récente et supportée à ce jour (PostgreSQL, 2025) \cite{noauthor_postgresql_nodate}. 
+
 \subsection{Modélisation de la base de données}
 \subsubsection{Schéma relationnel}
 \begin{figure}[H]
@@ -705,6 +661,53 @@ Il est important de noter la présence de deux énumérations (\textit{Enums}) u
     \label{tab:dict_participant}
 \end{table}
 
+\subsection{Identification des sources de données}
+
+Afin d'utiliser des données météorologiques réelles et concrètes, une phase de recherche a permis d'identifier MeteoSwiss comme source de qualité. Depuis mai 2025, cet Office fédéral de météorologie et de climatologie met progressivement à disposition ses données sous forme d'Open Government Data (OGD). Les données publiques ouvertes permettent, par exemple, aux villes d’optimiser en temps réel leurs transports publics, aux startups de développer des applications qui facilitent notre quotidien, et aux citoyens de suivre plus facilement les actions de leurs responsables politiques (Office fédéral de la statistique, 2026) \cite{noauthor_quest-ce_2026}. 
+\newline\newline
+L'accès aux données de MeteoSwiss s'effectue via une API REST conforme à la norme internationale OGC STAC. La famille de spécifications STAC (SpatioTemporal Asset Catalog) vise à standardiser la structuration et l'interrogation des métadonnées des ressources géospatiales. Les spécifications STAC définissent des types d'objets JSON liés par des relations de type lien afin de prendre en charge une interface navigable et une API RESTful offrant des interfaces de navigation et de recherche supplémentaires (trad. de STAC Community, 2025) \cite{stac_community_spatiotemporal_nodate}.
+\newline\newline
+Parmi l'ensemble des collections disponibles, la collection des données de prévisions locales a été sélectionnée. Celle-ci fournit des prévisions par point pour environ 6 000 sites en Suisse pour les 216 prochaines heures, mis à jour tout les heures. Ces prévisions sont indispensable pour informer l'utilisateur des conditions météorologiques et donc de la faisabilité d'une partie de Padel sur un terrain extérieur (Outdoor). Parmis tout les types de données météorologiques disponibles, trois types spécifiques ont été retenus, comme détaillé dans le tableau \ref{tab:meteo_params}.
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+    \hline
+    \rowcolor[gray]{0.9} 
+    \textbf{Identifiant} & \textbf{Groupe} & \textbf{Description} \\ \hline
+    \texttt{tre200h0} & Température & Température de l'air à 2 m au-dessus du sol. \\ \hline
+    \texttt{rp0003i0} & Précipitation & Probabilité de précipitations pendant 3 heures. \\ \hline
+    \texttt{fu3010h0} & Vent & Valeur scalaire de la vitesse du vent ; moyenne horaire en km/h \\ \hline
+    \end{tabularx}
+    \caption{Paramètres météorologiques MeteoSwiss choisis pour le projet PadelContext (MeteoSwiss, 2026) \cite{meteoswiss_local_2026}}
+    \label{tab:meteo_params}
+\end{table}
+\vspace{0.2cm}
+
+La récupération des données suit un processus séquentiel. Ces fichiers CSV fonctionnent comme une bibliothèque historique. Chaque heure, un nouveau fichier est généré pour chaque paramètre, contenant les prévisions des 216 prochaines heures pour l'ensemble du territoire suisse. La structure d'un fichier de données, par exemple pour la température (\texttt{tre200h0}), est organisée selon les en-têtes présentés dans le tableau \ref{tab:csv_structure}.
+
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|X|}
+    \hline
+    \rowcolor[gray]{0.9} 
+    \textbf{Colonne CSV} & \textbf{Description} \\ \hline
+    \texttt{point\_id} & Identifiant unique de la station ou de la localité \\ \hline
+    \texttt{point\_type\_id} & Type de point (1 = Station, 2 = Code postal, 3 = Lieu d'intérêt). \\ \hline
+    \texttt{Date} & Horodatage du relevé au format : AAAAMMJJHHmm \\ \hline
+    \texttt{tre200h0} & Valeur de la température pour le créneau donné \\ \hline
+    \end{tabularx}
+    \caption{Structure type des fichiers CSV de données de prévision locales de MeteoSwiss}
+    \label{tab:csv_structure}
+\end{table}
+\vspace{0.2cm}
+
+Afin de lier une réservation de padel à une donnée météo précise, il est nécessaire de connaître le \texttt{point\_id} correspondant à la localité du club. Pour ce faire, un fichier de référence fourni par MeteoSwiss recensant l'intégralité des stations méthéologiques, des codes postaux et des lieux d'intérêt. Ce fichier permet d'effectuer une jointure logique, par exemple, le code postal 1226 (Thônex) est associé au \texttt{point\_id} 122600. 
+
+\section{Réalisation}
+
 \subsection{Spécifications techniques de l'API REST}
 \subsubsection{Documentation des points de terminaison}
 Afin de garantir une maintenance aisée et une compréhension rapide de l'API, l'ensemble des points de terminaison a été rigoureusement documenté en utilisant l'outil Swagger. 
@@ -741,8 +744,6 @@ Afin de garantir la fiabilité, la robustesse et la non-régression de l'API RES
 Les tests unitaires ont pour objectif de valider le comportement d'un composant de code de manière totalement isolée du reste du système. Dans le cadre de l'API PadelContext, ces tests se concentrent exclusivement sur la logique métier des contrôleurs. Pour isoler efficacement chaque contrôleur, toutes les dépendances externes ont été simulées. Par exemple, les interactions avec la base de données via Prisma, le hachage des mots de passe avec la bibliothèque \texttt{bcryptjs} ou encore la génération de tokens avec la bibliothèque \texttt{jsonwebtoken} ont été remplacés par de fausses implémentations contrôlées par Jest. L'intérêt principal de cette approche est sa rapidité d'exécution et sa grande précision. En simulant des erreurs liées à la base de données, comme l'échec d'une transaction ou une perte de connexion, il a été possible de s'assurer que l'API gère correctement les exceptions et renvoie les bons codes HTTP sans avoir besoin d'altérer un environnement réel.
 \newline\newline
 Contrairement aux tests unitaires, les tests d'intégration visent à vérifier que l'ensemble des composants du système communiquent correctement entre eux. Ils valident le cheminement complet d'une requête HTTP : du routeur au middleware permettant  la vérification du JWT, en passant par le contrôleur, jusqu'à l'écriture ou la lecture dans une véritable base de données PostgreSQL. Ces tests ont été réalisés à l'aide de la bibliothèque Supertest, qui permet de simuler des requêtes HTTP réelles vers l'application Express. Lors de ces validations, des jeux de données réels sont créés en amont puis supprimés en aval afin de ne pas polluer l'environnement de développement. Bien qu'un contrôleur puisse parfaitement fonctionner de manière isolée, il peut échouer lorsqu'il est connecté à la base de données réelle en raison, par exemple, d'une contrainte de clé étrangère non respectée ou d'une erreur de format de date. Les tests d'intégration garantissent ainsi que des actions critiques, telles que la création d'un match depuis un créneau libre ou la participation à un match, fonctionnent de manière transactionnelle et fiable dans des conditions d'utilisation réelles.
-\subsection{Maquettes}
-Maquettes de l'application, comment elle va être organisée, les différentes pages, etc..
 \subsection{Serveur MCP}
 \subsubsection{Méchanisme de transport et communication}
 Le protocole MCP propose nativement deux mécanismes distincts pour acheminer les messages entre le client et le serveur. Le premier mécanisme, nommé Stdio, implique que le client MCP lance directement le serveur MCP en tant que sous-processus. Dans cette configuration, la communication s'effectue localement via les flux d'entrée standard (stdin) et de sortie standard (stdout) du système d'exploitation (Model Context protocol, 2025) \cite{noauthor_transports_2025}, comme illustré par le diagramme de la figure \ref{fig:transport_stdio}. 
@@ -805,10 +806,15 @@ Pour PadelContext, les outils ont été rigoureusement structurés en s'appuyant
 \textbf{6. Length and Completeness} : La description de l'outil est composée de quatre phrases ou plus, rédigées dans un style concis et bien structuré, couvrant tous les aspects de son utilisation.
 \newline\newline
 L'application stricte de cette grille garantit une réduction drastique des erreurs d'interprétation par l'agent IA, assurant ainsi une orchestration fiable des requêtes tout en optimisant la pertinence des résultats.
+\subsection{Client MCP et assistant IA}
+\subsection{Fiabilité de l'assistant}
+\subsection{Maîtrise des coûts}
 \subsection{Cas d'usage}
 Exemple d'une réservation d'un terrain de padel en extérieur, avec un matchmaking automatique et une vérification de la météo en temps réel
-\subsection{Comparaison des résultats}
-Comparaison du temps et de facilité de réservation entre les plateformes traditionnelles et ma solution MCP.
+\section{Évaluation des résultats}
+\subsection{Bénéfice UX}
+\subsection{Fiabilité face aux hallucinations}
+\subsection{Viabilité des coûts et complexité}
 \section{Conclusion}
 \subsection{Conclusion générale}
 \subsection{Améliorations possibles}
