@@ -490,17 +490,21 @@ Les scénarios d'utilisation principaux sont les suivants :
 \end{itemize}
 \subsection{Architecture logicielle et écosystème}
 
-L'architecture de PadelContext est conçue comme un système distribué où chaque fonctionnalité est isolée dans son propre environnement d'exécution. Grâce à son propose réseau virtuel privé, les différents conteneurs Docker qui composent l'écosystème de l'application peuvent communiquer entre eux de manière sécurisée et efficace.
+L'architecture de PadelContext est conçue comme un système distribué où chaque fonctionnalité est isolée dans son propre environnement d'exécution. Grâce à un réseau virtuel privé dédié, les différents conteneurs Docker qui composent l'écosystème de l'application communiquent entre eux de manière sécurisée et efficace.
 \newline\newline
-Les ports utilisés pour les communications entre les conteneurs sont fixés en dur dans le code de chaque service, tandis que les ports exposés sur la machine hôte sont configurables via des variables d'environnement. Cette approche permet de maintenir une structure interne rigide afin de faciliter l'intéraction entre les services pendant le développement de ce projet.
-\newline\newline
-Afin d'illustrer cette architecture, le diagramme de la figure \ref{fig:system_architecture.drawio.png} synthétise les différents services et leurs interactions.
+Le diagramme de la figure \ref{fig:system_architecture} synthétise les différents services qui composent cet écosystème ainsi que leurs interactions.
 \begin{figure}[H]
 \centering
 \includegraphics[width=1\textwidth]{img/system_architecture.drawio.png}
 \caption{Diagramme de l'architecture logicielle de l'écosystème PadelContext}
-\label{fig:system_architecture.drawio.png}
+\label{fig:system_architecture}
 \end{figure}
+L'écosystème repose sur quatre services conteneurisés. Le client MCP web constitue le point d'entrée du joueur et pilote le modèle de langage qui anime l'assistant conversationnel. Il transmet les requêtes au serveur MCP, lequel expose les fonctionnalités de l'application sous forme d'outils et relaie les appels vers l'API REST. Cette dernière centralise la logique métier et l'accès aux données. Elle interroge la base de données PostgreSQL pour les informations propres à l'application, et l'API externe MeteoSwiss pour enrichir les créneaux extérieurs de prévisions météorologiques.
+\newline\newline
+Le choix de confier la récupération des données météorologiques à l'API, plutôt qu'à un outil dédié du serveur MCP, constitue un parti pris d'architecture détaillé dans la section consacrée à la maîtrise des coûts du projet.
+\newline\newline
+Sur le plan de la configuration, les ports utilisés pour les communications internes entre les conteneurs sont fixés en dur dans le code de chaque service, tandis que les ports exposés sur la machine hôte restent configurables via des variables d'environnement. Cette approche conserve une structure interne stable tout en préservant la souplesse nécessaire au déploiement.
+
 \subsection{Backend}
 \subsubsection{Choix de l'architecture de l'API}
 Dans l'objectif d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
