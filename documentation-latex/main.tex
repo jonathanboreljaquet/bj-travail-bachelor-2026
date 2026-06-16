@@ -510,9 +510,9 @@ Sur le plan de la configuration, les ports utilisés pour les communications int
 Dans l'objectif d'assurer l'échange de données entre les interfaces utilisateur et la base de données, tout en fournissant un point d'accès standardisé au serveur MCP, le développement d'une API s'est avéré indispensable. 
 \newline\newline
 Pour ce faire, il a d'abord fallu déterminer l'architecture d'API la plus adaptée aux contraintes du projet. Parmi les standards actuels les plus connus se trouvent les architectures SOAP, REST et GraphQL. Dans le cadre de ce projet, j'ai choisi d'utiliser l'architecture REST.
-En effet, contrairement a l'architecure SOAP qui repose sur des messages XML et une structure de communication plus rigide, l'architecture REST prône la simplicité et une communication sans état. 
+En effet, contrairement à l'architecture SOAP qui repose sur des messages XML et une structure de communication plus rigide, l'architecture REST prône la simplicité et une communication sans état. 
 \newline\newline
-De plus, REST s'intègre parfaitement aux standards WEB en priviliégant fortement l'utilisation de format de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre ma base de données, mes application et mon serveur MCP.
+De plus, REST s'intègre parfaitement aux standards WEB en privilégiant fortement l'utilisation de formats de données légers tels que JSON, ce qui en fait aujourd'hui le standard pour la conception d'API web. Cette légèreté est idéale pour garantir des temps de réponse rapides entre l'API et ses clients, à savoir le serveur MCP et l'application web.
 \newline\newline
 Enfin, bien que GraphQL émerge actuellement comme un leader pour la conception d'API dans les applications hautement dynamiques nécessitant des requêtes de données très complexes, son implémentation dans le cadre de ce travail de bachelor aurait ajouté une complexité superflue. Les opérations liées à une application de réservation de terrain de padel suivent une logique transactionnelle standard pour laquelle la simplicité éprouvée de l'architecture REST est amplement suffisante et parfaitement adaptée (Addanki 2025) \cite{addanki_architectural_2025}.
 \subsubsection{Choix du système de base de données}
