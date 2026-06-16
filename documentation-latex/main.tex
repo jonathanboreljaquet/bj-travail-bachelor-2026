@@ -837,33 +837,34 @@ Contrairement aux tests unitaires, les tests d'intégration visent à vérifier 
 \subsection{Serveur MCP}
 
 \subsubsection{Définitions des outils MCP}
-Le serveur Model Context Protocol (MCP) constitue le pont de communication essentiel entre l'Assistant IA et les sources de données du système. Son rôle est d'exposer de manière standardisée les points de terminaison de l'API REST de PadelContext, ainsi que l'API externe de MeteoSwiss, sous forme d'outils (tools) directement exécutables par l'intelligence artificielle.
+Le serveur MCP constitue le pont de communication entre l'assistant conversationnel et les données de PadelContext. Son rôle est d'exposer les points de terminaison de l'API REST sous forme de tools que le modèle de langage peut invoquer. Les données météorologiques ne constituent pas un outil distinct. Elles sont récupérées par l'API et intégrées directement aux résultats des outils de consultation lorsqu'un terrain extérieur est concerné.
 \newline\newline
-Afin de couvrir l'ensemble des cas d'usage définis lors de la modélisation fonctionnelle, le serveur MCP expose cinq outils distincts. Le tableau \ref{tab:mcp_tools} résume leurs objectifs respectifs.
+Afin de couvrir l'ensemble des cas d'usage définis lors de la modélisation fonctionnelle, le serveur MCP expose quatre outils distincts. Le tableau \ref{tab:mcp_tools} résume leurs objectifs respectifs.
 \vspace{0.5cm}
 \begin{table}[H]
     \centering
-    \begin{tabularx}{\textwidth}{|l|l|X|}
+    {\small
+    \begin{tabularx}{\textwidth}{|l|X|}
     \hline
-        \rowcolor[gray]{0.9} 
-        \textbf{Nom de l'outil} & \textbf{Source interrogée} & \textbf{Description fonctionnelle} \\ \hline
-        \texttt{get-matches} & API PadelContext & Récupère la liste des matchs disponibles via le point de terminaison correspondant. \\ \hline
-        \texttt{get-available-slots} & API PadelContext & Récupère la liste des créneaux horaires disponibles via le point de terminaison correspondant. \\ \hline
-        \texttt{create-match-from-slot} & API PadelContext & Crée un match à partir d'un créneau horaire libre et y inscrit l'utilisateur authentifié via le point de terminaison correspondant. \\ \hline
-        \texttt{join-match} & API PadelContext & Inscrit l'utilisateur authentifié à un match existant via le point de terminaison correspondant. \\ \hline
-        \texttt{get-meteo-swiss} & API MeteoSwiss & Fournit les prévisions climatiques locales pour valider la faisabilité d'une partie en extérieur. \\ \hline
-\end{tabularx}
+        \rowcolor[gray]{0.9}
+        \textbf{Nom de l'outil} & \textbf{Description fonctionnelle} \\ \hline
+        \texttt{get-open-matches} & Recherche et liste les matchs ouverts en attente de joueurs, selon des filtres optionnels (\texttt{GET /api/matches}). \\ \hline
+        \texttt{get-available-slots} & Liste les créneaux horaires disponibles par terrain, selon des filtres optionnels (\texttt{GET /api/available-slots}). \\ \hline
+        \texttt{join-open-match} & Inscrit l'utilisateur authentifié à un match ouvert existant (\texttt{POST /api/matches/\{matchId\}/join}). \\ \hline
+        \texttt{create-match-from-slot} & Crée un nouveau match à partir d'un créneau libre et y inscrit l'utilisateur (\texttt{POST /api/matches/from-slot}). \\ \hline
+    \end{tabularx}
+    }
     \caption{Liste des outils exposés par le serveur MCP de PadelContext}
     \label{tab:mcp_tools}
 \end{table}
 \vspace{0.4cm}
 
 
-Dans l'architecture du Model Context Protocol, la description sémantique d'une fonctionnalité est critique. Pour comprendre l'objectif et les spécificités d'un outil, les LLMs s'appuient exclusivement sur sa description en langage naturel. Une étude récente, ayant analysé 856 outils MCP, révèle que 97,1 \% d'entre eux contiennent des défauts de conception qualifiés de << Tool Smells >>, avec 56 \% des outils échouant même à définir clairement leur objectif principal (Hasan et al. 2026, p. 4) \cite{hasan_model_2026}. Les auteurs soulignent que si ces descriptions sont défectueuses, sous-spécifiées ou trompeuses, l'agent IA risque de sélectionner le mauvais outil ou de fournir des arguments invalides, réduisant considérablement la fiabilité du système.
+Dans l'architecture du Model Context Protocol, la description sémantique d'une fonctionnalité est critique. Pour comprendre l'objectif et les spécificités d'un outil, les modèles de langage s'appuient exclusivement sur sa description en langage naturel. Une étude récente, ayant analysé 856 outils MCP, révèle que 97,1 \% d'entre eux contiennent des défauts de conception qualifiés de "Tool Smells", avec 56 \% des outils échouant même à définir clairement leur objectif principal (Hasan et al. 2026, p. 4) \cite{hasan_model_2026}. Les auteurs soulignent que si ces descriptions sont défectueuses, sous-spécifiées ou trompeuses, le modèle de langage risque de sélectionner le mauvais outil ou de fournir des arguments invalides, réduisant considérablement la fiabilité du système.
 \newline\newline
 Bien que l'étude démontre que l'amélioration de ces descriptions permet d'augmenter le taux de succès des tâches, elle met également en garde sur le fait qu'une documentation trop volumineuse augmente le coût et le nombre d'étapes d'exécution. Il est donc nécessaire de trouver un juste équilibre (Hasan et al. 2026, p. 4) \cite{hasan_model_2026}.
 \newline\newline
-Pour PadelContext, les outils ont été rigoureusement structurés en s'appuyant sur la grille d'évaluation d'excellence (score de 5/5) proposée par l'étude mentionnée. Chaque description est structurée autour de six piliers sémantiques afin d'atteindre une qualité optimale (Hasan et al. 2026, p. 42) \cite{hasan_model_2026} :
+Pour PadelContext, les outils ont été structurés en s'appuyant sur la grille d'évaluation proposée par l'étude mentionnée, en visant ses critères d'excellence. Chaque description a été rédigée pour satisfaire les six critères sémantiques de cette grille (Hasan et al. 2026, p. 42) \cite{hasan_model_2026} :
 \newline\newline
 \textbf{1. Purpose} : Explique clairement la fonction, le comportement et les données de retour de l'outil en utilisant un langage précis.
 \newline
@@ -877,10 +878,14 @@ Pour PadelContext, les outils ont été rigoureusement structurés en s'appuyant
 \newline
 \textbf{6. Length and Completeness} : La description de l'outil est composée de quatre phrases ou plus, rédigées dans un style concis et bien structuré, couvrant tous les aspects de son utilisation.
 \newline\newline
-L'application stricte de cette grille garantit une réduction drastique des erreurs d'interprétation par l'agent IA, assurant ainsi une orchestration fiable des requêtes tout en optimisant la pertinence des résultats.
-\subsection{Client MCP et assistant IA}
-\subsection{Fiabilité de l'assistant}
-\subsection{Maîtrise des coûts}
+L'application de cette grille vise à réduire les erreurs d'interprétation par le modèle de langage et à fiabiliser l'orchestration des requêtes.
+\subsubsection{Fonctionnement des outils MCP}
+Chaque outil définit son contrat d'entrée à l'aide d'un schéma Zod. Ce schéma remplit deux rôles complémentaires. D'une part, il valide et garantit le type de chaque paramètre transmis par le modèle de langage. Toute donnée mal formée est rejetée avant le moindre appel à l'API. D'autre part, chaque champ porte une description en langage naturel, exploitée par le modèle pour comprendre le sens du paramètre, ses contraintes et les cas où il doit être renseigné. Le schéma Zod sert ainsi à la fois de garde-fou à l'exécution et de support de la description des paramètres présentée précédemment.
+\newline\newline
+L'un des défis du projet a été de garantir la cohérence des dates avec la base de données, qui les stocke au format ISO 8601 en temps universel (UTC). Le serveur MCP joue ici le rôle de pivot entre les fuseaux horaires. Le modèle de langage est invité, via la description du schéma, à fournir les dates en heure locale (Europe/Zurich) sans aucun décalage. Chaque outil interprète alors cette valeur comme une heure de Zurich, la convertit en ISO 8601 UTC avant d'appeler l'endpoint correspondant, puis reconvertit en heure locale les dates renvoyées par l'API avant de les présenter au modèle. Ce trajet aller-retour garantit que la base de données reçoit et retourne toujours des dates UTC canoniques, tandis que l'utilisateur et le modèle raisonnent systématiquement en heure locale.
+\newline\newline
+Avant d'être renvoyée au modèle, la réponse brute de l'API est remodelée en un objet compact qui ne conserve que les champs utiles, met les dates en forme et enrichit les terrains extérieurs avec les données météorologiques. Cet objet est ensuite sérialisé en YAML plutôt qu'en JSON. Ce choix s'appuie sur des travaux récents consacrés à la représentation de données structurées pour les modèles de langage. Ceux-ci montrent que le format de sérialisation n'a pas d'effet statistiquement significatif sur l'exactitude des réponses. La sélection doit dès lors être guidée par l'économie de tokens, critère pour lequel YAML se révèle le format le plus efficace en consommant de 28 à 60 \% de tokens de moins que les autres formats testés (McMillan 2026, p. 7) \cite{mcmillan_structured_2026}. La maîtrise du coût en tokens constituant un enjeu de viabilité du projet, sérialiser les réponses des outils en YAML réduit leur taille sans dégrader la compréhension du modèle. Ce point est approfondi dans l'évaluation des résultats.
+\subsection{Client MCP et modèle de langage}
 \subsection{Cas d'usage}
 Exemple d'une réservation d'un terrain de padel en extérieur, avec un matchmaking automatique et une vérification de la météo en temps réel
 \section{Évaluation des résultats}
