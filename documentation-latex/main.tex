@@ -458,7 +458,7 @@ Le diagramme de Gantt est disponible dans l'annexe \ref{annexe:pdf_gantt}, cepen
 \end{table}
 
 \section{Analyse et conception}
-Ce chapitre établit les fondations du projet PadelContext en faisant le lien entre les besoins à couvrir et les décisions de conception qui en découlent. La réflexion débute par la modélisation fonctionnelle, qui formalise les acteurs du système et leurs cas d'usage, puis présente une vue d'ensemble de l'architecture logicielle et de son écosystème. Les sections suivantes détaillent et justifient les choix technologiques propres à chaque brique de la solution, du backend au serveur Model Context Protocol jusqu'au client et à son assistant conversationnel. Le chapitre se referme sur les aspects transverses, de la conteneurisation à la modélisation de la base de données jusqu'à l'identification des sources de données externes.
+Ce chapitre établit les fondations du projet PadelContext en faisant le lien entre les besoins à couvrir et les décisions de conception qui en découlent. La réflexion débute par la modélisation fonctionnelle, qui formalise les acteurs du système et leurs cas d'usage, puis présente une vue d'ensemble de l'architecture logicielle et de son écosystème. Les sections suivantes détaillent et justifient les choix technologiques propres à chaque brique de la solution imaginée, de l'API REST au serveur MCP jusqu'au client MCP et au modèle de langage utlilisé. Le chapitre se termine sur les aspects de conteneurisation, de modélisation de la base de données et de l'identification des sources de données météorologiques.
 \subsection{Modélisation fonctionnelle}
 \subsubsection{Diagramme de cas d'utilisation}
 Le diagramme de cas d'utilisation présenté à la figure \ref{fig:use_case_diagram} synthétise les interactions entre les utilisateurs et l'application PadelContext. Sa particularité tient à la place centrale de l'assistant conversationnel, qui s'intercale entre le joueur et les fonctionnalités du système et en devient un acteur à part entière.
@@ -772,42 +772,68 @@ Afin de lier une réservation de padel à une donnée météo précise, il est n
 
 \section{Réalisation}
 
-\subsection{Spécifications techniques de l'API REST}
-\subsubsection{Documentation des points de terminaison}
-Afin de garantir une maintenance aisée et une compréhension rapide de l'API, l'ensemble des points de terminaison a été rigoureusement documenté en utilisant l'outil Swagger. 
+\subsection{API REST}
+\subsubsection{Points de terminaison}
+Afin de garantir une maintenance aisée et une compréhension rapide de l'API, l'ensemble des points de terminaison a été documenté à l'aide de l'outil Swagger.
 \newline\newline
-L'avantage de l'outil Swagger est qu'il permet de rédiger une documentation dynamique et accessible directement depuis le serveur de l'API. En effet, la documentation est générée automatiquement à partir de commentaires structurés directement intégrés au-dessus du code de chaque route de l'application. Cette méthode professionnelle garantit que le code et sa documentation restent constamment synchronisés.
+L'avantage de l'outil Swagger est qu'il permet de rédiger une documentation dynamique et accessible directement depuis le serveur de l'API. En effet, la documentation est générée automatiquement à partir de commentaires structurés directement intégrés au-dessus du code de chaque route de l'application. Cette méthode permet de centraliser le code et sa documentation au même endroit.
 \newline\newline
-L'API PadelContext expose cinq points de terminaison permettant de gérer l'authentification, la consultation des matchs ouverts et des créneaux horaires disponibles et leur participation ou création. Le tableau \ref{tab:api_endpoints} présente une vue d'ensemble de ces routes.
+L'API PadelContext expose neuf points de terminaison couvrant l'authentification, la consultation et la création de matchs et de créneaux, l'accès aux données météorologiques ainsi que le suivi de la consommation du modèle de langage. Les tableaux \ref{tab:api_endpoints_1} et \ref{tab:api_endpoints_2} présentent une vue d'ensemble de ces routes.
 
 \vspace{0.5cm}
 \begin{table}[H]
     \centering
     \begin{tabularx}{\textwidth}{|l|l|X|}
     \hline
-    \rowcolor[gray]{0.9} 
+    \rowcolor[gray]{0.9}
     \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} \\ \hline
     {\textbf{POST}} & \texttt{/api/auth/login} & Authentifie un utilisateur via ses identifiants et retourne un JSON Web Token (JWT) valide pour authentifier ses futures requêtes. \\ \hline
     {\textbf{GET}} & \texttt{/api/matches} & Récupère la liste des matchs ouverts (en attente de joueurs) en appliquant divers filtres optionnels (ville, prix, durée, etc.). \\ \hline
-    {\textbf{GET}} & \texttt{/api/available-slots} & Retourne les créneaux horaires disponibles pour les 7 prochains jours, en appliquant divers filtres optionnels (ville, prix, durée, etc.). \\ \hline
-    {\textbf{POST}} & \texttt{/api/matches/\{matchId\}/join} & Permet à un utilisateur de s'inscrire à une partie existante possédant encore des places disponibles grâce à son JWT. \\ \hline
-    {\textbf{POST}} & \texttt{/api/matches/from-slot} & Permet à un utilisateur de convertir un créneau libre en un nouveau match ouvert et y inscrit automatiquement le créateur grâce à son JWT. \\ \hline
+    {\textbf{GET}} & \texttt{/api/matches/me} & Récupère tous les matchs de l'utilisateur authentifié, quel que soit leur statut, triés par date de début. \\ \hline
+    {\textbf{POST}} & \texttt{/api/matches/from-slot} & Convertit un créneau libre en un nouveau match ouvert et y inscrit automatiquement le créateur grâce à son JWT. \\ \hline
+    {\textbf{POST}} & \texttt{/api/matches/\{matchId\}/join} & Inscrit l'utilisateur authentifié à une partie existante disposant encore de places disponibles grâce à son JWT. \\ \hline
+    {\textbf{GET}} & \texttt{/api/available-slots} & Retourne les créneaux horaires disponibles (les 7 prochains jours par défaut, ou une fenêtre précisée) en appliquant divers filtres optionnels (ville, prix, durée, etc.). \\ \hline
     \end{tabularx}
-    \caption{Vue d'ensemble des points de terminaison de l'API PadelContext}
-    \label{tab:api_endpoints}
+    \caption{Points de terminaison de l'API - Partie 1}
+    \label{tab:api_endpoints_1}
+\end{table}
+\vspace{0.2cm}
+
+\vspace{0.3cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} \\ \hline
+    {\textbf{GET}} & \texttt{/api/weather} & Fournit les données météorologiques (précipitations, vent, température) pour un code postal suisse et une date donnée. \\ \hline
+    {\textbf{GET}} & \texttt{/api/llm-usage/me} & Retourne le nombre de tokens consommés sur le mois en cours ainsi que la limite mensuelle de l'utilisateur. \\ \hline
+    {\textbf{POST}} & \texttt{/api/llm-usage/log} & Enregistre un usage du modèle de langage et incrémente le compteur mensuel de tokens de l'utilisateur. \\ \hline
+    \end{tabularx}
+    \caption{Points de terminaison de l'API - Partie 2}
+    \label{tab:api_endpoints_2}
 \end{table}
 \vspace{0.2cm}
 
 La spécification technique complète et exhaustive de ces points de terminaison, incluant les paramètres de requête, le format des corps JSON attendus, ainsi que la gestion des différents codes de statut HTTP, est visualisable via l'interface graphique de Swagger. 
 \newline\newline
 Des captures d'écran détaillant l'utilisation et les réponses de chaque point de terminaison via cette interface sont disponibles dans l'annexe \ref{annexe:swagger}.
-\subsubsection{Documentation et stratégie de tests}
+\subsubsection{Acquisition des données météorologiques}
 
-Afin de garantir la fiabilité, la robustesse et la non-régression de l'API REST tout au long de son développement, une stratégie de test rigoureuse a été mise en place. En accord avec les choix technologiques définis précédemment, le framework Jest a été utilisé pour orchestrer ces vérifications. La stratégie adoptée repose sur deux niveaux de validation complémentaires : les tests unitaires et les tests d'intégration.
+Comme présenté lors de la conception, l'accès aux données météorologiques constitue un élément central de la solution PadelContext. Initialement envisagé comme un outil MCP interrogé directement par le modèle de langage lors de la planification du projet, il a finalement été réalisé sous la forme d'un service interne à l'API REST. Ce choix centralise la logique d'acquisition et de mise en cache des prévisions au sein de l'API. Le serveur MCP se contente alors d'appeler le point de terminaison \texttt{/api/weather} lorsqu'un terrain extérieur est concerné. Cette décision répond également à un objectif d'optimisation du coût en tokens du modèle de langage, détaillé dans l'évaluation des résultats.
+\newline\newline
+Cette acquisition repose sur un service dédié, conçu sous la forme d'un singleton. Une instance unique est ainsi partagée dans toute l'application, ce qui garantit que les données téléchargées en arrière-plan et celles lues lors d'une requête proviennent du même cache en mémoire. Au démarrage, le service charge en mémoire un fichier CSV statique fourni par MeteoSwiss qui associe chaque code postal suisse à un identifiant de point de prévision (\texttt{point\_id}). Les prévisions sont ensuite conservées dans un cache en mémoire vive, organisé par catégorie de mesure. Trois catégories sont retenues, la température, la probabilité de précipitations et la vitesse du vent.
+\newline\newline
+La mise à jour de ce cache est confiée à une tâche planifiée qui s'exécute toutes les dix minutes, complétée par une première exécution immédiate au démarrage afin de ne jamais servir un cache vide. À chaque exécution, la tâche interroge l'API STAC de MeteoSwiss pour détecter la publication de nouveaux fichiers de prévision. Deux mécanismes limitent le coût de cette synchronisation. D'une part, l'en-tête HTTP \texttt{ETag} permet de ne re-télécharger un fichier que s'il a réellement changé, une réponse HTTP 304 signalant l'absence de modification . D'autre part, un contrôle d'intégrité par somme de contrôle SHA-256 vérifie que chaque fichier téléchargé n'a pas été corrompu avant de remplacer les données du cache.
+\newline\newline
+Grâce à cette architecture, le point de terminaison \texttt{/api/weather} répond instantanément. Lorsqu'une requête arrive, le service convertit le code postal en identifiant de point puis lit directement la valeur correspondante dans le cache en mémoire, sans solliciter l'API MeteoSwiss. Cette mise en cache en amont garantit des temps de réponse constants et découple la disponibilité de l'application de celle de l'API externe.
+
+\subsubsection{Stratégie de tests}
+Afin de garantir la fiabilité, la robustesse et la non-régression de l'API REST tout au long de son développement, une stratégie de test rigoureuse a été mise en place. En accord avec les choix technologiques définis précédemment, le framework Jest a été utilisé pour orchestrer ces vérifications. La stratégie adoptée repose sur deux niveaux de validation complémentaires, les tests unitaires et les tests d'intégration.
 \newline\newline
 Les tests unitaires ont pour objectif de valider le comportement d'un composant de code de manière totalement isolée du reste du système. Dans le cadre de l'API PadelContext, ces tests se concentrent exclusivement sur la logique métier des contrôleurs. Pour isoler efficacement chaque contrôleur, toutes les dépendances externes ont été simulées. Par exemple, les interactions avec la base de données via Prisma, le hachage des mots de passe avec la bibliothèque \texttt{bcryptjs} ou encore la génération de tokens avec la bibliothèque \texttt{jsonwebtoken} ont été remplacés par de fausses implémentations contrôlées par Jest. L'intérêt principal de cette approche est sa rapidité d'exécution et sa grande précision. En simulant des erreurs liées à la base de données, comme l'échec d'une transaction ou une perte de connexion, il a été possible de s'assurer que l'API gère correctement les exceptions et renvoie les bons codes HTTP sans avoir besoin d'altérer un environnement réel.
 \newline\newline
-Contrairement aux tests unitaires, les tests d'intégration visent à vérifier que l'ensemble des composants du système communiquent correctement entre eux. Ils valident le cheminement complet d'une requête HTTP : du routeur au middleware permettant  la vérification du JWT, en passant par le contrôleur, jusqu'à l'écriture ou la lecture dans une véritable base de données PostgreSQL. Ces tests ont été réalisés à l'aide de la bibliothèque Supertest, qui permet de simuler des requêtes HTTP réelles vers l'application Express. Lors de ces validations, des jeux de données réels sont créés en amont puis supprimés en aval afin de ne pas polluer l'environnement de développement. Bien qu'un contrôleur puisse parfaitement fonctionner de manière isolée, il peut échouer lorsqu'il est connecté à la base de données réelle en raison, par exemple, d'une contrainte de clé étrangère non respectée ou d'une erreur de format de date. Les tests d'intégration garantissent ainsi que des actions critiques, telles que la création d'un match depuis un créneau libre ou la participation à un match, fonctionnent de manière transactionnelle et fiable dans des conditions d'utilisation réelles.
+Contrairement aux tests unitaires, les tests d'intégration visent à vérifier que l'ensemble des composants du système communiquent correctement entre eux. Ils valident le cheminement complet d'une requête HTTP, du routeur au middleware permettant la vérification du JWT, en passant par le contrôleur, jusqu'à l'écriture ou la lecture dans une véritable base de données PostgreSQL. Ces tests ont été réalisés à l'aide de la bibliothèque Supertest, qui permet de simuler des requêtes HTTP réelles vers l'application Express. Lors de ces validations, des jeux de données réels sont créés en amont puis supprimés en aval afin de ne pas polluer l'environnement de développement. Bien qu'un contrôleur puisse parfaitement fonctionner de manière isolée, il peut échouer lorsqu'il est connecté à la base de données réelle en raison, par exemple, d'une contrainte de clé étrangère non respectée ou d'une erreur de format de date. Les tests d'intégration garantissent ainsi que des actions critiques, telles que la création d'un match depuis un créneau libre ou la participation à un match, fonctionnent de manière transactionnelle et fiable dans des conditions d'utilisation réelles.
 \subsection{Serveur MCP}
 
 \subsubsection{Définitions des outils MCP}
