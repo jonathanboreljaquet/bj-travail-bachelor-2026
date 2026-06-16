@@ -898,6 +898,45 @@ Pour contenir la taille du contexte envoyé au modèle, une fenêtre glissante n
 \newline\newline
 Enfin, ce même point de terminaison applique les contrôles de sécurité et de maîtrise des coûts du client, à savoir la limitation du débit des requêtes, la vérification du quota mensuel de tokens, la validation humaine des actions sensibles et le relais des identifiants vers le serveur MCP. Ces mécanismes sont détaillés dans la section consacrée à la sécurité et à la robustesse.
 \subsection{Interfaces utilisateur}
+Le client web met à disposition du joueur deux modes d'interaction complémentaires reposant sur la même API. Le premier est un assistant conversationnel, le second une navigation classique par listes et formulaires. Cette dualité est un choix délibéré. Elle permet de confronter une interaction en langage naturel à une interface traditionnelle et constitue le terrain de l'étude comparative menée dans l'évaluation des résultats. L'accès à l'application débute par une page de connexion, présentée à la figure \ref{fig:ui_connexion}, qui authentifie le joueur et lui délivre le jeton (JWT) utilisé pour toutes ses futures requêtes.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{img/padel_context_connexion.png}
+\caption{Page de connexion de l'application PadelContext}
+\label{fig:ui_connexion}
+\end{figure}
+
+\subsubsection{Assistant conversationnel}
+Le premier mode est un assistant conversationnel, présenté à la figure \ref{fig:ui_chatbot}. Le joueur formule sa demande en langage naturel, par exemple pour rejoindre un match répondant à plusieurs critères, et l'assistant interroge le système avant de proposer une réponse synthétique. La figure illustre également la validation humaine des actions sensibles. Avant de procéder à une inscription, l'assistant présente le récapitulatif du match et sollicite une confirmation explicite du joueur, puis n'exécute l'action qu'une fois cette confirmation obtenue. Le bandeau supérieur affiche par ailleurs la consommation de tokens du mois. Ces deux mécanismes relèvent de la sécurité et de la robustesse et sont détaillés dans la section correspondante.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{img/padel_context_chatbot.png}
+\caption{Assistant conversationnel illustrant la validation humaine avant l'inscription à un match}
+\label{fig:ui_chatbot}
+\end{figure}
+
+\subsubsection{Navigation classique}
+Le second mode reproduit une navigation classique par listes et filtres, sans intervention du modèle de langage. Il se décline en deux vues. La vue des créneaux libres, présentée à la figure \ref{fig:ui_slots}, affiche terrain par terrain les plages horaires disponibles à la réservation. La vue des matchs ouverts, présentée à la figure \ref{fig:ui_open_matches}, liste les parties en attente de joueurs, chacune assortie d'un bouton d'inscription direct. Le joueur retrouve ainsi, par une suite de clics explicites, les mêmes fonctionnalités que celles offertes par l'assistant.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{img/padel_context_classique_available_slots.png}
+\caption{Navigation classique, vue des créneaux libres par terrain}
+\label{fig:ui_slots}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{img/padel_context_classique_open_matches.png}
+\caption{Navigation classique, vue des matchs ouverts}
+\label{fig:ui_open_matches}
+\end{figure}
+
+Indépendamment du mode choisi, une vue transversale << Mes matchs >>, présentée à la figure \ref{fig:ui_mymatches}, récapitule les parties auxquelles le joueur participe, réparties entre les matchs à venir et l'historique.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{img/padel_context_mymatches.png}
+\caption{Vue << Mes matchs >> récapitulant les parties du joueur}
+\label{fig:ui_mymatches}
+\end{figure}
 \subsection{Sécurité et robustesse}
 \subsection{Cas d'usage}
 Exemple d'une réservation d'un terrain de padel en extérieur, avec un matchmaking automatique et une vérification de la météo en temps réel
