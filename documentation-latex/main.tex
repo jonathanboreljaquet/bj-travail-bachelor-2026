@@ -461,6 +461,7 @@ Le diagramme de Gantt est disponible dans l'annexe \ref{annexe:pdf_gantt}, cepen
 Ce chapitre établit les fondations du projet PadelContext en faisant le lien entre les besoins à couvrir et les décisions de conception qui en découlent. La réflexion débute par la modélisation fonctionnelle, qui formalise les acteurs du système et leurs cas d'usage, puis présente une vue d'ensemble de l'architecture logicielle et de son écosystème. Les sections suivantes détaillent et justifient les choix technologiques propres à chaque brique de la solution, du backend au serveur Model Context Protocol jusqu'au client et à son assistant conversationnel. Le chapitre se referme sur les aspects transverses, de la conteneurisation à la modélisation de la base de données jusqu'à l'identification des sources de données externes.
 \subsection{Modélisation fonctionnelle}
 \subsubsection{Diagramme de cas d'utilisation}
+Le diagramme de cas d'utilisation présenté à la figure \ref{fig:use_case_diagram} synthétise les interactions entre les utilisateurs et l'application PadelContext. Sa particularité tient à la place centrale de l'assistant conversationnel, qui s'intercale entre le joueur et les fonctionnalités du système et en devient un acteur à part entière.
 \begin{figure}[H]
 \centering
 \includegraphics[width=1\textwidth]{img/use_case_diagram.drawio.png}
@@ -469,23 +470,23 @@ Ce chapitre établit les fondations du projet PadelContext en faisant le lien en
 \end{figure}
 
 \subsubsection{Description des acteurs et des fonctionnalités}
-Afin de bien délimiter le périmètre d'action de l'application PadelContext, il est essentiel de définir les différents acteurs interagissant avec le système, ainsi que les scénarios d'utilisation principaux qui en découlent. Contrairement à une application classique, l'intégration du Model Context Protocol modifie l'interaction entre les acteurs. L'utilisateur ne se renseigne pas et ne navigue pas uniquement via des clics dans des menus, mais dialogue avec un assistant IA qui orchestre les requêtes de manière proactive.
+Afin de bien délimiter le périmètre d'action de l'application PadelContext, il est essentiel de définir les différents acteurs interagissant avec le système, ainsi que les scénarios d'utilisation principaux qui en découlent. Contrairement à une application classique, l'intégration du Model Context Protocol modifie l'interaction entre les acteurs. L'utilisateur ne se renseigne pas et ne navigue pas uniquement via des clics dans des menus, mais dialogue avec un Assistant IA qui orchestre les requêtes de manière proactive.
 \newline\newline
 Les acteurs principaux de l'application sont les suivants :
 \newline
 \begin{itemize}
 \item \textbf{Le Joueur} : Il s'agit de l'utilisateur final de l'application. Son objectif est de trouver des partenaires, de consulter la disponibilité des terrains et de planifier des parties de padel tout en s'affranchissant de la charge mentale logistique (météo, équipement sur place, niveau des autres joueurs, etc.).
-\item \textbf{L'Assistant IA} : Utilisant un LLM et connecté au serveur MCP, il agit comme un assistant proactif. Il comprend les requêtes en langage naturel du joueur et utilise les outils mis à sa disposition pour interroger l'API REST de l'application ainsi que l'API externe MeteoSwiss.
+\item \textbf{L'Assistant IA} : Utilisant un modèle de langage et connecté au serveur MCP, il agit comme un assistant proactif. Il comprend les requêtes en langage naturel du joueur et utilise les outils mis à sa disposition pour interroger l'API REST de l'application.
 \end{itemize}\
 \newline
 Les scénarios d'utilisation principaux sont les suivants :
 \newline
 \begin{itemize}
-\item \textbf{Connexion} : Le joueur s'authentifie sur l'application. Cette étape permet de personnaliser ses futures requêtes auprès de l'Assistant IA et de l'autoriser à exécuter des actions nécessitant une identification (comme rejoindre une partie ou réserver un terrain).
-\item \textbf{Afficher les parties existantes} : Le joueur exprime à l'Assistant IA son désir de participer à un match, par exemple : << Je cherche à rejoindre une partie pour demain à 18h00 avec des joueurs d'un niveau moyen de 5.0 >>. L'Assistant IA fait appel au serveur MCP pour interroger l'outil approprié. Il analyse les matchs ouverts et filtre les résultats pour ne proposer que ceux correspondant au niveau du joueur et à la tranche horaire souhaitée.
-\item \textbf{Rejoindre une partie existante} : Si le joueur valide la proposition de l'Assistant IA, ce dernier vérifie l'état de connexion du joueur, puis exécute l'action nécessaire pour l'inscrire à la partie sélectionnée.
-\item \textbf{Afficher les terrains disponibles} : Le joueur formule le souhait de réserver un terrain pour une date et une heure précises, par exemple : << Je souhaite réserver un terrain extérieur pour samedi prochain à 14h00 >>. L'Assistant IA interroge le serveur MCP pour lister les terrains disponibles et filtre les résultats selon la tranche horaire et le type de terrain demandés. De plus, avant de finaliser sa proposition, l'Assistant IA consulte l'API MeteoSwiss pour s'assurer que les conditions climatiques seront favorables.
-\item \textbf{Réserver un terrain} : Une fois la proposition validée par le joueur, l'Assistant IA vérifie que l'utilisateur est connecté et procède à la réservation effective du terrain.
+\item \textbf{Se connecter} : Le joueur s'authentifie sur l'application. Cette étape permet de personnaliser ses futures requêtes auprès de l'Assistant IA et de l'autoriser à exécuter des actions nécessitant une identification (comme rejoindre ou créer une partie).
+\item \textbf{Afficher les parties existantes} : Le joueur exprime à l'Assistant IA son désir de participer à une partie, par exemple en formulant << Je cherche à rejoindre une partie pour demain à 18h00 avec des joueurs d'un niveau moyen de 5.0 >>. L'Assistant IA fait appel au serveur MCP pour interroger l'outil approprié. Il analyse les parties ouvertes et filtre les résultats pour ne proposer que ceux correspondant au niveau du joueur et à la tranche horaire souhaitée. Pour les parties se déroulant en extérieur, les prévisions météorologiques associées au créneau sont également présentées au joueur.
+\item \textbf{Rejoindre une partie} : Si le joueur valide la proposition de l'Assistant IA, ce dernier exécute l'action d'inscription à la partie sélectionnée, que le système réserve aux utilisateurs authentifiés.
+\item \textbf{Afficher les terrains disponibles} : Le joueur formule le souhait de réserver un terrain pour une date et une heure précises, par exemple en formulant << Je souhaite réserver un terrain extérieur pour samedi prochain à 14h00 >>. L'Assistant IA interroge le serveur MCP pour lister les terrains disponibles et filtre les résultats selon la tranche horaire et le type de terrain demandés. De plus, pour les terrains extérieurs, la proposition de l'Assistant IA intègre les prévisions météorologiques que le système associe à chaque créneau, afin que le joueur puisse juger des conditions de jeu.
+\item \textbf{Créer une partie} : Une fois la proposition validée par le joueur, l'Assistant IA crée une nouvelle partie ouverte sur le créneau choisi et y inscrit le joueur, une action que le système réserve aux utilisateurs authentifiés.
 \end{itemize}
 \subsection{Architecture logicielle et écosystème}
 
