@@ -462,7 +462,7 @@ Le diagramme de Gantt est disponible dans l'annexe \ref{annexe:pdf_gantt}, cepen
 \end{table}
 
 \section{Analyse et conception}
-Ce chapitre établit les fondations du projet PadelContext en faisant le lien entre les besoins à couvrir et les décisions de conception qui en découlent. La réflexion débute par la modélisation fonctionnelle, qui formalise les acteurs du système et leurs cas d'usage, puis présente une vue d'ensemble de l'architecture logicielle et de son écosystème. Les sections suivantes détaillent et justifient les choix technologiques propres à chaque brique de la solution imaginée, de l'API REST au serveur MCP jusqu'au client MCP et au modèle de langage utlilisé. Le chapitre se termine sur les aspects de conteneurisation, de modélisation de la base de données et de l'identification des sources de données météorologiques.
+Ce chapitre établit les fondations du projet PadelContext en faisant le lien entre les besoins à couvrir et les décisions de conception qui en découlent. La réflexion débute par la modélisation fonctionnelle, qui formalise les acteurs du système et leurs cas d'usage, puis présente une vue d'ensemble de l'architecture logicielle et de son écosystème. Les sections suivantes détaillent et justifient les choix technologiques propres à chaque brique de la solution imaginée, de l'API REST au serveur MCP jusqu'au client MCP et au modèle de langage utilisé. Le chapitre se termine sur les aspects de conteneurisation, de modélisation de la base de données et de l'identification des sources de données météorologiques.
 \subsection{Modélisation fonctionnelle}
 \subsubsection{Diagramme de cas d'utilisation}
 Le diagramme de cas d'utilisation présenté à la figure \ref{fig:use_case_diagram} synthétise les interactions entre les utilisateurs et l'application PadelContext. Sa particularité tient à la place centrale de l'assistant conversationnel, qui s'intercale entre le joueur et les fonctionnalités du système et en devient un acteur à part entière.
@@ -775,7 +775,7 @@ Les données de chaque paramètre sont distribuées sous forme de fichiers CSV. 
 Afin de lier une réservation de padel à une donnée météo précise, il est nécessaire de connaître le \texttt{point\_id} correspondant à la localité du club. Pour ce faire, un fichier de référence fourni par MeteoSwiss recense l'intégralité des stations météorologiques, des codes postaux et des lieux d'intérêt. Ce fichier permet d'effectuer une jointure logique. Par exemple, le code postal 1226 (Thônex) est associé au \texttt{point\_id} 122600. 
 
 \section{Réalisation}
-
+Ce chapitre décrit la mise en œuvre concrète de PadelContext, dont le chapitre précédent a posé les choix de conception. Il reprend la même décomposition par composants, en partant de l'API REST avec ses points de terminaison, l'acquisition des données météorologiques et sa stratégie de tests, puis du serveur MCP et de la définition de ses outils. La réalisation du client MCP et des interfaces utilisateur est ensuite présentée, avant d'aborder les mécanismes de sécurité et de robustesse. Le chapitre se conclut par deux cas d'usage de bout en bout qui illustrent le fonctionnement de la solution.
 \subsection{API REST}
 \subsubsection{Points de terminaison}
 Afin de garantir une maintenance aisée et une compréhension rapide de l'API, l'ensemble des points de terminaison a été documenté à l'aide de l'outil Swagger.
@@ -828,7 +828,7 @@ Comme présenté lors de la conception, l'accès aux données météorologiques 
 \newline\newline
 Cette acquisition repose sur un service dédié, conçu sous la forme d'un singleton. Une instance unique est ainsi partagée dans toute l'application, ce qui garantit que les données téléchargées en arrière-plan et celles lues lors d'une requête proviennent du même cache en mémoire. Au démarrage, le service charge en mémoire un fichier CSV statique fourni par MeteoSwiss qui associe chaque code postal suisse à un identifiant de point de prévision (\texttt{point\_id}). Les prévisions sont ensuite conservées dans un cache en mémoire vive, organisé par catégorie de mesure. Trois catégories sont retenues, la température, la probabilité de précipitations et la vitesse du vent.
 \newline\newline
-La mise à jour de ce cache est confiée à une tâche planifiée qui s'exécute toutes les dix minutes, complétée par une première exécution immédiate au démarrage afin de ne jamais servir un cache vide. À chaque exécution, la tâche interroge l'API STAC de MeteoSwiss pour détecter la publication de nouveaux fichiers de prévision. Deux mécanismes limitent le coût de cette synchronisation. D'une part, l'en-tête HTTP \texttt{ETag} permet de ne re-télécharger un fichier que s'il a réellement changé, une réponse HTTP 304 signalant l'absence de modification . D'autre part, un contrôle d'intégrité par somme de contrôle SHA-256 vérifie que chaque fichier téléchargé n'a pas été corrompu avant de remplacer les données du cache.
+La mise à jour de ce cache est confiée à une tâche planifiée qui s'exécute toutes les dix minutes, complétée par une première exécution immédiate au démarrage afin de ne jamais servir un cache vide. À chaque exécution, la tâche interroge l'API STAC de MeteoSwiss pour détecter la publication de nouveaux fichiers de prévision. Deux mécanismes limitent le coût de cette synchronisation. D'une part, l'en-tête HTTP \texttt{ETag} permet de ne re-télécharger un fichier que s'il a réellement changé, une réponse HTTP 304 signalant l'absence de modification. D'autre part, un contrôle d'intégrité par somme de contrôle SHA-256 vérifie que chaque fichier téléchargé n'a pas été corrompu avant de remplacer les données du cache.
 \newline\newline
 Grâce à cette architecture, le point de terminaison \texttt{/api/weather} répond instantanément. Lorsqu'une requête arrive, le service convertit le code postal en identifiant de point puis lit directement la valeur correspondante dans le cache en mémoire, sans solliciter l'API MeteoSwiss. Cette mise en cache en amont garantit des temps de réponse constants et découple la disponibilité de l'application de celle de l'API externe.
 
@@ -997,7 +997,28 @@ La dernière protection vise Human-Agent Trust Exploitation (ASI09) et Agent Goa
 Ce système, communément appelé \textit{human-in-the-loop}, constitue l'étape de confirmation explicite recommandée en premier lieu contre ASI09 (OWASP 2025, p. 34) \cite{owasp_owasp_2025} et l'approbation humaine des actions à fort impact préconisée contre ASI01 (OWASP 2025, p. 10) \cite{owasp_owasp_2025}. Il neutralise le risque d'une action non désirée déclenchée par une mauvaise interprétation de la demande. Les outils de simple consultation, dépourvus d'effet de bord, ne sont pas soumis à cette validation afin de préserver la fluidité de l'échange.
 
 \subsection{Cas d'usage}
-Exemple d'une réservation d'un terrain de padel en extérieur, avec un matchmaking automatique et une vérification de la météo en temps réel
+Cette section illustre le fonctionnement de bout en bout de la solution à travers deux scénarios concrets. Le premier décrit la consultation des matchs disponibles. Le second, qui s'appuie sur le premier, décrit l'inscription à un match avec validation utilisateur.
+\newline\newline
+La figure \ref{fig:sequence_affichage_matchs} retrace la demande d'un joueur qui souhaite connaître les matchs ouverts pour le lendemain à Thônex. Elle suit le parcours complet de la requête, depuis la saisie en langage naturel jusqu'à l'affichage des matchs, en traversant chacun des composants de l'application.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{img/sequence_diagram_get-open-matches.drawio.png}
+\caption{Diagramme de séquence de la consultation des matchs disponibles}
+\label{fig:sequence_affichage_matchs}
+\end{figure}
+
+\noindent La figure \ref{fig:sequence_inscription_match} prolonge ce scénario lorsque le joueur décide de rejoindre l'un des matchs proposés. Elle met en évidence l'étape de validation utilisateur, l'inscription n'étant exécutée qu'après une confirmation explicite du joueur. En cas de refus, aucune opération n'est réalisée.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{img/sequence_diagram_join-open-match.drawio.png}
+\caption{Diagramme de séquence de l'inscription à un match avec validation utilisateur}
+\label{fig:sequence_inscription_match}
+\end{figure}
+
+
+
 \section{Évaluation des résultats}
 \subsection{Bénéfice UX}
 \subsection{Fiabilité face aux hallucinations}
