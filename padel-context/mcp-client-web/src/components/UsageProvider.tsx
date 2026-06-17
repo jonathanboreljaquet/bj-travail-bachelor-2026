@@ -22,9 +22,6 @@ type UsageContextValue = {
 
 const UsageContext = createContext<UsageContextValue | null>(null);
 
-// Fournit le quota de tokens à toute la zone connectée. Le badge du header le
-// lit, et le chatbot appelle `refresh()` après chaque message pour le mettre à
-// jour en direct.
 export function UsageProvider({
   initialUsage,
   children,
@@ -73,7 +70,9 @@ export function UsageProvider({
 export function useUsage(): UsageContextValue {
   const ctx = useContext(UsageContext);
   if (!ctx) {
-    throw new Error("useUsage doit être utilisé à l'intérieur d'un UsageProvider");
+    throw new Error(
+      "useUsage doit être utilisé à l'intérieur d'un UsageProvider",
+    );
   }
   return ctx;
 }

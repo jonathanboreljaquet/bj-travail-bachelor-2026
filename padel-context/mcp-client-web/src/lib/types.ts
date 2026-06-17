@@ -1,5 +1,3 @@
-// Types partagés pour les données métier renvoyées par l'API (onglet "Matchs").
-
 export type CourtType = "INDOOR" | "OUTDOOR" | "COVERED";
 
 export type Club = {
@@ -27,7 +25,6 @@ export type Participant = {
   };
 };
 
-// Match ouvert renvoyé par GET /api/matches
 export type Match = {
   id: number;
   startTime: string;
@@ -38,8 +35,6 @@ export type Match = {
   participants: Participant[];
 };
 
-// Créneau libre renvoyé par GET /api/available-slots (le court porte ici un id,
-// nécessaire pour créer un match depuis le créneau).
 export type AvailableSlot = {
   startTime: string;
   endTime: string;
@@ -50,13 +45,8 @@ export type AvailableSlotGroup = {
   availableSlots: AvailableSlot[];
 };
 
-// Statuts possibles d'un match côté API.
 export type MatchStatus = "OPEN" | "COMPLETED" | "CANCELED";
 
-// Match de l'utilisateur connecté renvoyé par GET /api/matches/me.
-// Contrairement aux matchs ouverts, on récupère tous les statuts ainsi que
-// l'identifiant du créateur. Les participants ne portent ici que le prénom et
-// le niveau (cf. la sélection Prisma de l'endpoint).
 export type MyMatchParticipant = {
   user: {
     firstname: string;

@@ -32,12 +32,7 @@ async function getInitialUsage(jwt: string): Promise<TokenUsage | null> {
   }
 }
 
-export default async function AppLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  // Garde d'authentification commune aux deux onglets.
+export default async function AppLayout({ children }: { children: ReactNode }) {
   const jwt = (await cookies()).get("padel_context_jwt_token")?.value;
   if (!jwt) redirect("/login");
 

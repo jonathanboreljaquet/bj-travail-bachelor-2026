@@ -24,14 +24,11 @@ const STATUS_TONE: Record<MatchStatus, "emerald" | "sky" | "neutral"> = {
 
 export default function MyMatchesView({ matches }: { matches: MyMatch[] }) {
   const [view, setView] = useState<"upcoming" | "past">("upcoming");
-  // Instant figé au premier rendu pour départager passé / à venir.
   const [now] = useState(() => Date.now());
 
-  // L'API renvoie les matchs triés par date de début croissante.
   const upcoming = matches.filter(
     (match) => new Date(match.startTime).getTime() >= now,
   );
-  // Historique : du plus récent au plus ancien.
   const past = matches
     .filter((match) => new Date(match.startTime).getTime() < now)
     .reverse();

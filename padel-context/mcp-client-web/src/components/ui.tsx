@@ -1,7 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-// Petite bibliothèque de primitives UI partagées (thème clair "sport vibrant").
-
 export function Card({
   className = "",
   children,

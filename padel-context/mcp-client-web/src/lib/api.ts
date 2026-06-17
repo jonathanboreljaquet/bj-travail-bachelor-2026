@@ -3,10 +3,10 @@ import { cookies } from "next/headers";
 import { API_URL } from "./config";
 import type { AvailableSlotGroup, Match, MyMatch } from "./types";
 
-// Helpers de lecture côté serveur : on récupère le JWT depuis le cookie et on
-// interroge l'API interne. Réservé au serveur (le navigateur ne joint pas l'API
-// Docker directement).
-async function authedGet<T>(path: string, search?: URLSearchParams): Promise<T | null> {
+async function authedGet<T>(
+  path: string,
+  search?: URLSearchParams,
+): Promise<T | null> {
   const jwt = (await cookies()).get("padel_context_jwt_token")?.value;
   const qs = search && [...search].length > 0 ? `?${search.toString()}` : "";
 
@@ -24,14 +24,19 @@ async function authedGet<T>(path: string, search?: URLSearchParams): Promise<T |
   }
 }
 
-export async function getOpenMatches(search?: URLSearchParams): Promise<Match[]> {
+export async function getOpenMatches(
+  search?: URLSearchParams,
+): Promise<Match[]> {
   return (await authedGet<Match[]>("/api/matches", search)) ?? [];
 }
 
 export async function getAvailableSlots(
   search?: URLSearchParams,
 ): Promise<AvailableSlotGroup[]> {
-  return (await authedGet<AvailableSlotGroup[]>("/api/available-slots", search)) ?? [];
+  return (
+    (await authedGet<AvailableSlotGroup[]>("/api/available-slots", search)) ??
+    []
+  );
 }
 
 // Matchs (tous statuts) auxquels l'utilisateur connecté participe.

@@ -41,10 +41,6 @@ export default function ChatbotClient() {
   const showThinkingIndicator =
     isSending && messages[messages.length - 1]?.role === "user";
 
-  // Vrai tant qu'un appel d'outil attend une décision humaine (HITL).
-  // Tant que c'est le cas, l'appel d'outil est "ouvert" (sans résultat) :
-  // envoyer un message intercalerait un tour utilisateur entre l'appel et
-  // son résultat, ce que l'API refuse ("Tool result is missing...").
   const hasPendingApproval = useMemo(
     () =>
       messages.some(
@@ -120,8 +116,6 @@ export default function ChatbotClient() {
                     return null;
                   }
 
-                  // === TRADUCTION VISUELLE DES OUTILS ===
-                  // Titre + détails "user friendly" pour la carte de validation.
                   const friendlyTitle = SENSITIVE_TOOL_LABELS[toolName];
                   let friendlyDetails: ReactNode = null;
 
@@ -188,10 +182,7 @@ export default function ChatbotClient() {
                     );
                   }
 
-                  // Rendu selon l'état réel du tool part (AI SDK v6).
                   switch (part.state) {
-                    // Préparation de l'appel : le modèle génère les arguments,
-                    // AVANT toute demande de validation.
                     case "input-streaming":
                     case "input-available":
                       return (
@@ -204,11 +195,8 @@ export default function ChatbotClient() {
                         </div>
                       );
 
-                    // L'utilisateur vient de répondre : l'action est ACCEPTÉE
-                    // (ou refusée) mais PAS encore exécutée — l'outil s'exécute.
                     case "approval-responded":
                       if (part.approval?.approved === false) {
-                        // Refus : l'état "output-denied" prend le relais juste après.
                         return null;
                       }
                       return (
@@ -221,8 +209,6 @@ export default function ChatbotClient() {
                           patienter…
                         </div>
                       );
-
-                    // Demande de validation humaine (HITL).
                     case "approval-requested":
                       return (
                         <div
@@ -295,9 +281,6 @@ export default function ChatbotClient() {
                         </div>
                       );
 
-                    // L'outil a bien été exécuté. On insiste sur le fait que la
-                    // réponse de l'assistant arrive juste en dessous (ne pas
-                    // quitter avant de l'avoir lue).
                     case "output-available":
                       return (
                         <div
@@ -319,7 +302,6 @@ export default function ChatbotClient() {
                         </div>
                       );
 
-                    // Action refusée par l'utilisateur (rien n'a été exécuté).
                     case "output-denied":
                       return (
                         <div
@@ -341,7 +323,6 @@ export default function ChatbotClient() {
                         </div>
                       );
 
-                    // Échec d'exécution de l'outil.
                     case "output-error":
                       return (
                         <div

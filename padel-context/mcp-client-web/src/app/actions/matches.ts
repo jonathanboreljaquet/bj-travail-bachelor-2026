@@ -10,7 +10,6 @@ async function getJwt(): Promise<string | undefined> {
   return (await cookies()).get("padel_context_jwt_token")?.value;
 }
 
-// Rejoindre un match existant (écriture => Server Action).
 export async function joinMatchAction(matchId: number): Promise<ActionResult> {
   const jwt = await getJwt();
   if (!jwt) return { ok: false, message: "Utilisateur non authentifié." };
@@ -25,14 +24,16 @@ export async function joinMatchAction(matchId: number): Promise<ActionResult> {
   } | null;
 
   if (!res.ok) {
-    return { ok: false, message: payload?.message ?? "Échec de l'inscription." };
+    return {
+      ok: false,
+      message: payload?.message ?? "Échec de l'inscription.",
+    };
   }
 
   revalidatePath("/matches");
   return { ok: true, message: payload?.message ?? "Inscription réussie !" };
 }
 
-// Créer un match depuis un créneau libre (écriture => Server Action).
 export async function createMatchFromSlotAction(input: {
   courtId: number;
   startTime: string;
