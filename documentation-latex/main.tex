@@ -12,6 +12,10 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+
+% Améliore la justification et évite les débordements de texte dans la marge (overfull hbox)
+\usepackage{microtype}
+
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -938,6 +942,60 @@ Indépendamment du mode choisi, une vue transversale << Mes matchs >>, présent�
 \label{fig:ui_mymatches}
 \end{figure}
 \subsection{Sécurité et robustesse}
+Intégrer au sein d'une application un modèle de langage capable de déclencher des actions introduit des risques de sécurité spécifiques. OWASP (Open Worldwide Application Security Project) est une fondation à but non lucratif qui fait référence dans le domaine de la sécurité applicative, notamment connue pour son OWASP Top 10 Web Application Security Risks, une liste largement adoptée des risques les plus critiques des applications web. Son projet GenAI Security Project a transposé cette démarche aux applications dites agentiques, c'est-à-dire celles où un modèle de langage peut planifier et déclencher des actions, et a publié en décembre 2025 le référentiel OWASP Top 10 for Agentic Applications for 2026 (OWASP 2025) \cite{owasp_owasp_2025}. Élaboré par des experts en sécurité issus de l'industrie, du monde universitaire et des pouvoirs publics, ce document recense les dix menaces de sécurité les plus critiques propres à ce type de système et propose pour chacune des mesures concrètes.
+\newline\newline
+Le tableau \ref{tab:owasp_agentic_top10} présente ces dix menaces, identifiées par les codes ASI01 à ASI10 (Agentic Security Initiative) et accompagnées d'une description synthétique. Elles constituent la grille de lecture à partir de laquelle les protections de PadelContext sont examinées dans la suite de cette section.
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{|p{4.1cm}|X|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Menace} & \textbf{Description synthétique} \\ \hline
+    \textbf{ASI01}\newline Agent Goal Hijack & Manipulation des objectifs ou du raisonnement de l'assistant, le plus souvent par injection de prompt, afin de le détourner vers des fins non prévues. \\ \hline
+    \textbf{ASI02}\newline Tool Misuse and Exploitation & Usage non sûr d'un outil pourtant légitime, par des paramètres dangereux ou un enchaînement inattendu, menant à une fuite ou une perte de données. \\ \hline
+    \textbf{ASI03}\newline Identity and Privilege Abuse & Exploitation de la délégation et de l'héritage de droits pour élever les accès ou agir au-delà du périmètre autorisé. \\ \hline
+    \textbf{ASI04}\newline Agentic Supply Chain Vulnerabilities & Compromission d'outils, de serveurs MCP, de modèles ou de paquets tiers intégrés, qui injecte du code ou des instructions malveillantes. \\ \hline
+    \textbf{ASI05}\newline Unexpected Code Execution (RCE) & Génération ou exécution de code non maîtrisée, ouvrant la voie à une exécution de code à distance ou à une compromission de l'hôte. \\ \hline
+    \textbf{ASI06}\newline Memory \& Context Poisoning & Corruption durable de la mémoire, des bases vectorielles ou du contexte récupéré, qui biaise le raisonnement au fil des sessions. \\ \hline
+    \textbf{ASI07}\newline Insecure Inter-Agent Communication & Interception, falsification ou rejeu des messages échangés entre agents, faute d'authentification ou de contrôle d'intégrité. \\ \hline
+    \textbf{ASI08}\newline Cascading Failures & Propagation et amplification d'une erreur initiale à travers plusieurs agents ou processus, jusqu'à une défaillance systémique. \\ \hline
+    \textbf{ASI09}\newline Human-Agent Trust Exploitation & Confiance excessive de l'utilisateur qui approuve des actions nuisibles, faute de confirmation ou face à des justifications trompeuses. \\ \hline
+    \textbf{ASI10}\newline Rogue Agents & Agent qui dévie de sa fonction et agit de façon nuisible ou déceptive, par exemple en persistant ou en poursuivant des objectifs cachés. \\ \hline
+    \end{tabularx}
+    \caption{Les dix menaces du référentiel OWASP Top 10 for Agentic Applications}
+    \label{tab:owasp_agentic_top10}
+\end{table}
+
+Plusieurs de ces menaces ne se matérialisent pas dans PadelContext, en raison des choix d'architecture du projet. 
+\newline\newline
+Unexpected Code Execution (RCE) (ASI05) est hors de portée, car l'assistant ne dispose d'aucun outil lui permettant de générer ou d'exécuter du code, ses seuls effets passent par quatre outils aux paramètres typés. Memory \& Context Poisoning (ASI06) ne s'applique pas non plus, l'assistant ne conservant aucune mémoire persistante au-delà de l'échange en cours. Ensuite, Insecure Inter-Agent Communication (ASI07) et Cascading Failures (ASI08) supposent une orchestration de plusieurs agents autonomes qui n'existe pas dans cette architecture mono-agent. Rogue Agents (ASI10) ne se matérialise pas davantage, cette menace décrivant la dérive comportementale d'un agent doté d'une réelle autonomie, alors que l'assistant de PadelContext ne conserve aucun état et voit chacune de ses actions d'écriture soumise à validation humaine. Pour finir, Agentic Supply Chain Vulnerabilities (ASI04) ne concerne quant à elle que partiellement PadelContext. Sa principale surface, la découverte et le chargement dynamiques d'outils ou de serveurs MCP tiers, est absente puisque le serveur MCP est celui du projet, unique et non exposé directement. Ne subsiste qu'une dépendance logicielle classique, vis-à-vis du modèle et des bibliothèques tierces, dont les versions sont figées.
+\newline\newline
+Les protections décrites ci-après répondent donc aux menaces qui concernent réellement PadelContext, principalement Agent Goal Hijack (ASI01), Tool Misuse and Exploitation (ASI02), Identity and Privilege Abuse (ASI03) et Human-Agent Trust Exploitation (ASI09).
+
+\subsubsection{Authentification}
+Le contrôle de l'identité et des privilèges constitue la première protection. Il répond à la menace Identity and Privilege Abuse (ASI03), qui recouvre l'élévation des droits et l'usurpation du périmètre d'action d'un assistant. La communication entre le client, le serveur MCP et l'API REST repose sur deux niveaux d'authentification complémentaires. Le premier authentifie le client auprès du serveur MCP. À chaque connexion, le client transmet un secret interne partagé, et le serveur MCP rejette toute requête dont ce secret est absent ou invalide. Ce mécanisme garantit que seul le client légitime peut solliciter les outils, le serveur MCP n'étant jamais exposé directement aux utilisateurs. Le second niveau authentifie l'utilisateur auprès de l'API. Le jeton (JWT) du joueur est relayé de bout en bout, du client au serveur MCP puis du serveur MCP à l'API, de sorte que chaque appel d'outil agit strictement dans le périmètre des droits de l'utilisateur connecté.
+\newline\newline
+Ce relais du jeton répond directement à deux recommandations du référentiel face à ASI03. L'assistant n'opère jamais sous un compte de service générique sur-privilégié, mais sous l'identité du joueur lui-même, ce qui le maintient au plus près du principe de moindre privilège. De plus, l'API revalide le jeton à chaque appel, et non une seule fois en début d'échange, ce qui correspond à la recommandation de réautoriser chaque action sensible (OWASP 2025, p. 17) \cite{owasp_owasp_2025} et écarte le risque qu'un intermédiaire agisse au-delà des droits de l'utilisateur d'origine.
+\newline\newline
+Un mécanisme d'authentification plus complet, fondé sur un fournisseur d'identité dédié et le protocole OAuth comme le recommande la documentation du protocole MCP, avait été envisagé. Il n'a pas été retenu dans le périmètre de ce travail, le secret interne combiné au relais du jeton couvrant le besoin du prototype pour un coût de mise en œuvre bien moindre. Cette piste, qui rejoint la cible idéale d'une identité propre à l'assistant évoquée par le référentiel (OWASP 2025, p. 17) \cite{owasp_owasp_2025}, est conservée comme amélioration possible.
+
+\subsubsection{Limitation du débit et quotas}
+La menace Tool Misuse and Exploitation (ASI02) recouvre notamment la consommation incontrôlée des ressources, par exemple un assistant amené à multiplier les appels à un outil coûteux et à faire grimper la facture. Deux mécanismes complémentaires encadrent l'usage de l'assistant afin de prévenir ces abus et de contenir le coût d'exploitation.
+\newline\newline
+Le premier est une limitation du débit des requêtes. Chaque utilisateur est limité à cinq messages par minute, au moyen d'une fenêtre glissante. À chaque message, l'identifiant de l'utilisateur, extrait de son jeton JWT ou avec son adresse IP si le jeton n'existe pas, sert de clé pour mettre à jour et consulter un compteur de requêtes dans une base de données Redis hébergée par le service Upstash. Au-delà de la limite, le client retourne une erreur explicite invitant le joueur à patienter.
+\newline\newline
+Le choix de Redis répond précisément à ce besoin. Il s'agit d'une base de données clé-valeur conservée en mémoire vive, dont les lectures et écritures se comptent en fractions de milliseconde. Cette rapidité est indispensable pour un contrôle exécuté à chaque message, qui ne doit pas alourdir le temps de réponse de l'assistant. Redis gère par ailleurs nativement l'expiration des clés, ce qui épouse la logique d'une fenêtre glissante dont les compteurs doivent s'effacer au fil du temps. Le recours à Upstash en fournit enfin une instance hébergée et accessible directement, sans infrastructure à administrer.
+\newline\newline
+Le second est un quota mensuel de consommation de tokens. Avant chaque appel au modèle, le client interroge l'API pour vérifier que l'utilisateur n'a pas dépassé sa limite mensuelle, et refuse la requête le cas échéant. À l'issue de chaque échange, la consommation réelle est journalisée. L'API enregistre une entrée détaillée dans la table \texttt{LlmUsageLog}, comprenant le prompt, les tokens d'entrée et de sortie ainsi que le modèle, et incrémente le compteur mensuel de l'utilisateur, le tout au sein d'une transaction garantissant la cohérence. Ce compteur est automatiquement remis à zéro le premier jour de chaque mois par une tâche planifiée. Ce dispositif, en plus de permettre la réalisation de monitoring, limite l'exposition financière du projet et fournit une base de mesure pour l'analyse de viabilité menée dans l'évaluation des résultats.
+\newline\newline
+Ces deux plafonds, complétés par la fenêtre glissante de contexte présentée dans la réalisation du Client MCP, mettent en œuvre la budgétisation des outils préconisée par le référentiel face à Tool Misuse and Exploitation (ASI02). Cette recommandation prescrit des plafonds de coût, de débit ou de tokens, assortis d'un blocage automatique en cas de dépassement (OWASP 2025, p. 14) \cite{owasp_owasp_2025}.
+
+\subsubsection{Validation humaine des actions sensibles}
+La dernière protection vise Human-Agent Trust Exploitation (ASI09) et Agent Goal Hijack (ASI01). Le référentiel souligne qu'en l'absence d'une étape de confirmation, la confiance accordée à l'assistant se transforme en exécution immédiate d'une action que l'utilisateur n'a pas réellement voulue (OWASP 2025, p. 33) \cite{owasp_owasp_2025}. Le modèle de langage peut consulter librement les données, mais il ne peut jamais déclencher seul une action ayant un effet sur le système. Les deux outils qui en modifient l'état, à savoir la création d'un match à partir d'un créneau et l'inscription à un match existant, sont marqués comme nécessitant une approbation. Lorsque le modèle décide d'invoquer l'un de ces outils, son exécution est suspendue et un récapitulatif de l'action est présenté au joueur, qui doit la confirmer explicitement. L'action n'est exécutée qu'après cette confirmation, comme l'illustre la figure \ref{fig:ui_chatbot}.
+\newline\newline
+Ce système, communément appelé \textit{human-in-the-loop}, constitue l'étape de confirmation explicite recommandée en premier lieu contre ASI09 (OWASP 2025, p. 34) \cite{owasp_owasp_2025} et l'approbation humaine des actions à fort impact préconisée contre ASI01 (OWASP 2025, p. 10) \cite{owasp_owasp_2025}. Il neutralise le risque d'une action non désirée déclenchée par une mauvaise interprétation de la demande. Les outils de simple consultation, dépourvus d'effet de bord, ne sont pas soumis à cette validation afin de préserver la fluidité de l'échange.
+
 \subsection{Cas d'usage}
 Exemple d'une réservation d'un terrain de padel en extérieur, avec un matchmaking automatique et une vérification de la météo en temps réel
 \section{Évaluation des résultats}
