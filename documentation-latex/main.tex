@@ -1021,6 +1021,85 @@ La figure \ref{fig:sequence_affichage_matchs} retrace la demande d'un joueur qui
 
 \section{Évaluation des résultats}
 \subsection{Bénéfice UX}
+Cette première question de recherche cherche à mesurer l'apport réel de l'assistant conversationnel sur l'expérience de réservation, comparé à l'interface de navigation classique. Faute de temps, aucun test utilisateur n'a pu être mené dans le cadre de ce travail. L'évaluation retenue est donc analytique et porte sur le coût d'interaction des deux approches, c'est-à-dire le nombre d'actions élémentaires, les changements de contexte et la charge mentale qu'exige une même tâche. Cette démarche s'inspire du Keystroke-Level Model, qui décompose une tâche en la somme des actions élémentaires nécessaires à sa réalisation (Card, Moran et Newell 1980) \cite{card_keystroke-level_1980}.
+\newline\newline
+Le modèle décrit toute exécution comme une suite d'opérateurs élémentaires, chacun associé à une durée moyenne. Parmi ceux qu'il propose, l'analyse se fonde sur la base présentée au tableau \ref{tab:klm_operators}. L'opérateur K y est retenu pour un utilisateur moyen, et l'opérateur P, dont la durée varie de 0.8 à 1.5 seconde selon la distance et la taille de la cible, est fixé à 1 seconde pour simplifier. L'opérateur D permettant de mesurer un tracé a été retiré, car pas utilisé dans notre cas.
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|c|X|r|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Opérateur} & \textbf{Description} & \textbf{Temps (sec)} \\ \hline
+    K & Frappe d'une touche ou d'un bouton, pour un utilisateur moyen. & 0.28 \\ \hline
+    P & Pointer une cible à l'écran avec la souris. & 1.00 \\ \hline
+    H & Replacer la ou les mains sur le clavier ou un autre périphérique. & 0.40 \\ \hline
+    M & Préparation mentale avant d'exécuter une action physique. & 1.35 \\ \hline
+    R($t$) & Temps de réponse du système, de $t$ secondes. & $t$ \\ \hline
+    \end{tabularx}
+    \caption{Base d'opérateurs du Keystroke-Level Model retenue pour l'analyse, adaptée de (Card, Moran et Newell 1980, p. 399) \cite{card_keystroke-level_1980}}
+    \label{tab:klm_operators}
+\end{table}
+\vspace{0.3cm}
+Afin de comparer les deux approches sur une base commune, l'analyse fixe un même résultat attendu. Il s'agit de rechercher puis de rejoindre un match de padel existant à Thônex pour le lendemain, sur un terrain extérieur, à un prix compris entre 15 et 20 francs par personne et disposant de matériel de location sur place. Ce résultat est accessible à l'identique dans les deux interfaces, ce qui garantit l'équité de la comparaison.
+\newline\newline
+Le premier encodage décrit le parcours dans l'interface de navigation classique. L'utilisateur renseigne lui-même chaque filtre du formulaire, parcourt les résultats, puis confirme son inscription dans la fenêtre de validation. Le tableau \ref{tab:klm_classique} en détaille les opérateurs.
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|X|l|c|c|c|c|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Étape} & \textbf{Opérateurs} & \textbf{M} & \textbf{P} & \textbf{K} & \textbf{H} \\ \hline
+    Saisir la ville Thônex (6 car.) & M P K H 6K H & 1 & 1 & 7 & 2 \\ \hline
+    Choisir le type Extérieur (sélecteur) & M P K P K & 1 & 2 & 2 & 0 \\ \hline
+    Choisir le jour demain (sélecteur) & M P K P K & 1 & 2 & 2 & 0 \\ \hline
+    Saisir le prix minimum 15 (2 car.) & M P K H 2K H & 1 & 1 & 3 & 2 \\ \hline
+    Saisir le prix maximum 20 (2 car.) & M P K H 2K H & 1 & 1 & 3 & 2 \\ \hline
+    Cocher Matériel sur place & M P K & 1 & 1 & 1 & 0 \\ \hline
+    Valider le filtre & M P K & 1 & 1 & 1 & 0 \\ \hline
+    Parcourir et identifier le match & M & 1 & 0 & 0 & 0 \\ \hline
+    Cliquer Rejoindre & M P K & 1 & 1 & 1 & 0 \\ \hline
+    Confirmer dans la fenêtre & M P K & 1 & 1 & 1 & 0 \\ \hline
+    \rowcolor[gray]{0.95}
+    \textbf{Total} & & \textbf{10} & \textbf{11} & \textbf{21} & \textbf{6} \\ \hline
+    \end{tabularx}
+    \caption{Encodage de la tâche de référence dans l'interface classique}
+    \label{tab:klm_classique}
+\end{table}
+\vspace{0.2cm}
+Le temps d'exécution prédit vaut $10 \times 1.35 + 11 \times 1.00 + 21 \times 0.28 + 6 \times 0.40 = 32.78$ secondes.
+\newline\newline
+Le second encodage décrit le parcours via l'assistant conversationnel. L'utilisateur exprime l'ensemble de son besoin en une seule requête en langage naturel, fixée ici à << Trouve un match de padel demain à Thônex en extérieur, entre 15 et 20.- avec du matériel sur place >> soit 98 caractères. Il lit ensuite les propositions, désigne le match voulu en saisissant son identifiant, puis confirme l'inscription. La latence de réponse du modèle est estimée à 3 secondes par échange. Le tableau \ref{tab:klm_assistant} en détaille les opérateurs.
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|X|l|c|c|c|c|c|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Étape} & \textbf{Opérateurs} & \textbf{M} & \textbf{P} & \textbf{K} & \textbf{H} & \textbf{R} \\ \hline
+    Cliquer le champ de saisie & M P K H & 1 & 1 & 1 & 1 & 0 \\ \hline
+    Taper la requête (98 car.) et Entrée & 99K & 0 & 0 & 99 & 0 & 0 \\ \hline
+    Attendre les propositions & R & 0 & 0 & 0 & 0 & 3 \\ \hline
+    Lire les propositions & M & 1 & 0 & 0 & 0 & 0 \\ \hline
+    Saisir l'identifiant du match (ex: 234) et Entrée & M 4K & 1 & 0 & 4 & 0 & 0 \\ \hline
+    Attendre la demande de confirmation & R & 0 & 0 & 0 & 0 & 3 \\ \hline
+    Confirmer le match & M P K & 1 & 1 & 1 & 0 & 0 \\ \hline
+    \rowcolor[gray]{0.95}
+    \textbf{Total} & & \textbf{4} & \textbf{2} & \textbf{105} & \textbf{1} & \textbf{6} \\ \hline
+    \end{tabularx}
+    \caption{Encodage de la tâche de référence avec l'assistant conversationnel}
+    \label{tab:klm_assistant}
+\end{table}
+\vspace{0.2cm}
+Le temps d'exécution prédit vaut $4 \times 1.35 + 2 \times 1.00 + 105 \times 0.28 + 1 \times 0.40 + 6 = 43.2$ secondes.
+\newline\newline
+La comparaison des deux encodages va à l'encontre de l'intuition. En temps d'exécution brut, l'assistant se révèle plus lent, avec environ 43 secondes contre près de 32 pour l'interface classique. La cause tient à la frappe, puisque exprimer le besoin en langage naturel représente près d'une centaine de frappes au clavier.
+\newline\newline
+Cette analyse ne porte toutefois que sur le temps d'exécution moteur. Or organiser une partie de padel à l'aide de l'assistant demande une charge mentale nettement moindre. Le temps d'exécution peut être comparable, voire supérieur pour l'assistant, mais le modèle de langage sait en outre affiner la recherche à partir d'éléments qu'une interface classique n'expose pas. La météo en est un bon exemple. PadelContext intègre les données météorologiques de chaque match en extérieur, si bien que l'utilisateur peut demander à l'assistant de retenir le créneau le plus favorable pour jouer. Le modèle de langage compare alors ces valeurs et propose le meilleur créneau, là où l'interface classique contraindrait l'utilisateur à consulter une application météo externe puis à recouper lui-même les informations pour trancher.
+\newline\newline
+Cette évaluation conserve les limites propres au modèle, qui suppose un utilisateur expert réalisant une tâche routinière sans erreur (Card, Moran et Newell 1980, p. 409) \cite{card_keystroke-level_1980}. Elle laisse aussi de côté la facilité d'apprentissage, dimension où l'assistant dispose d'un atout supplémentaire. Comme annoncé, des tests utilisateurs permettraient de confirmer réellement ces résultats.
+
 \subsection{Fiabilité face aux hallucinations}
 \subsection{Viabilité des coûts et complexité}
 \section{Conclusion}

@@ -346,27 +346,35 @@ function MatchCard({ match }: { match: Match }) {
         </div>
       ) : null}
 
-      <JoinButton matchId={match.id} disabled={isFull} />
+      <JoinButton
+        matchId={match.id}
+        matchLabel={`${match.court.club.name}, ${formatDate(match.startTime)} à ${formatTime(match.startTime)}`}
+        disabled={isFull}
+      />
     </Card>
   );
 }
 
 function JoinButton({
   matchId,
+  matchLabel,
   disabled,
 }: {
   matchId: number;
+  matchLabel: string;
   disabled: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<ActionResult | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
-  function onClick() {
+  function confirm() {
     setResult(null);
     startTransition(async () => {
       const r = await joinMatchAction(matchId);
       setResult(r);
+      setConfirming(false);
       if (r.ok) router.refresh();
     });
   }
@@ -374,7 +382,7 @@ function JoinButton({
   return (
     <div className="mt-auto space-y-1.5">
       <Button
-        onClick={onClick}
+        onClick={() => setConfirming(true)}
         disabled={disabled || isPending}
         className="w-full"
       >
@@ -388,6 +396,58 @@ function JoinButton({
           {result.message}
         </p>
       ) : null}
+
+      {confirming ? (
+        <ConfirmDialog
+          title="Confirmer l'inscription"
+          message={`Veux-tu rejoindre le match ${matchLabel} ?`}
+          confirmLabel="Confirmer"
+          pending={isPending}
+          onConfirm={confirm}
+          onCancel={() => setConfirming(false)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function ConfirmDialog({
+  title,
+  message,
+  confirmLabel,
+  pending,
+  onConfirm,
+  onCancel,
+}: {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  pending: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={onCancel}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    >
+      <div className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+        <Card className="p-5">
+          <h3 className="text-base font-semibold">{title}</h3>
+          <p className="mt-2 text-sm text-black/70">{message}</p>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="ghost" onClick={onCancel} disabled={pending}>
+              Annuler
+            </Button>
+            <Button onClick={onConfirm} disabled={pending}>
+              {pending ? <Spinner className="h-4 w-4" /> : null}
+              {confirmLabel}
+            </Button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -413,11 +473,14 @@ function SlotGroupCard({ group }: { group: AvailableSlotGroup }) {
   const { court, availableSlots } = group;
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [result, setResult] = useState<ActionResult | null>(null);
+  const [confirmSlot, setConfirmSlot] = useState<AvailableSlot | null>(null);
   const [, startTransition] = useTransition();
 
   const slotsByDay = groupSlotsByDay(availableSlots);
 
-  function create(startTime: string, endTime: string) {
+  function confirm() {
+    if (!confirmSlot) return;
+    const { startTime, endTime } = confirmSlot;
     setPendingKey(startTime);
     setResult(null);
     startTransition(async () => {
@@ -428,6 +491,7 @@ function SlotGroupCard({ group }: { group: AvailableSlotGroup }) {
       });
       setResult(r);
       setPendingKey(null);
+      setConfirmSlot(null);
       if (r.ok) router.refresh();
     });
   }
@@ -457,7 +521,7 @@ function SlotGroupCard({ group }: { group: AvailableSlotGroup }) {
               {day.slots.map((slot) => (
                 <button
                   key={slot.startTime}
-                  onClick={() => create(slot.startTime, slot.endTime)}
+                  onClick={() => setConfirmSlot(slot)}
                   disabled={pendingKey !== null}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -480,6 +544,17 @@ function SlotGroupCard({ group }: { group: AvailableSlotGroup }) {
         >
           {result.message}
         </p>
+      ) : null}
+
+      {confirmSlot ? (
+        <ConfirmDialog
+          title="Confirmer la création du match"
+          message={`Créer un match sur ${court.club.name} le ${formatDate(confirmSlot.startTime)} de ${formatTime(confirmSlot.startTime)} à ${formatTime(confirmSlot.endTime)} ?`}
+          confirmLabel="Confirmer"
+          pending={pendingKey !== null}
+          onConfirm={confirm}
+          onCancel={() => setConfirmSlot(null)}
+        />
       ) : null}
     </Card>
   );
