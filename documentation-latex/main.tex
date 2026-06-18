@@ -48,6 +48,27 @@
 % Add references in table of contents
 \usepackage[nottoc]{tocbibind}
 
+% Style des blocs de code JSON (messages JSON-RPC)
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{210,210,210}
+\definecolor{jsonstring}{RGB}{163,21,21}
+\lstdefinestyle{jsonstyle}{
+    basicstyle=\ttfamily\footnotesize,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    framesep=6pt,
+    rulecolor=\color{codeframe},
+    breaklines=true,
+    breakatwhitespace=false,
+    showstringspaces=false,
+    columns=fullflexible,
+    keepspaces=true,
+    tabsize=2,
+    stringstyle=\color{jsonstring},
+    morestring=[b]",
+    literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {â}{{\^a}}1 {ô}{{\^o}}1 {î}{{\^{\i}}}1 {ç}{{\c c}}1 {É}{{\'E}}1
+}
+
 % Set author and place
 % TODO: Changer les valeurs ci-dessous
 % Elle seront utilisées pour la page de titre et les en-têtes/pieds de page
@@ -570,6 +591,73 @@ Pour PadelContext, le choix s'est porté sur le transport Streamable HTTP plutô
 \newline\newline
 Indépendamment du mécanisme de transport retenu, le format des échanges entre le client et le serveur est régi par la spécification JSON-RPC 2.0. Il s'agit d'un protocole d'appel de procédure à distance léger et sans état, qui structure les messages au format JSON (JSON-RPC Working Group 2013) \cite{json-rpc_working_group_json-rpc_2013}.
 \newline\newline
+Cette spécification définit trois types de messages. Une requête contient un identifiant, le nom d'une méthode et d'éventuels paramètres, et attend une réponse. Une réponse reprend l'identifiant de la requête à laquelle elle correspond et porte soit un résultat, soit une erreur. Une notification prend la forme d'une requête sans identifiant et n'appelle aucune réponse. Dans PadelContext, deux méthodes concentrent l'essentiel des échanges. La méthode \texttt{tools/list} permet au client de découvrir dynamiquement les outils exposés par le serveur, comme le présente la figure \ref{lst:jsonrpc_tools_list}. La méthode \texttt{tools/call} déclenche ensuite l'exécution d'un outil avec ses arguments et en retourne le résultat, comme le présente la figure \ref{lst:jsonrpc_tools_call}.
+\begin{figure}[H]
+\textbf{Requête}
+\begin{lstlisting}[style=jsonstyle]
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list"
+}
+\end{lstlisting}
+\textbf{Réponse (tronquée à un seul outil)}
+\begin{lstlisting}[style=jsonstyle]
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "get-open-matches",
+        "description": "Searches and lists currently open Padel matches.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "city": { "type": "string", "description": "Target city." }
+          }
+        }
+      }
+    ]
+  }
+}
+\end{lstlisting}
+\caption{Découverte des outils du serveur MCP via la méthode \texttt{tools/list}}
+\label{lst:jsonrpc_tools_list}
+\end{figure}
+\begin{figure}[H]
+\textbf{Requête}
+\begin{lstlisting}[style=jsonstyle]
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "get-open-matches",
+    "arguments": {
+      "city": "Thonex",
+    }
+  }
+}
+\end{lstlisting}
+\textbf{Réponse}
+\begin{lstlisting}[style=jsonstyle]
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "..."
+      }
+    ]
+  }
+}
+\end{lstlisting}
+\caption{Invocation d'un outil du serveur MCP via la méthode \texttt{tools/call}}
+\label{lst:jsonrpc_tools_call}
+\end{figure}
 Enfin, le serveur MCP de PadelContext adopte une architecture passerelle, telle qu'introduite dans l'état de l'art. Plutôt que d'accéder directement à la base de données, le serveur encapsule l'API REST existante du projet, sur laquelle s'appuient ses outils pour fournir les données et exécuter les actions demandées par le modèle de langage. Ce choix permet de réutiliser la logique métier déjà implémentée dans l'API, de conserver une source de vérité unique et de maintenir une séparation claire des responsabilités entre les services.
 
 \subsection{Client MCP et modèle de langage}
@@ -841,7 +929,7 @@ Contrairement aux tests unitaires, les tests d'intégration visent à vérifier 
 \subsection{Serveur MCP}
 
 \subsubsection{Définitions des outils MCP}
-Le serveur MCP constitue le pont de communication entre l'assistant conversationnel et les données de PadelContext. Son rôle est d'exposer les points de terminaison de l'API REST sous forme de tools que le modèle de langage peut invoquer. Les données météorologiques ne constituent pas un outil distinct. Elles sont récupérées par l'API et intégrées directement aux résultats des outils de consultation lorsqu'un terrain extérieur est concerné.
+Le serveur MCP constitue le pont de communication entre l'assistant conversationnel et les données de PadelContext. Son rôle est d'exposer les points de terminaison de l'API REST sous forme d'outils que le modèle de langage peut invoquer. Les données météorologiques ne constituent pas un outil distinct. Elles sont récupérées par l'API et intégrées directement aux résultats des outils de consultation lorsqu'un terrain extérieur est concerné.
 \newline\newline
 Afin de couvrir l'ensemble des cas d'usage définis lors de la modélisation fonctionnelle, le serveur MCP expose quatre outils distincts. Le tableau \ref{tab:mcp_tools} résume leurs objectifs respectifs.
 \vspace{0.5cm}
