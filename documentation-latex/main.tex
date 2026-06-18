@@ -206,7 +206,13 @@ Enfin, je remercie mes proches, qui ont pris le temps de relire ce rapport et de
 \newpage
 
 \section{Résumé}
-% Insérer le résumé ici
+Réserver un terrain de padel à Genève suppose de jongler avec de nombreux paramètres, les conditions météo des terrains extérieurs, le niveau et la disponibilité des partenaires, la présence de matériel de location et le prix. Les plateformes actuelles laissent cette charge au joueur. Ce travail conçoit et développe PadelContext, une plateforme qui confie ces arbitrages à un assistant conversationnel, en reliant un modèle de langage aux données de l'application au moyen du Model Context Protocol.
+\newline\newline
+L'application se présente comme un ensemble de services conteneurisés, où un serveur MCP en passerelle expose une API et sa base de données au modèle Gemini. Les mêmes fonctionnalités restent accessibles de deux façons, par menus et filtres ou par un échange en langage naturel. Les terrains extérieurs y sont automatiquement accompagnés de prévisions météo, et toute opération engageante exige l'accord explicite du joueur, suivant les bonnes pratiques de sécurité des applications agentiques.
+\newline\newline
+Le dispositif est éprouvé sous trois angles. Côté expérience, une modélisation du coût d'interaction montre que l'intérêt du dialogue ne tient pas à la rapidité, mais à l'effort cognitif épargné et au croisement d'informations comme la météo. Côté fiabilité, le protocole encadre la forme des appels sans garantir le discernement du modèle, ce qui laisse la décision finale à l'humain. Côté coût, la mesure des échanges situe une conversation complète autour du centime, et l'architecture autorise le remplacement du modèle sans réécriture.
+\newline\newline
+Il en ressort qu'un tel assistant offre une alternative tenable aux interfaces de réservation traditionnelles, dès lors que l'utilisateur garde la main sur les actions décisives. L'évaluation reste toutefois analytique, et une validation auprès de joueurs réels constituerait le prolongement naturel de ce travail.
 \newpage
 
 % Liste des tableaux
@@ -399,7 +405,7 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
 \begin{table}[H]
     \centering
     \renewcommand{\arraystretch}{1.3}
-    \begin{tabular}{|c|S{p{9.5cm}}|l|c|}
+    \begin{tabularx}{\textwidth}{|c|X|l|c|}
         \hline
         \textbf{ID} & \textbf{Fonctionnalité / Tâche} & \textbf{Catégorie} & \textbf{Effort} \\ \hline
         01 & Modélisation de la base de données et création de l'API de base & Must-have & 15\% \\ \hline
@@ -415,7 +421,7 @@ L'application stricte de cette règle permet d'assurer qu'en cas de complexité 
         11 & Outil MCP (Géolocalisation) : Filtrage avancé des terrains par coordonnées GPS & Could-have & 5\% \\ \hline
         12 & Interface de messagerie instantanée entre les joueurs & Won't-have & - \\ \hline
         13 & Paiement intégré lors de la réservation d'un terrain & Won't-have & - \\ \hline
-    \end{tabular}
+    \end{tabularx}
     \caption{Priorisation détaillée des livrables selon la méthodologie MoSCoW}
     \label{tab:moscow_features_detail}
 \end{table}
@@ -424,65 +430,7 @@ Dans la continuité de la méthodologie MoSCoW, la réalisation d'une planificat
 \newline\newline
 Les jalons, identifiés par un losange noir ($\blacklozenge$), représentent les points clés du projet, tels que la mise en place d'une base de données et d'une API opérationnelles, ou encore la capacité du serveur MCP à interroger les données internes de l'application et l'API MeteoSwiss. Ces jalons sont essentiels pour mesurer l'avancement du projet et s'assurer que les objectifs intermédiaires sont atteints avant de passer à la phase suivante.
 \newline\newline
-Le diagramme de Gantt est disponible dans l'annexe \ref{annexe:pdf_gantt}, cependant un aperçu est présenté ci-dessous.
-\begin{table}[H]
-    \centering
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{|p{10cm}|c|c|}
-        \hline
-        \textbf{Nom de la tâche} & \textbf{Date de début} & \textbf{Date de fin} \\ \hline
-        
-        Introduction de la documentation & 02.03.26 & 06.03.26 \\ \hline
-        Méthodologie et planification & 09.03.26 & 13.03.26 \\ \hline
-        
-        \textbf{Backend} & \textbf{16.03.26} & \textbf{10.04.26} \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Modélisation et documentation de la base de données\vspace{0.15cm}} & 16.03.26 & 20.03.26 \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Étude, choix et documentation des technologies backend\vspace{0.15cm}} & 23.03.26 & 27.03.26 \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création et mise en place du serveur backend\vspace{0.15cm}} & 30.03.26 & 03.04.26 \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation de l'architecture backend\vspace{0.15cm}} & 06.04.26 & 10.04.26 \\ \hline
-        \hspace*{0.5cm}\textbf{$\blacklozenge$ Base de données et API opérationnelles} & \textbf{13.04.26} & \textbf{13.04.26} \\ \hline
-        
-        \textbf{MCP - Base de données} & \textbf{13.04.26} & \textbf{24.04.26} \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation et création des tools MCP avec les données internes\vspace{0.15cm}} & 13.04.26 & 17.04.26 \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création du MVP pour tester les tools\vspace{0.15cm}} & 20.04.26 & 24.04.26 \\ \hline
-        \hspace*{0.5cm}\textbf{$\blacklozenge$ Le serveur MCP est capable d'interroger les données internes de l'application} & \textbf{27.04.26} & \textbf{27.04.26} \\ \hline
-        
-        \textbf{MCP - API MeteoSwiss} & \textbf{27.04.26} & \textbf{08.05.26} \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation et création des tools MCP avec l'API MeteoSwiss\vspace{0.15cm}} & 27.04.26 & 01.05.26 \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création du MVP pour tester les tools\vspace{0.15cm}} & 04.05.26 & 08.05.26 \\ \hline
-        \hspace*{0.5cm}\textbf{$\blacklozenge$ Le serveur MCP est capable d'interroger l'API MeteoSwiss} & \textbf{11.05.26} & \textbf{11.05.26} \\ \hline
-        
-    \end{tabular}
-    \caption{Planification Gantt du projet (Partie 1)}
-    \label{tab:gantt_part1}
-\end{table}
-
-\begin{table}[H]
-    \centering
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{|p{10cm}|c|c|}
-        \hline
-        \textbf{Nom de la tâche} & \textbf{Date de début} & \textbf{Date de fin} \\ \hline
-        
-        \textbf{Frontend} & \textbf{11.05.26} & \textbf{22.05.26} \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation de l'architecture générale\vspace{0.15cm}} & 11.05.26 & 15.05.26 \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Création de l'application WEB minimaliste\vspace{0.15cm}} & 18.05.26 & 22.05.26 \\ \hline
-        \hspace*{0.5cm}\textbf{$\blacklozenge$ Prototype complet et testable} & \textbf{25.05.26} & \textbf{25.05.26} \\ \hline
-        
-        \textbf{Étude comparative} & \textbf{25.05.26} & \textbf{29.05.26} \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Rédaction de l'analyse comparative (PadelContext vs PadelConnect)\vspace{0.15cm}} & 25.05.26 & 29.05.26 \\ \hline
-        \hspace*{0.5cm}\textbf{$\blacklozenge$ Étude complétée et documentée} & \textbf{01.06.26} & \textbf{01.06.26} \\ \hline
-        
-        \textbf{Fonctionnalités optionnelles et conclusion} & \textbf{01.06.26} & \textbf{19.06.26} \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Développement de l'application mobile native PadelContext\vspace{0.15cm}} & 01.06.26 & 05.06.26 \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Documentation de la conclusion et des améliorations possibles\vspace{0.15cm}} & 08.06.26 & 12.06.26 \\ \hline
-        \hspace*{0.5cm}\parbox{9cm}{\vspace{0.15cm}Finalisation de la documentation\vspace{0.15cm}} & 15.06.26 & 19.06.26 \\ \hline
-        \hspace*{0.5cm}\textbf{$\blacklozenge$ Rendu final du Travail de Bachelor} & \textbf{22.06.26} & \textbf{22.06.26} \\ \hline
-        
-    \end{tabular}
-    \caption{Planification Gantt du projet (Partie 2)}
-    \label{tab:gantt_part2}
-\end{table}
+Le diagramme de Gantt complet est disponible dans l'annexe \ref{annexe:pdf_gantt}.
 
 \section{Analyse et conception}
 Ce chapitre établit les fondations du projet PadelContext en faisant le lien entre les besoins à couvrir et les décisions de conception qui en découlent. La réflexion débute par la modélisation fonctionnelle, qui formalise les acteurs du système et leurs cas d'usage, puis présente une vue d'ensemble de l'architecture logicielle et de son écosystème. Les sections suivantes détaillent et justifient les choix technologiques propres à chaque brique de la solution imaginée, de l'API REST au serveur MCP jusqu'au client MCP et au modèle de langage utilisé. Le chapitre se termine sur les aspects de conteneurisation, de modélisation de la base de données et de l'identification des sources de données météorologiques.
@@ -685,9 +633,9 @@ De plus, afin d'optimiser les ressources, chaque conteneur de l'écosystème rep
 \newline\newline
 Afin de prévenir l'obsolescence prématurée du projet et de minimiser les problèmes de compatibilité durant la phase de développement, un choix strict de sélection des versions a été appliqué pour chaque image Docker. Le choix s'est systématiquement porté sur des versions actives, stables et officiellement maintenues, garantissant ainsi l'accès à une documentation à jour en cas de difficulté de codage.
 \newline\newline
-Pour les images de l'API REST, du serveur MCP et du client MCP reposant tous sur l'environnement d'exécution JavaScript Node.js, l'image Docker \texttt{node:24.14.0-alpine3.23} a été sélectionnée. Ce choix est justifié par les recommandations officielles de Node.js, qui spécifient que la version 24 est une version \textit{LTS (Long-Term Support)} durant la période de réalisation de ce travail de Bachelor. Ce statut LTS garantit la correction des failles de sécurité et des bugs critiques pendant une durée de 30 mois (Node.js 2026) \cite{nodejs_nodejs_2026}.
+Pour les images de l'API REST, du serveur MCP et du client MCP reposant tous sur l'environnement d'exécution JavaScript Node.js, l'image Docker \texttt{node:24.14.0-\allowbreak alpine3.23} a été sélectionnée. Ce choix est justifié par les recommandations officielles de Node.js, qui spécifient que la version 24 est une version \textit{LTS (Long-Term Support)} durant la période de réalisation de ce travail de Bachelor. Ce statut LTS garantit la correction des failles de sécurité et des bugs critiques pendant une durée de 30 mois (Node.js 2026) \cite{nodejs_nodejs_2026}.
 \newline\newline
-Enfin, pour la base de données PostgreSQL, l'image \texttt{postgres:18.3-alpine3.23} a été retenue. Ce choix suit la même logique de pérennité en s'appuyant sur les recommandations officielles de PostgreSQL, qui identifient la version 18 comme la version majeure la plus récente et supportée à ce jour (PostgreSQL 2026) \cite{postgresql_postgresql_2026}. 
+Enfin, l'image \texttt{postgres:18.3-\allowbreak alpine3.23} a été retenue pour la base de données PostgreSQL. Ce choix suit la même logique de pérennité en s'appuyant sur les recommandations officielles de PostgreSQL, qui identifient la version 18 comme la version majeure la plus récente et supportée à ce jour (PostgreSQL 2026) \cite{postgresql_postgresql_2026}. 
 
 \subsection{Modélisation de la base de données}
 La structure de la base de données relationnelle de PadelContext est présentée en deux temps. Le schéma relationnel donne une vue d'ensemble des entités et de leurs relations, tandis que le dictionnaire de données en détaille, table par table, les attributs, leurs types et leurs contraintes.
