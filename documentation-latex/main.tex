@@ -1101,7 +1101,48 @@ Cette analyse ne porte toutefois que sur le temps d'exécution moteur. Or organi
 Cette évaluation conserve les limites propres au modèle, qui suppose un utilisateur expert réalisant une tâche routinière sans erreur (Card, Moran et Newell 1980, p. 409) \cite{card_keystroke-level_1980}. Elle laisse aussi de côté la facilité d'apprentissage, dimension où l'assistant dispose d'un atout supplémentaire. Comme annoncé, des tests utilisateurs permettraient de confirmer réellement ces résultats.
 
 \subsection{Fiabilité face aux hallucinations}
+La deuxième question de recherche porte sur la fiabilité de l'assistant, c'est-à-dire sa capacité à ne pas produire d'informations fausses ou inventées lorsqu'il manipule les données de l'application. Le protocole MCP normalise la communication entre le modèle de langage et les données externes, en imposant des outils au schéma typé dont chaque paramètre est validé avant d'être transmis. Cette normalisation sécurise toutefois la forme de l'échange, et non le jugement du modèle. Le choix de l'outil à appeler et l'interprétation des résultats restent à la charge du modèle de langage, dont la fiabilité dépend de facteurs qui lui sont propres comme sa capacité de raisonnement.
+\newline\newline
+Évaluer objectivement ce risque s'est révélé difficile, car il varie d'un modèle à l'autre et d'une formulation à l'autre. L'approche retenue a donc été empirique, en testant plusieurs rédactions des descriptions fournies avec chaque outil. Des descriptions trop vagues ont fait apparaître des comportements indésirables. Dans un cas, le modèle omettait d'indiquer si un terrain disposait de matériel de location sur place. Dans un autre, il supposait de lui-même que la ville recherchée était Genève, déduite du contexte temporel transmis, alors que l'utilisateur n'avait précisé aucune ville.
+\newline\newline
+Pour limiter ces dérives, plusieurs garde-fous ont été intégrés à la conception des outils.
+\begin{itemize}
+    \item Une description structurée en trois temps, le but de l'outil, ses règles d'usage et ses limites, avec des consignes explicites du type << ne pas utiliser cet outil si... >> pour distinguer deux outils de recherche proches, ainsi que l'obligation d'afficher certains champs comme la disponibilité du matériel.
+    \item Des consignes anti-invention, qui demandent au modèle de ne jamais deviner un identifiant et de l'extraire uniquement d'un résultat de recherche antérieur.
+    \item Les contraintes du schéma MCP lui-même, paramètres typés, valeurs énumérées et champs obligatoires, qui empêchent un paramètre malformé ou inventé d'aboutir jusqu'à l'API.
+    \item Une température fixée à zéro, qui rend les réponses du modèle déterministes et réduit leur variabilité.
+\end{itemize}
+\vspace{0.2cm}
+Le garde-fou le plus déterminant reste cependant la validation humaine. Aucune action d'écriture, rejoindre ou créer un match, ne s'exécute sans une confirmation explicite de l'utilisateur, comme l'illustre la figure \ref{fig:sequence_inscription_match}. La robustesse du système ne repose donc pas sur l'absence totale d'hallucination, mais sur ce point de contrôle qui neutralise une éventuelle erreur du modèle avant qu'elle ne produise un effet.
+\newline\newline
+Cette évaluation conserve une limite importante. L'hallucination se réduit, mais ne s'élimine pas, et la fiabilité finale dépend du raisonnement propre au modèle, un facteur extérieur au protocole. En l'absence d'un protocole de test quantitatif à grande échelle, ces constats restent empiriques. Les descriptions détaillées constituent la parade la plus efficace, mais elles alourdissent chaque requête envoyée au modèle, ce qui ouvre directement la question du coût traitée à la section suivante.
+
 \subsection{Viabilité des coûts et complexité}
+La troisième question de recherche évalue la viabilité économique de l'assistant ainsi que la complexité de son intégration. Le coût d'un assistant fondé sur un modèle de langage tient presque entièrement à sa consommation de tokens, facturée à chaque requête. Pour la mesurer, l'outil d'observabilité Langfuse, recommandé par M. Bertin, conseiller pour ce travail de Bachelor, a été intégré au projet. Il enregistre chaque requête envoyée au modèle et expose le nombre de tokens en entrée et en sortie, ce qui a permis d'identifier les requêtes les plus coûteuses et l'accumulation du contexte au fil d'une conversation.
+\newline\newline
+Les tests ont été menés sur le modèle Gemini 3.1 Flash Lite, le plus économique de la gamme de Google, présenté comme offrant des performances proches de modèles plus grands pour une fraction de leur coût. Son offre gratuite, limitée à 15 requêtes par minute, 250\,000 tokens par minute et 500 requêtes par jour, a suffi à éprouver largement le fonctionnement et le coût des demandes sans engager de frais. Au moment de la rédaction de ce travail et au tarif payant standard, le seul pertinent pour un usage en temps réel, le modèle est facturé 0.25 dollar par million de tokens en entrée et 1.50 dollar par million de tokens en sortie.
+\newline\newline
+Les mesures relevées dans Langfuse montrent que ce coût dépend avant tout de la quantité de données renvoyée par l'outil appelé, et non de la longueur de la question. Le tableau \ref{tab:cout_tokens} compare deux requêtes représentatives. Une recherche ciblée, restreinte à la ville de Thônex avec des filtres, ne mobilise qu'environ 2\,800 tokens. Une recherche large, lancée pour l'ensemble d'un week-end sans aucun filtre, renvoie la disponibilité de tous les terrains et grimpe à près de 10\,000 tokens. L'outil de recherche de créneaux est en effet le plus gourmand, car il peut retourner un volume important de résultats.
+\vspace{0.5cm}
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{|X|c|c|c|c|}
+    \hline
+    \rowcolor[gray]{0.9}
+    \textbf{Requête} & \textbf{Entrée} & \textbf{Sortie} & \textbf{Total} & \textbf{Coût (\$)} \\ \hline
+    Recherche ciblée à Thônex avec filtres & 2\,534 & 250 & 2\,784 & 0.0010 \\ \hline
+    Recherche large du week-end sans filtre & 9\,721 & 292 & 10\,013 & 0.0029 \\ \hline
+    \end{tabularx}
+    \caption{Consommation de tokens et coût estimé de deux requêtes au modèle Gemini 3.1 Flash Lite, au tarif standard de 0.25 \$ en entrée et 1.50 \$ en sortie par million de tokens}
+    \label{tab:cout_tokens}
+\end{table}
+\vspace{0.2cm}
+À cette charge s'ajoutent les allers-retours propres au fonctionnement de l'assistant. Chaque tour de conversation renvoie au modèle l'ensemble du contexte conservé, si bien qu'une requête suivante cumule l'historique déjà établi et de nouvelles données pour atteindre une quinzaine de milliers de tokens. Pour borner cet emballement, une fenêtre glissante limite le contexte transmis aux cinq derniers messages. Même dans ce cas le plus lourd, une interaction complète reste de l'ordre du centime, et entièrement gratuite dans le cadre de l'offre d'essai utilisée pour ce travail.
+\newline\newline
+Plusieurs optimisations ont été appliquées pour contenir cette consommation. Les résultats des outils sont transmis au format YAML plutôt qu'en JSON, plus léger en tokens à données égales. À l'inverse, les descriptions détaillées des outils, qui constituent la meilleure parade contre les hallucinations étudiée à la section précédente, sont renvoyées à chaque appel et pèsent sur chaque requête. La conception a donc cherché un équilibre entre des descriptions assez riches pour fiabiliser le modèle et assez sobres pour rester économiques.
+\newline\newline
+Au-delà du coût, la complexité d'intégration mérite d'être soulignée, car elle conditionne elle aussi la viabilité à long terme. Le protocole MCP agit comme une norme qui standardise la connexion entre des données externes et un modèle de langage. Le modèle n'est de ce fait pas figé dans l'architecture, et le remplacer par une option plus performante ou meilleur marché ne demande qu'un changement minime. La viabilité du projet ne dépend donc pas d'un fournisseur unique, puisque l'évolution constante du marché des modèles de langage pourra être suivie sans refonte de l'application. Cette standardisation joue d'ailleurs dans les deux sens, car brancher un serveur MCP différent pour exposer d'autres données reste tout aussi simple.
+
 \section{Conclusion}
 \subsection{Conclusion générale}
 \subsection{Améliorations possibles}
