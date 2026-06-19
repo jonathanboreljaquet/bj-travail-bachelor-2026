@@ -8,4 +8,4 @@ Le rapport complet est disponible au format PDF : [documentation-latex/main.pdf]
 
 ## Projet
 
-Le code source de l'application PadelContext, ainsi que les instructions d'installation et de lancement, se trouvent dans [padel-context/README.md](padel-context/README.md).
+Le code source de l'application PadelContext se trouve dans le dossier [padel-context](padel-context/).
