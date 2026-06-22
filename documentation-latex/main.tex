@@ -94,6 +94,10 @@
 % Augmentation de l'espacement entre les sauts de ligne
 %\setlength{\parskip}{5pt} % Modifier la valeur selon vos besoins
 
+% Chaque section principale commence en haut d'une nouvelle page
+\let\stdsection\section
+\renewcommand{\section}{\clearpage\stdsection}
+
 % Title
 \title{\fulltitle}
 \author{\authorname}
