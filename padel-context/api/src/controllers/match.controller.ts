@@ -373,7 +373,7 @@ export const joinMatch = async (req: Request, res: Response): Promise<void> => {
  * Récupère tous les matchs de l'utilisateur connecté, quel que soit leur statut.
  * @param {Request} req - L'objet requête d'Express.
  * @param {Response} res - L'objet réponse d'Express.
- * @returns {200} Succès : Retourne le tableau des matchs de l'utilisateur, triés par date de début décroissante.
+ * @returns {200} Succès : Retourne le tableau des matchs de l'utilisateur, triés par date de début croissante.
  * @throws {401} Non autorisé : L'utilisateur n'est pas connecté.
  * @throws {500} Erreur interne : Déclenché en cas d'échec de la requête en base de données.
  */

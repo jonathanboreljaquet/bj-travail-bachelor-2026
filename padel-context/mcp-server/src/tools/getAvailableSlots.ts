@@ -174,7 +174,7 @@ export const getAvailableSlotsTool = {
                 };
             }
 
-            // Optimisation du format de la réponse afin de minimiser l'halucination du LLM et son cout en tokens
+            // Optimisation du format de la réponse afin de minimiser l'hallucination du LLM et son coût en tokens
             const optimizedSlots = await Promise.all(
                 rawAvailableSlots.map(async (item) => {
                     const isOutdoor = item.court.type === "OUTDOOR";
