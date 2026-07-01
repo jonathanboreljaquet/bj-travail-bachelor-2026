@@ -105,12 +105,29 @@ services:
       UPSTASH_REDIS_REST_URL: "${UPSTASH_REDIS_REST_URL:-}"
       UPSTASH_REDIS_REST_TOKEN: "${UPSTASH_REDIS_REST_TOKEN:-}"
       MCP_INTERNAL_SECRET: "${MCP_INTERNAL_SECRET:-}"
+      # Trafic MCP routé via mitmproxy pour inspection (commenter cette ligne pour revenir au serveur direct)
+      MCP_SERVER_URL: "http://mcp-proxy:8080/mcp"
     volumes:
       - ./mcp-client-web/src:/app/src
     depends_on:
       mcp-server:
         condition: service_started
+      mcp-proxy:
+        condition: service_started
     restart: unless-stopped
+    networks:
+      - padel-context-network
+
+  mcp-proxy:
+    image: mitmproxy/mitmproxy
+    container_name: padel-context-mcp-proxy
+    # Reverse proxy placé devant le serveur MCP pour inspecter tout le trafic JSON-RPC.
+    command: mitmweb --mode reverse:http://mcp-server:3001 --web-host 0.0.0.0 --set web_open_browser=false --set web_password=padelcontext
+    ports:
+      - "${MCP_PROXY_WEB_PORT:-8081}:8081" # UI web d'inspection sur http://localhost:8081
+    depends_on:
+      mcp-server:
+        condition: service_started
     networks:
       - padel-context-network
 

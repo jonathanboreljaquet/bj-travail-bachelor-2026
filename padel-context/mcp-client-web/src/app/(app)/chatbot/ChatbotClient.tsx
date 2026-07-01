@@ -122,6 +122,13 @@ export default function ChatbotClient() {
                   if (toolName === "create-match-from-slot") {
                     const input = (part.input ??
                       {}) as CreateMatchFromSlotInput;
+                    const day = input.startTime
+                      ? new Date(input.startTime).toLocaleDateString("fr-CH", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                        })
+                      : null;
                     const start = input.startTime
                       ? new Date(input.startTime).toLocaleTimeString("fr-CH", {
                           hour: "2-digit",
@@ -142,6 +149,14 @@ export default function ChatbotClient() {
                             Créer une nouvelle partie
                           </dd>
                         </div>
+                        {day && (
+                          <div className="flex items-center justify-between gap-3">
+                            <dt className="text-zinc-500">Jour</dt>
+                            <dd className="font-medium capitalize text-zinc-800">
+                              {day}
+                            </dd>
+                          </div>
+                        )}
                         {start && end && (
                           <div className="flex items-center justify-between gap-3">
                             <dt className="text-zinc-500">Créneau</dt>
