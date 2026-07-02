@@ -15,6 +15,7 @@ import { seedCourt } from "./seeds/court.seed";
 import { seedMatch } from "./seeds/match.seed";
 import { seedUser } from "./seeds/user.seed";
 import { seedParticipant } from "./seeds/participant.seed";
+import { seedDemo } from "./seeds/demo.seed";
 
 const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL,
@@ -64,6 +65,7 @@ async function main() {
     await seedUser(prisma);
     await seedMatch(prisma);
     await seedParticipant(prisma);
+    await seedDemo(prisma);
 }
 
 main()
